@@ -8,8 +8,8 @@ app.use(express.json());
 const db = mysql.createConnection({
   host: 'localhost',
   user: 'root',       // 본인 MySQL 계정
-  password: '비밀번호',
-  database: 'esgdb'
+  password: '1234',
+  database: 'join_membership'
 });
 
 db.connect((err) => {
