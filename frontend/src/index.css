@@ -1,11 +1,27 @@
 .main_nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between; /* 로고 왼쪽, 메뉴 오른쪽 */
   padding: 10px 20px;
+  background: #fff;
+  border-bottom: 1px solid #ddd; /* 구분선 */
+}
+
+.main_nav .nav {
+  display: flex;
+  gap: 30px;  /* 메뉴 간격 */
+  list-style: none;
+  margin: 0;
+  padding: 0;
 }
 
 .main_nav .nav-link {
   color: green !important;
   font-weight: 500;
+  font-size: 18px;
   transition: color 0.3s ease, transform 0.2s ease;
+  padding: 8px 15px;
+  text-decoration: none;
 }
 
 .main_nav .nav-link:hover {
@@ -21,4 +37,22 @@
 .nav .nav-link:hover {
   color: var(--light-green) !important;
   transform: translateY(-2px);
+}
+
+.green {
+  color: white;
+}
+
+.login {
+ background-color: green !important;
+  color: white !important;
+  border-radius: 4px;
+  padding: 8px 20px;
+}
+
+
+.logo {
+  width: 160px;                 /* ✅ 크기만 조절 */
+  height: auto;
+  margin-right: 40px; 
 }
