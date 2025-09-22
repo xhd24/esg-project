@@ -50,7 +50,7 @@ const Sidebar = ({ width = 280, isOpen, setOpen }) => {
         className={styles.button}
       >
         {isOpen ? (
-          <span>X</span>
+          <span className={styles.close}>X</span>
         ) : (
           <img
             src={menu}
@@ -59,14 +59,14 @@ const Sidebar = ({ width = 280, isOpen, setOpen }) => {
           />
         )}
       </button>
-
+<br/>
       <div className={styles.content}>
         <ul className="nav flex-column">
           <li className="nav-item">
-            <Link to="/report" className="nav-link">Reports</Link>
+            <Link to="/report" className="nav-link"><span className={styles.white}>Reports</span></Link>
           </li>
           <li className="nav-item">
-            <Link to="/history" className="nav-link">History</Link>
+            <Link to="/history" className="nav-link"><span className={styles.white}>History</span></Link>
           </li>
         </ul>
       </div>

@@ -16,25 +16,15 @@
 }
 
 .main_nav .nav-link {
-  color: green !important;
   font-weight: 500;
   font-size: 18px;
   transition: color 0.3s ease, transform 0.2s ease;
   padding: 8px 15px;
   text-decoration: none;
+  color: green !important;
 }
 
 .main_nav .nav-link:hover {
-  color: var(--light-green) !important;
-  transform: translateY(-2px);
-}
-.nav .nav-link {
-  color: green !important;
-  font-weight: 500;
-  transition: color 0.3s ease, transform 0.2s ease;
-}
-
-.nav .nav-link:hover {
   color: var(--light-green) !important;
   transform: translateY(-2px);
 }
@@ -49,7 +39,6 @@
   border-radius: 4px;
   padding: 8px 20px;
 }
-
 
 .logo {
   width: 160px;                 /* ✅ 크기만 조절 */

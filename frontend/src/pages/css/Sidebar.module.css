@@ -15,33 +15,39 @@
 }
 
 .sidebar {
-  background-color: lightgray;
+  background-color: green !important;
   position: fixed;
   top: 0;
   bottom: 0;
   left: 0;
   transition: 0.4s ease;
-  color: #202020;
   height: 100%;
   z-index: 99;
   font-size: 20px;
 }
 
 .button {
-  position: fixed;       /* 화면 왼쪽 상단 고정 */
+  position: fixed;
+  /* 화면 왼쪽 상단 고정 */
   top: 15px;
   left: 15px;
-  width: auto;           /* 아이콘 크기에 맞춤 */
+  width: auto;
+  /* 아이콘 크기에 맞춤 */
   height: auto;
-  z-index: 2000;         /* 사이드바 위에 뜨도록 */
+  z-index: 2000;
+  /* 사이드바 위에 뜨도록 */
   border: none;
-  background: none;      /* 배경 제거 */
-  padding: 0;            /* 불필요 여백 제거 */
-  cursor: pointer;       /* 마우스 올리면 손가락 모양 */
+  background: none;
+  /* 배경 제거 */
+  padding: 0;
+  /* 불필요 여백 제거 */
+  cursor: pointer;
+  /* 마우스 올리면 손가락 모양 */
 }
 
 .openBtn {
-  width: 35px;   /* 원하는 크기로 조절 */
+  width: 35px;
+  /* 원하는 크기로 조절 */
   height: 35px;
 }
 
@@ -53,4 +59,13 @@
 
 .icon {
   margin: 0;
+}
+
+.white:hover {
+  color: var(--light-green) !important;
+  transform: translateY(-2px);
+}
+
+.white {
+  color: white;
 }
