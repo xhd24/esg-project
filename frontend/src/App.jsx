@@ -13,7 +13,7 @@ function App() {
             <div>
                 <nav>
                     <Link to='/'>Home</Link>
-                    <Link to='/signup'>회원가입</Link>
+                    <Link to='/Signup'>회원가입</Link>
                     <Link to='/login'>로그인</Link>
                     <Link to='/carbon'>탄소배출량(가제)</Link>
                     <Link to='/assessment'>ESG 평가 (가제)</Link>
@@ -21,7 +21,7 @@ function App() {
                 </nav>
                 <Routes>
                     <Route path='/' element={<Home />} />   
-                    <Route path='/signup' element={<Signup />} />   
+                    <Route path='/Signup' element={<Signup />} />   
                     <Route path='/login' element={<Login />} />   
                     <Route path='/carbon' element={<Carbon />} />   
                     <Route path='/assessment' element={<Assessment />} />          
