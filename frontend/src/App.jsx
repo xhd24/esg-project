@@ -16,7 +16,7 @@ import { useState } from "react";
 
 function App() {
   const [isSidebarOpen, setSidebarOpen] = useState(false);
-  const sidebarWidth = 320;
+  const sidebarWidth = 280;
 
   return (
     <BrowserRouter>

@@ -2,10 +2,16 @@ import { useEffect, useRef, useState } from 'react';
 import main_esg from '../assets/images/main_esg.png';
 import main_esg2 from '../assets/images/main_esg2.png';
 import styles from './css/Home.module.css';
+import { Navigate, useNavigate } from 'react-router-dom';
 
 function Home() {
     const textRef = useRef(null);
     const [isTextVisible, setIsTextVisible] = useState(false);
+
+    const navigate = useNavigate();
+    const handleClick = () => {
+        navigate('/assessment');
+    }
 
     useEffect(() => {
         const observer = new IntersectionObserver(
@@ -60,7 +66,7 @@ function Home() {
                         효율적이고 간편한 ESG 대응 및 관리,<br />
                         지금 시작해보세요
                     </h1>
-                    <button className={styles.ctaBtn}>무료 평가 시작하기</button>
+                    <button onClick={handleClick} className={styles.ctaBtn}>무료 평가 시작하기</button>
                 </div>
             </div>
         </div>
