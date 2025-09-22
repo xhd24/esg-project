@@ -1,0 +1,17 @@
+node_modules
+dist
+.env
+
+# 로그 파일
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# 빌드 결과물
+backend/build
+frontend/build
+
+# IDE 설정
+.vscode
+.idea
