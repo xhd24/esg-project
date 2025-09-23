@@ -38,25 +38,23 @@ function formatNumericWithComma(input) {
 // 원본(raw) 입력을 검사 → 포맷된 값 + 에러메시지
 function validateNumericRaw(raw) {
   if (raw === "") return { formatted: "", error: null };
-
-  // 1) 허용 외 문자 여부
   const hasBadChar = /[^0-9.]/.test(raw);
-  // 2) 소수점 개수
   const dotCount = (raw.match(/\./g) || []).length;
-  // 3) 소수점으로 시작
   const startsWithDot = raw.startsWith(".");
-
   let error = null;
   if (hasBadChar) error = "숫자와 소수점만 입력 가능해요.";
   else if (dotCount > 1) error = "소수점은 1개만 사용할 수 있어요.";
   else if (startsWithDot) error = "소수점 앞에 숫자를 넣어주세요 (예: 0.5).";
-
   const formatted = formatNumericWithComma(raw);
   return { formatted, error };
 }
 
 // ----- 로컬스토리지 키 -----
 const LS_KEY = "carb1_form_v1";
+// 에러 사라지는 애니메이션 시간(ms)
+const ERROR_FADE_MS = 300;
+// 자동 숨김 대기 시간(ms)
+const ERROR_AUTO_HIDE_MS = 3000;
 
 function Carb1() {
   // ===== 외부 =====
@@ -67,9 +65,10 @@ function Carb1() {
     items: ["", "", "", "", ""]
   });
   const [extLoading, setExtLoading] = useState(false);
-  const [extErrs, setExtErrs] = useState(["", "", "", "", ""]); // 각 항목 에러
-  // 에러 자동제거 타이머(외부)
-  const extErrTimers = useRef({}); // { [idx]: timeoutId }
+  const [extErrs, setExtErrs] = useState(["", "", "", "", ""]); // 각 항목 에러 메시지
+  const [extErrLeaving, setExtErrLeaving] = useState([false, false, false, false, false]); // 페이드아웃 플래그
+  // 에러 타이머들
+  const extErrTimers = useRef({}); // { [idx]: { hideId, clearId } }
 
   // ===== 내부 =====
   const [inn, setInn] = useState({
@@ -79,9 +78,9 @@ function Carb1() {
     steps: ["", "", "", "", "", "", "", ""]
   });
   const [inLoading, setInLoading] = useState(false);
-  const [innErrs, setInnErrs] = useState(["", "", "", "", "", "", "", ""]); // 각 단계 에러
-  // 에러 자동제거 타이머(내부)
-  const innErrTimers = useRef({}); // { [idx]: timeoutId }
+  const [innErrs, setInnErrs] = useState(["", "", "", "", "", "", "", ""]);
+  const [innErrLeaving, setInnErrLeaving] = useState([false, false, false, false, false, false, false, false]);
+  const innErrTimers = useRef({}); // { [idx]: { hideId, clearId } }
 
   // ===== 마운트 시 복원 =====
   useEffect(() => {
@@ -94,7 +93,6 @@ function Carb1() {
         return;
       }
     } catch (_) {}
-    // 저장된 값이 없으면 오늘 날짜 기본값
     const d = new Date();
     const yyyy = d.getFullYear();
     const mm = String(d.getMonth() + 1).padStart(2, "0");
@@ -119,12 +117,28 @@ function Carb1() {
   // 언마운트 시 남은 에러 타이머 정리
   useEffect(() => {
     return () => {
-      Object.values(extErrTimers.current).forEach((id) => clearTimeout(id));
-      Object.values(innErrTimers.current).forEach((id) => clearTimeout(id));
+      Object.values(extErrTimers.current).forEach(({ hideId, clearId }) => {
+        if (hideId) clearTimeout(hideId);
+        if (clearId) clearTimeout(clearId);
+      });
+      Object.values(innErrTimers.current).forEach(({ hideId, clearId }) => {
+        if (hideId) clearTimeout(hideId);
+        if (clearId) clearTimeout(clearId);
+      });
     };
   }, []);
 
-  // 핸들러
+  // 공통: 에러 타이머 초기화 함수
+  const resetErrTimers = (store, idx) => {
+    const t = store.current[idx];
+    if (t) {
+      if (t.hideId) clearTimeout(t.hideId);
+      if (t.clearId) clearTimeout(t.clearId);
+      delete store.current[idx];
+    }
+  };
+
+  // 핸들러(외부)
   const onChangeExt = (e) => {
     const { name, value } = e.target;
     setExt((f) => ({ ...f, [name]: value }));
@@ -139,30 +153,50 @@ function Carb1() {
       return { ...f, items: next };
     });
 
-    // 에러 세팅 + 3초 뒤 자동 제거
+    // 기존 타이머/상태 초기화
+    resetErrTimers(extErrTimers, idx);
+    setExtErrLeaving((prev) => {
+      const next = prev.slice();
+      next[idx] = false;
+      return next;
+    });
+
+    // 에러 세팅 및 자동 숨김 로직
     setExtErrs((errs) => {
       const next = errs.slice();
       next[idx] = error || "";
       return next;
     });
 
-    // 기존 타이머 있으면 초기화
-    if (extErrTimers.current[idx]) {
-      clearTimeout(extErrTimers.current[idx]);
-      delete extErrTimers.current[idx];
-    }
     if (error) {
-      extErrTimers.current[idx] = setTimeout(() => {
-        setExtErrs((errs) => {
-          const next = errs.slice();
-          next[idx] = "";
+      // 3초 후 → leaving true로 만들어 부드럽게 숨김
+      const hideId = setTimeout(() => {
+        setExtErrLeaving((prev) => {
+          const next = prev.slice();
+          next[idx] = true;
           return next;
         });
-        delete extErrTimers.current[idx];
-      }, 3000);
+        // 페이드 시간 후 실제로 에러 제거
+        const clearId = setTimeout(() => {
+          setExtErrs((errs) => {
+            const next = errs.slice();
+            next[idx] = "";
+            return next;
+          });
+          setExtErrLeaving((prev) => {
+            const next = prev.slice();
+            next[idx] = false;
+            return next;
+          });
+          resetErrTimers(extErrTimers, idx);
+        }, ERROR_FADE_MS);
+        extErrTimers.current[idx].clearId = clearId;
+      }, ERROR_AUTO_HIDE_MS);
+      extErrTimers.current[idx] = { hideId, clearId: null };
     }
   };
 
+  // 핸들러(내부)
   const onChangeInn = (e) => {
     const { name, value } = e.target;
     setInn((f) => ({ ...f, [name]: value }));
@@ -170,34 +204,48 @@ function Carb1() {
   const onChangeInnStep = (idx, raw) => {
     const { formatted, error } = validateNumericRaw(raw);
 
-    // 값 세팅
     setInn((f) => {
       const next = f.steps.slice();
       next[idx] = formatted;
       return { ...f, steps: next };
     });
 
-    // 에러 세팅 + 3초 뒤 자동 제거
+    resetErrTimers(innErrTimers, idx);
+    setInnErrLeaving((prev) => {
+      const next = prev.slice();
+      next[idx] = false;
+      return next;
+    });
+
     setInnErrs((errs) => {
       const next = errs.slice();
       next[idx] = error || "";
       return next;
     });
 
-    // 기존 타이머 있으면 초기화
-    if (innErrTimers.current[idx]) {
-      clearTimeout(innErrTimers.current[idx]);
-      delete innErrTimers.current[idx];
-    }
     if (error) {
-      innErrTimers.current[idx] = setTimeout(() => {
-        setInnErrs((errs) => {
-          const next = errs.slice();
-          next[idx] = "";
+      const hideId = setTimeout(() => {
+        setInnErrLeaving((prev) => {
+          const next = prev.slice();
+          next[idx] = true;
           return next;
         });
-        delete innErrTimers.current[idx];
-      }, 3000);
+        const clearId = setTimeout(() => {
+          setInnErrs((errs) => {
+            const next = errs.slice();
+            next[idx] = "";
+            return next;
+          });
+          setInnErrLeaving((prev) => {
+            const next = prev.slice();
+            next[idx] = false;
+            return next;
+          });
+          resetErrTimers(innErrTimers, idx);
+        }, ERROR_FADE_MS);
+        innErrTimers.current[idx].clearId = clearId;
+      }, ERROR_AUTO_HIDE_MS);
+      innErrTimers.current[idx] = { hideId, clearId: null };
     }
   };
 
@@ -370,7 +418,7 @@ function Carb1() {
                   required
                 />
                 {extErrs[i] && (
-                  <div className="error-box" role="alert" aria-live="polite">
+                  <div className={`error-box ${extErrLeaving[i] ? "leaving" : ""}`} role="alert" aria-live="polite">
                     <span className="error-icon" aria-hidden="true">!</span>
                     <span className="error-text">{extErrs[i]}</span>
                   </div>
@@ -426,7 +474,7 @@ function Carb1() {
                   required
                 />
                 {innErrs[i] && (
-                  <div className="error-box" role="alert" aria-live="polite">
+                  <div className={`error-box ${innErrLeaving[i] ? "leaving" : ""}`} role="alert" aria-live="polite">
                     <span className="error-icon" aria-hidden="true">!</span>
                     <span className="error-text">{innErrs[i]}</span>
                   </div>
