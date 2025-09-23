@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import axios from "axios";
-import "./css/Login.css"; // 스타일 파일 (선택)
+import "./css/Login.css";
 
 function Login() {
   const [formData, setFormData] = useState({
@@ -18,12 +18,9 @@ function Login() {
     e.preventDefault();
 
     try {
-      // 로그인 요청 (백엔드 API 필요)
       const res = await axios.post("http://localhost:5000/api/login", formData);
-
       if (res.data.success) {
-        alert("로그인 성공!");
-        // TODO: 토큰 저장 or 메인 페이지 이동
+        alert("로그인 성공! 환영합니다 " + res.data.user.full_name);
       } else {
         alert("아이디 또는 비밀번호가 올바르지 않습니다.");
       }
@@ -47,7 +44,6 @@ function Login() {
             placeholder="아이디 입력"
           />
         </div>
-
         <div>
           <label>비밀번호</label>
           <input
@@ -59,10 +55,8 @@ function Login() {
             placeholder="비밀번호 입력"
           />
         </div>
-
         <button type="submit">로그인</button>
       </form>
-
       <div className="login-links">
         <Link to="/signup">회원가입</Link>
         <span> | </span>

@@ -6,6 +6,8 @@ import Assessment from './pages/Assessment.jsx';
 import Carbon from './pages/Carbon.jsx';
 import Signup from './pages/Signup.jsx';
 import FAQ from './pages/FAQ.jsx';
+import FindId from './pages/FindId.jsx';
+import FindPassword from './pages/FindPassword.jsx';
 import './index.css';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import Sidebar from "./pages/Sidebar.jsx";
@@ -52,6 +54,8 @@ function App() {
               <Route path='/' element={<Home />} />
               <Route path='/signup' element={<Signup />} />
               <Route path='/login' element={<Login />} />
+              <Route path='/find-id' element={<FindId />} />
+              <Route path='/find-password' element={<FindPassword />} />
               <Route path='/carbon' element={<Carbon />} />
               <Route path='/assessment' element={<Assessment />} />
               <Route path='/faq' element={<FAQ />} />
