@@ -15,6 +15,10 @@ import Report from "./pages/Report.jsx";
 import History from "./pages/History.jsx";
 import logo from './assets/images/logo.png';
 import { useState } from "react";
+import { FAQWrite, FAQHistory } from "./pages/Query.jsx";
+import Carb1 from "./pages/Carb1.jsx";
+import Carb2 from "./pages/Carb2.jsx";
+import Carb3 from "./pages/Carb3.jsx";
 
 function App() {
   const [isSidebarOpen, setSidebarOpen] = useState(false);
@@ -24,7 +28,7 @@ function App() {
     <BrowserRouter>
       {/* 전체 레이아웃 */}
       <div style={{ display: "flex" }}>
-        
+
         {/* 사이드바 */}
         <Sidebar width={sidebarWidth} isOpen={isSidebarOpen} setOpen={setSidebarOpen} />
 
@@ -57,8 +61,16 @@ function App() {
               <Route path='/find-id' element={<FindId />} />
               <Route path='/find-password' element={<FindPassword />} />
               <Route path='/carbon' element={<Carbon />} />
+              <Route path='/carbon' element={<Carbon />}>
+                <Route index element={<Carb1 />} />    
+                <Route path='c2' element={<Carb2 />} />
+                <Route path='c3' element={<Carb3 />} />
+              </Route>
               <Route path='/assessment' element={<Assessment />} />
-              <Route path='/faq' element={<FAQ />} />
+              <Route path='/faq' element={<FAQ />}>
+                <Route index element={<FAQHistory />} />     {/* /faq */}
+                <Route path='write' element={<FAQWrite />} /> {/* /faq/write */}
+              </Route>
               <Route path='/report' element={<Report />} />
               <Route path='/history' element={<History />} />
             </Routes>
