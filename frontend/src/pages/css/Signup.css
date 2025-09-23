@@ -1,0 +1,109 @@
+/* Signup.css */
+.signup-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh; /* 화면 세로 가운데 */
+  background: #f5f6fa;
+}
+
+
+.signup-container {
+  width: 100%;
+  max-width: 520px;
+  padding: 2.5rem;
+  border: 2px solid #e0e0e0;   /* ✅ 전체 테두리 */
+  border-radius: 16px;
+  background: #ffffff;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.signup-container:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.12);
+}
+
+.signup-container h2 {
+  text-align: center;
+  margin-bottom: 2rem;
+  color: #2c3e50;
+  font-size: 1.9rem;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+}
+
+.signup-form div {
+  margin-bottom: 1.3rem;
+}
+
+.signup-form label {
+  font-weight: 600;
+  font-size: 0.9rem;
+  display: block;
+  margin-bottom: 0.4rem;
+  color: #34495e;
+}
+
+.signup-form input[type="text"],
+.signup-form input[type="email"],
+.signup-form input[type="password"] {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border: 1.5px solid #ccc;
+  border-radius: 10px;
+  outline: none;
+  font-size: 15px;
+  background: #fdfdfd;
+  transition: border 0.25s, box-shadow 0.25s, background 0.25s;
+}
+
+.signup-form input[type="text"]:focus,
+.signup-form input[type="email"]:focus,
+.signup-form input[type="password"]:focus {
+  border-color: #4a90e2;
+  background: #ffffff;
+  box-shadow: 0 0 8px rgba(74, 144, 226, 0.35);
+}
+
+.signup-form .radio-group {
+  display: flex;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.signup-form .radio-group label {
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  cursor: pointer;
+  color: #2c3e50;
+}
+
+.signup-form input[type="radio"] {
+  accent-color: #4a90e2; /* 라디오 버튼 색상 */
+}
+
+.signup-form button {
+  width: 100%;
+  padding: 1rem;
+  font-size: 16px;
+  font-weight: 600;
+  background: linear-gradient(135deg, #4a90e2, #357ab8);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: background 0.3s ease, transform 0.2s ease;
+  margin-top: 1rem;
+}
+
+.signup-form button:hover {
+  background: linear-gradient(135deg, #357ab8, #2a5f91);
+  transform: translateY(-2px);
+}
+
+.signup-form button:active {
+  transform: translateY(1px);
+}
