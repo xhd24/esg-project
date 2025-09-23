@@ -1,7 +1,6 @@
-import { useState, useEffect } from "react";
 // src/pages/Carb1.jsx
-import "./css/Carb1.css";   // ← 요걸로!
-
+import { useState, useEffect, useRef } from "react";
+import "./css/Carb1.css";
 
 // 외부 5항목(숫자만 입력)
 const EXT_LABELS = [
@@ -23,9 +22,7 @@ function sanitizeNumeric(input) {
   if (input == null) return "";
   let s = String(input).replace(/[^0-9.]/g, "");
   const parts = s.split(".");
-  if (parts.length > 1) {
-    s = parts[0] + "." + parts.slice(1).join("").replace(/\./g, "");
-  }
+  if (parts.length > 1) s = parts[0] + "." + parts.slice(1).join("").replace(/\./g, "");
   if (s.startsWith(".")) s = "0" + s;
   return s;
 }
@@ -38,6 +35,29 @@ function formatNumericWithComma(input) {
   return d !== undefined ? `${iWithComma}.${d}` : iWithComma;
 }
 
+// 원본(raw) 입력을 검사 → 포맷된 값 + 에러메시지
+function validateNumericRaw(raw) {
+  if (raw === "") return { formatted: "", error: null };
+
+  // 1) 허용 외 문자 여부
+  const hasBadChar = /[^0-9.]/.test(raw);
+  // 2) 소수점 개수
+  const dotCount = (raw.match(/\./g) || []).length;
+  // 3) 소수점으로 시작
+  const startsWithDot = raw.startsWith(".");
+
+  let error = null;
+  if (hasBadChar) error = "숫자와 소수점만 입력 가능해요.";
+  else if (dotCount > 1) error = "소수점은 1개만 사용할 수 있어요.";
+  else if (startsWithDot) error = "소수점 앞에 숫자를 넣어주세요 (예: 0.5).";
+
+  const formatted = formatNumericWithComma(raw);
+  return { formatted, error };
+}
+
+// ----- 로컬스토리지 키 -----
+const LS_KEY = "carb1_form_v1";
+
 function Carb1() {
   // ===== 외부 =====
   const [ext, setExt] = useState({
@@ -47,6 +67,9 @@ function Carb1() {
     items: ["", "", "", "", ""]
   });
   const [extLoading, setExtLoading] = useState(false);
+  const [extErrs, setExtErrs] = useState(["", "", "", "", ""]); // 각 항목 에러
+  // 에러 자동제거 타이머(외부)
+  const extErrTimers = useRef({}); // { [idx]: timeoutId }
 
   // ===== 내부 =====
   const [inn, setInn] = useState({
@@ -56,52 +79,139 @@ function Carb1() {
     steps: ["", "", "", "", "", "", "", ""]
   });
   const [inLoading, setInLoading] = useState(false);
+  const [innErrs, setInnErrs] = useState(["", "", "", "", "", "", "", ""]); // 각 단계 에러
+  // 에러 자동제거 타이머(내부)
+  const innErrTimers = useRef({}); // { [idx]: timeoutId }
 
-  // 오늘 날짜 기본값
+  // ===== 마운트 시 복원 =====
   useEffect(() => {
+    try {
+      const saved = localStorage.getItem(LS_KEY);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed.ext) setExt((prev) => ({ ...prev, ...parsed.ext }));
+        if (parsed.inn) setInn((prev) => ({ ...prev, ...parsed.inn }));
+        return;
+      }
+    } catch (_) {}
+    // 저장된 값이 없으면 오늘 날짜 기본값
     const d = new Date();
     const yyyy = d.getFullYear();
     const mm = String(d.getMonth() + 1).padStart(2, "0");
     const dd = String(d.getDate()).padStart(2, "0");
     const today = `${yyyy}-${mm}-${dd}`;
-    setExt(f => ({ ...f, startDate: today, endDate: today }));
-    setInn(f => ({ ...f, startDate: today, endDate: today }));
+    setExt((f) => ({ ...f, startDate: today, endDate: today }));
+    setInn((f) => ({ ...f, startDate: today, endDate: today }));
+  }, []);
+
+  // ===== 변경 시 자동 저장(디바운스) =====
+  const saveTimer = useRef(null);
+  useEffect(() => {
+    clearTimeout(saveTimer.current);
+    saveTimer.current = setTimeout(() => {
+      try {
+        localStorage.setItem(LS_KEY, JSON.stringify({ ext, inn }));
+      } catch (_) {}
+    }, 300);
+    return () => clearTimeout(saveTimer.current);
+  }, [ext, inn]);
+
+  // 언마운트 시 남은 에러 타이머 정리
+  useEffect(() => {
+    return () => {
+      Object.values(extErrTimers.current).forEach((id) => clearTimeout(id));
+      Object.values(innErrTimers.current).forEach((id) => clearTimeout(id));
+    };
   }, []);
 
   // 핸들러
   const onChangeExt = (e) => {
     const { name, value } = e.target;
-    setExt(f => ({ ...f, [name]: value }));
+    setExt((f) => ({ ...f, [name]: value }));
   };
-  const onChangeExtItem = (idx, value) => {
-    setExt(f => {
+  const onChangeExtItem = (idx, raw) => {
+    const { formatted, error } = validateNumericRaw(raw);
+
+    // 값 세팅
+    setExt((f) => {
       const next = f.items.slice();
-      next[idx] = formatNumericWithComma(value);
+      next[idx] = formatted;
       return { ...f, items: next };
     });
+
+    // 에러 세팅 + 3초 뒤 자동 제거
+    setExtErrs((errs) => {
+      const next = errs.slice();
+      next[idx] = error || "";
+      return next;
+    });
+
+    // 기존 타이머 있으면 초기화
+    if (extErrTimers.current[idx]) {
+      clearTimeout(extErrTimers.current[idx]);
+      delete extErrTimers.current[idx];
+    }
+    if (error) {
+      extErrTimers.current[idx] = setTimeout(() => {
+        setExtErrs((errs) => {
+          const next = errs.slice();
+          next[idx] = "";
+          return next;
+        });
+        delete extErrTimers.current[idx];
+      }, 3000);
+    }
   };
 
   const onChangeInn = (e) => {
     const { name, value } = e.target;
-    setInn(f => ({ ...f, [name]: value }));
+    setInn((f) => ({ ...f, [name]: value }));
   };
-  const onChangeInnStep = (idx, value) => {
-    setInn(f => {
+  const onChangeInnStep = (idx, raw) => {
+    const { formatted, error } = validateNumericRaw(raw);
+
+    // 값 세팅
+    setInn((f) => {
       const next = f.steps.slice();
-      next[idx] = formatNumericWithComma(value);
+      next[idx] = formatted;
       return { ...f, steps: next };
     });
+
+    // 에러 세팅 + 3초 뒤 자동 제거
+    setInnErrs((errs) => {
+      const next = errs.slice();
+      next[idx] = error || "";
+      return next;
+    });
+
+    // 기존 타이머 있으면 초기화
+    if (innErrTimers.current[idx]) {
+      clearTimeout(innErrTimers.current[idx]);
+      delete innErrTimers.current[idx];
+    }
+    if (error) {
+      innErrTimers.current[idx] = setTimeout(() => {
+        setInnErrs((errs) => {
+          const next = errs.slice();
+          next[idx] = "";
+          return next;
+        });
+        delete innErrTimers.current[idx];
+      }, 3000);
+    }
   };
 
   // 필수값 체크
   const isExtReady =
     ext.shipKey.trim() &&
     ext.startDate && ext.endDate &&
-    ext.items.every(v => v.trim());
+    ext.items.every((v) => v.trim()) &&
+    extErrs.every((m) => !m); // 에러 없을 때만 가능
   const isInnReady =
     inn.shipKey.trim() &&
     inn.startDate && inn.endDate &&
-    inn.steps.every(v => v.trim());
+    inn.steps.every((v) => v.trim()) &&
+    innErrs.every((m) => !m);
 
   // 날짜 배열
   const days = (a, b) => {
@@ -147,6 +257,7 @@ function Carb1() {
         totalCo2 += Number(data.total_co2_kg || 0);
       }
       alert(`외부 저장 완료: ${inserted}건 · 총 CO₂ ${totalCo2.toFixed(6)} kg`);
+      localStorage.setItem(LS_KEY, JSON.stringify({ ext, inn }));
     } catch (err) {
       alert("외부 저장 실패: " + (err?.message || err));
     } finally {
@@ -188,6 +299,7 @@ function Carb1() {
         totalCo2 += Number(data.total_co2_kg || 0);
       }
       alert(`내부 저장 완료: ${inserted}건 · 총 CO₂ ${totalCo2.toFixed(6)} kg`);
+      localStorage.setItem(LS_KEY, JSON.stringify({ ext, inn }));
     } catch (err) {
       alert("내부 저장 실패: " + (err?.message || err));
     } finally {
@@ -250,13 +362,19 @@ function Carb1() {
               <div className="field" key={i}>
                 <label className="label">{label} <small>(단위 t)</small></label>
                 <input
-                  className="input numeric"
+                  className={`input numeric ${extErrs[i] ? "input-error" : ""}`}
                   type="text" inputMode="decimal"
                   value={ext.items[i]}
                   onChange={(e) => onChangeExtItem(i, e.target.value)}
                   placeholder="예: 1,250.5"
                   required
                 />
+                {extErrs[i] && (
+                  <div className="error-box" role="alert" aria-live="polite">
+                    <span className="error-icon" aria-hidden="true">!</span>
+                    <span className="error-text">{extErrs[i]}</span>
+                  </div>
+                )}
               </div>
             ))}
           </div>
@@ -300,13 +418,19 @@ function Carb1() {
               <div className="field" key={i}>
                 <label className="label">{label} <small>(단위 t)</small></label>
                 <input
-                  className="input numeric"
+                  className={`input numeric ${innErrs[i] ? "input-error" : ""}`}
                   type="text" inputMode="decimal"
                   value={inn.steps[i]}
                   onChange={(e) => onChangeInnStep(i, e.target.value)}
                   placeholder="예: 2,000 또는 2,000.75"
                   required
                 />
+                {innErrs[i] && (
+                  <div className="error-box" role="alert" aria-live="polite">
+                    <span className="error-icon" aria-hidden="true">!</span>
+                    <span className="error-text">{innErrs[i]}</span>
+                  </div>
+                )}
               </div>
             ))}
           </div>
@@ -346,7 +470,7 @@ function Carb1() {
             </tbody>
           </table>
         </div>
-        <div className="help">* 입력 값은 DB 저장 전에도 여기에서 즉시 확인할 수 있어.</div>
+        <div className="help">* 페이지를 이동해도 입력 값이 자동 저장됩니다.</div>
       </section>
     </div>
   );
