@@ -1,0 +1,244 @@
+/* ===== Palette (밝은 초록 포인트) ===== */
+:root {
+  --green-50:  #f0fff4;
+  --green-100: #e6ffed;
+  --green-200: #c6f6d5;
+  --green-300: #9ae6b4;
+  --green-400: #68d391;
+  --green-500: #48bb78;   /* 주 포인트 */
+  --green-600: #38a169;
+  --green-700: #2f855a;
+
+  --ink-900:  #0a0f0c;    /* 텍스트 기본 */
+  --ink-700:  #2b3a33;
+  --ink-400:  #7b8f86;
+
+  --bg-body:  #f7faf7;    /* 전체 배경(밝은 느낌) */
+  --bg-card:  #ffffff;    /* 카드(섹션) */
+  --line:     #dfe7e2;    /* 테두리 */
+  --shadow:   0 6px 20px rgba(25, 94, 50, 0.08);
+}
+
+/* ===== Layout ===== */
+.carb1-container {
+  padding: 20px;
+  display: grid;
+  gap: 24px;
+  max-width: 1280px;
+  width: 100%;
+  margin: 0 auto;
+  background: var(--bg-body);
+}
+
+.card {
+  background: var(--bg-card);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 18px 18px 20px;
+  box-shadow: var(--shadow);
+}
+
+.section-title {
+  margin: 0 0 14px;
+  color: var(--ink-900);
+  font-size: 18px;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding-left: 10px;
+  border-left: 6px solid var(--green-400);
+}
+
+/* 2열 그리드 */
+.grid-2 {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: 1fr 1fr;
+}
+@media (max-width: 860px) {
+  .grid-2 { grid-template-columns: 1fr; }
+}
+
+/* ===== Form ===== */
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.label {
+  color: var(--ink-900);
+  font-size: 16px;        /* 기존 13px → 16px */
+  font-weight: 300;       /* 더 진하게 */
+  line-height: 1.35;
+}
+
+.input, .date {
+  height: 40px;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  font-size: 14px;
+  color: var(--ink-900);
+  background: #fff;
+  transition: border-color .2s ease, box-shadow .2s ease, background .2s ease;
+}
+.input::placeholder { color: var(--ink-400); }
+.input:focus, .date:focus {
+  outline: none;
+  border-color: var(--green-400);
+  box-shadow: 0 0 0 4px var(--green-100);
+  background: #fff;
+}
+
+/* 숫자칸 보기 좋게(가변폭이면 지워도 됨) */
+.input.numeric { font-variant-numeric: tabular-nums; }
+
+/* 버튼 */
+/* 더 진한 초록 그라디언트 */
+.btn-primary {
+  height: 44px;
+  padding: 0 16px;
+  border: none;
+  border-radius: 10px;
+  font-weight: 700;
+  color: #0b2717;
+  background: linear-gradient(180deg, #5cc48f, #2fa568); /* ← 진하게 */
+  box-shadow: 0 8px 18px rgba(47, 165, 104, 0.35);
+  cursor: pointer;
+  transition: transform .06s ease, box-shadow .2s ease, filter .2s ease;
+}
+.btn-primary:hover {
+  filter: brightness(1.03);
+  box-shadow: 0 10px 22px rgba(47,165,104,.42);
+}
+.btn-primary:active { transform: translateY(1px); }
+.btn-primary:disabled { filter: grayscale(.2) opacity(.7); box-shadow: none; }
+
+
+/* ===== Table ===== */
+.table-wrap { overflow-x: auto; }
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  overflow: hidden;
+}
+.table thead th {
+  background: var(--green-50);
+  color: var(--ink-900);
+  font-weight: 700;
+  border-bottom: 1px solid var(--line);
+  padding: 10px 12px;
+  text-align: left;
+}
+.table tbody td {
+  border-top: 1px solid var(--line);
+  padding: 10px 12px;
+  color: var(--ink-700);
+}
+.table tbody tr:nth-child(even) {
+  background: #fcfffd;
+}
+
+/* 작은 설명 텍스트 */
+.help {
+  margin-top: 6px;
+  color: var(--ink-400);
+  font-size: 12px;
+}
+
+/* ===================== */
+/*  Error Box (pretty)   */
+/* ===================== */
+.error-box {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin-top: 8px;
+  padding: 10px 12px;
+  border-radius: 12px;
+
+  background: linear-gradient(
+    180deg,
+    rgba(255, 99, 99, 0.08) 0%,
+    rgba(255, 99, 99, 0.06) 100%
+  );
+  border: 1px solid rgba(255, 99, 99, 0.35);
+  box-shadow:
+    0 6px 14px -8px rgba(255, 99, 99, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(1px);
+
+  position: relative;
+}
+.error-box::before {
+  content: "";
+  position: absolute;
+  left: -1px;
+  top: 6px;
+  bottom: 6px;
+  width: 3px;
+  border-radius: 3px;
+  background: linear-gradient(180deg, #ff7a7a, #ff5252);
+}
+
+/* 느낌표 아이콘 (원형 배지) */
+.error-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 20px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 800;
+  color: #fff;
+
+  background: radial-gradient(circle at 30% 30%, #ff8a8a, #ff5252);
+  box-shadow: 0 2px 6px rgba(255, 82, 82, 0.4);
+  transform: translateY(2px);
+}
+
+/* 텍스트 */
+.error-text {
+  color: #ff9393;
+  font-size: 12.5px;
+  line-height: 1.45;
+}
+
+/* 살짝 등장 애니메이션 */
+@keyframes errorIn {
+  from {
+    opacity: 0;
+    transform: translateY(-2px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.error-box {
+  animation: errorIn 160ms ease-out;
+  transition: opacity 0.3s ease, transform 0.3s ease;
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* 인풋 에러 상태 강조(이미 input-error 사용 중) */
+.input-error {
+  border-color: #ff6b6b !important;
+  box-shadow:
+    0 0 0 3px rgba(255, 107, 107, 0.18),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+/* 마지막 여백 미세 조정(선택) */
+.field .error-box:last-child {
+  margin-bottom: 2px;
+}
+.error-box.leaving {
+  opacity: 0;
+  transform: translateY(-2px);
+}
