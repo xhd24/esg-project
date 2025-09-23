@@ -1,124 +1,141 @@
 import { useState, useEffect } from "react";
+// src/pages/Carb1.jsx
+import "./css/Carb1.css";   // ← 요걸로!
+
+
+// 외부 5항목(숫자만 입력)
+const EXT_LABELS = [
+  "1. 원자재 채취",
+  "2. 기자재 제조",
+  "3. 원자재 및 기자재 운송 ",
+  "4. 선박 폐기 ",
+  "5. 재활용 "
+];
+
+// 내부 8단계(숫자만 입력)
+const INT_LABELS = [
+  "1. 설계","2. 강재적치","3. 강재절단","4. 조립",
+  "5. 의장","6. 탑재","7. 안변작업","8. 시운전"
+];
+
+// 숫자만 허용(소수점 1개 허용)으로 정제
+function sanitizeNumeric(input) {
+  if (input == null) return "";
+  let s = String(input).replace(/[^0-9.]/g, "");
+  const parts = s.split(".");
+  if (parts.length > 1) {
+    s = parts[0] + "." + parts.slice(1).join("").replace(/\./g, "");
+  }
+  if (s.startsWith(".")) s = "0" + s;
+  return s;
+}
+// 천 단위 콤마 포맷(소수점 유지)
+function formatNumericWithComma(input) {
+  const s = sanitizeNumeric(input);
+  if (s === "") return "";
+  const [i, d] = s.split(".");
+  const iWithComma = i.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+  return d !== undefined ? `${iWithComma}.${d}` : iWithComma;
+}
 
 function Carb1() {
-  const CATEGORY = "운용"; // 고정
-
-  const [form, setForm] = useState({
-    shipKey: "",            // shipId(숫자) 또는 shipCode(문자)
+  // ===== 외부 =====
+  const [ext, setExt] = useState({
+    shipKey: "",
     startDate: "",
     endDate: "",
-    energyType: "MGO",      // 연료만: MGO/HFO/LNG
-    amount: "",             // 연료 사용량 (단위: ton, 소수 가능)
-    distanceNm: "",         // 운항거리 (nm, 정수)
-    capacityTon: ""         // 적재능력 (ton DWT, 정수)
+    items: ["", "", "", "", ""]
   });
-  const [loading, setLoading] = useState(false);
+  const [extLoading, setExtLoading] = useState(false);
 
-  // 숫자 포맷/파싱 유틸
-  const formatWithComma = (raw, allowDecimal = true) => {
-    if (raw == null) return "";
-    // 콤마 제거
-    let s = String(raw).replace(/,/g, "");
-    // 숫자와 .만 남기기 (소수점 하나 허용)
-    s = allowDecimal ? s.replace(/[^0-9.]/g, "") : s.replace(/[^0-9]/g, "");
-    const parts = s.split(".");
-    const intPart = parts[0] || "0";
-    const decPart = allowDecimal && parts[1] !== undefined ? parts[1] : undefined;
+  // ===== 내부 =====
+  const [inn, setInn] = useState({
+    shipKey: "",
+    startDate: "",
+    endDate: "",
+    steps: ["", "", "", "", "", "", "", ""]
+  });
+  const [inLoading, setInLoading] = useState(false);
 
-    // 앞의 0들 정리 (단, '0'은 유지)
-    const intNorm = intPart.replace(/^0+(?=\d)/, "");
-    const withComma = intNorm.replace(/\B(?=(\d{3})+(?!\d))/g, ",") || "0";
-
-    return decPart !== undefined ? `${withComma}.${decPart}` : withComma;
-  };
-  const parseNumber = (s) => Number(String(s || "").replace(/,/g, "") || 0);
-
-  // 핸들러 (천단위 콤마 자동)
-  const onChange = (e) => {
-    const { name, value } = e.target;
-    // 텍스트 필드 공통
-    if (["shipKey", "startDate", "endDate", "energyType"].includes(name)) {
-      setForm((f) => ({ ...f, [name]: value }));
-      return;
-    }
-    // 숫자 필드 포맷
-    if (name === "amount") {
-      setForm((f) => ({ ...f, amount: formatWithComma(value, true) })); // 소수 허용
-    } else if (name === "distanceNm" || name === "capacityTon") {
-      setForm((f) => ({ ...f, [name]: formatWithComma(value, false) })); // 정수만
-    }
-  };
-
+  // 오늘 날짜 기본값
   useEffect(() => {
     const d = new Date();
     const yyyy = d.getFullYear();
     const mm = String(d.getMonth() + 1).padStart(2, "0");
     const dd = String(d.getDate()).padStart(2, "0");
     const today = `${yyyy}-${mm}-${dd}`;
-    setForm((f) => ({ ...f, startDate: today, endDate: today }));
+    setExt(f => ({ ...f, startDate: today, endDate: today }));
+    setInn(f => ({ ...f, startDate: today, endDate: today }));
   }, []);
 
-  // 날짜 범위 -> 배열
-  const daysBetween = (start, end) => {
+  // 핸들러
+  const onChangeExt = (e) => {
+    const { name, value } = e.target;
+    setExt(f => ({ ...f, [name]: value }));
+  };
+  const onChangeExtItem = (idx, value) => {
+    setExt(f => {
+      const next = f.items.slice();
+      next[idx] = formatNumericWithComma(value);
+      return { ...f, items: next };
+    });
+  };
+
+  const onChangeInn = (e) => {
+    const { name, value } = e.target;
+    setInn(f => ({ ...f, [name]: value }));
+  };
+  const onChangeInnStep = (idx, value) => {
+    setInn(f => {
+      const next = f.steps.slice();
+      next[idx] = formatNumericWithComma(value);
+      return { ...f, steps: next };
+    });
+  };
+
+  // 필수값 체크
+  const isExtReady =
+    ext.shipKey.trim() &&
+    ext.startDate && ext.endDate &&
+    ext.items.every(v => v.trim());
+  const isInnReady =
+    inn.shipKey.trim() &&
+    inn.startDate && inn.endDate &&
+    inn.steps.every(v => v.trim());
+
+  // 날짜 배열
+  const days = (a, b) => {
     const out = [];
-    const a = new Date(start + "T00:00:00");
-    const b = new Date(end + "T00:00:00");
-    for (let d = a; d <= b; d.setDate(d.getDate() + 1)) {
-      const yyyy = d.getFullYear();
-      const mm = String(d.getMonth() + 1).padStart(2, "0");
-      const dd = String(d.getDate()).padStart(2, "0");
-      out.push(`${yyyy}-${mm}-${dd}`);
+    const A = new Date(a + "T00:00:00"), B = new Date(b + "T00:00:00");
+    for (let d = A; d <= B; d.setDate(d.getDate() + 1)) {
+      const y = d.getFullYear(), m = String(d.getMonth() + 1).padStart(2, "0"), day = String(d.getDate()).padStart(2, "0");
+      out.push(`${y}-${m}-${day}`);
     }
     return out;
   };
 
-  const onSubmit = async (e) => {
+  // 외부 저장
+  const submitExternal = async (e) => {
     e.preventDefault();
-
-    // 기본 검증
-    if (!form.shipKey.trim()) return alert("선박 식별자(shipId/코드)를 입력하세요.");
-    if (!form.startDate || !form.endDate) return alert("기간을 선택하세요.");
-    if (form.endDate < form.startDate) return alert("종료일이 시작일보다 빠릅니다.");
-    if (!["MGO", "HFO", "LNG"].includes(form.energyType)) return alert("연료를 선택하세요.");
-
-    const amountNum = parseNumber(form.amount);
-    const distanceNmNum = parseNumber(form.distanceNm);
-    const capacityTonNum = parseNumber(form.capacityTon);
-
-    if (!(amountNum > 0)) return alert("연료 사용량(ton)은 0보다 커야 합니다.");
-    if (!(distanceNmNum > 0)) return alert("운항거리(nm)를 입력하세요.");
-    if (!(capacityTonNum > 0)) return alert("적재능력(ton)을 입력하세요.");
-
-    // shipId/shipCode 분기
-    const numericOnly = /^\d+$/.test(form.shipKey.trim());
-    const shipPayload = numericOnly
-      ? { shipId: Number(form.shipKey.trim()) }
-      : { shipCode: form.shipKey.trim() };
-
-    // 연료 라인 (단위: ton)
-    const line = { kind: "FUEL", fuelType: form.energyType, amount: amountNum };
-
-    const dates = daysBetween(form.startDate, form.endDate);
-
+    if (ext.endDate < ext.startDate) return alert("외부: 종료일이 시작일보다 빠릅니다.");
     try {
-      setLoading(true);
-      let totalInserted = 0;
-      let totalCo2 = 0;
-
-      for (const date of dates) {
+      setExtLoading(true);
+      const shipPayload = /^\d+$/.test(ext.shipKey.trim())
+        ? { shipId: Number(ext.shipKey.trim()) }
+        : { shipCode: ext.shipKey.trim() };
+      let inserted = 0, totalCo2 = 0;
+      for (const date of days(ext.startDate, ext.endDate)) {
         const payload = {
           ...shipPayload,
           date,
-          stage: "운항",
-          workTag: null,
-          category: CATEGORY,
-          lines: [line],
-          ops: {
-            distance_nm: distanceNmNum,
-            capacity_ton: capacityTonNum
+          category: "외부업체",
+          stage: "선박건조공정",
+          lifecycle: {
+            items: {
+              1: ext.items[0], 2: ext.items[1], 3: ext.items[2], 4: ext.items[3], 5: ext.items[4]
+            }
           }
         };
-
         const r = await fetch("/api/stage-activities", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -126,200 +143,213 @@ function Carb1() {
         });
         const data = await r.json();
         if (!r.ok) throw new Error(data.error || "서버 오류");
-        totalInserted += data.inserted || 0;
+        inserted += data.inserted || 0;
         totalCo2 += Number(data.total_co2_kg || 0);
       }
-
-      alert(`저장 완료: ${totalInserted}건 · 총 CO₂ ${totalCo2.toFixed(6)} kg`);
-      // 입력 일부 초기화(기간은 유지)
-      setForm((f) => ({
-        ...f,
-        shipKey: "",
-        amount: "",
-        distanceNm: "",
-        capacityTon: ""
-      }));
+      alert(`외부 저장 완료: ${inserted}건 · 총 CO₂ ${totalCo2.toFixed(6)} kg`);
     } catch (err) {
-      alert("저장 실패: " + err.message);
+      alert("외부 저장 실패: " + (err?.message || err));
     } finally {
-      setLoading(false);
+      setExtLoading(false);
     }
   };
 
-  // 단위 표기: 모두 ton
-  const unit = "ton";
-
-  // 미리보기 (콤마 유지)
-  const preview = {
-    shipKey: form.shipKey || "—",
-    startDate: form.startDate || "—",
-    endDate: form.endDate || "—",
-    fuelType: form.energyType || "—",
-    amount: form.amount ? `${form.amount} ${unit}` : "—",
-    distanceNm: form.distanceNm ? `${form.distanceNm} nm` : "—",
-    capacityTon: form.capacityTon ? `${form.capacityTon} ton` : "—"
+  // 내부 저장
+  const submitInternal = async (e) => {
+    e.preventDefault();
+    if (inn.endDate < inn.startDate) return alert("내부: 종료일이 시작일보다 빠릅니다.");
+    try {
+      setInLoading(true);
+      const shipPayload = /^\d+$/.test(inn.shipKey.trim())
+        ? { shipId: Number(inn.shipKey.trim()) }
+        : { shipCode: inn.shipKey.trim() };
+      let inserted = 0, totalCo2 = 0;
+      for (const date of days(inn.startDate, inn.endDate)) {
+        const payload = {
+          ...shipPayload,
+          date,
+          category: "조선소 내부",
+          stage: "선박건조공정",
+          build: {
+            steps: {
+              1: inn.steps[0], 2: inn.steps[1], 3: inn.steps[2], 4: inn.steps[3],
+              5: inn.steps[4], 6: inn.steps[5], 7: inn.steps[6], 8: inn.steps[7]
+            }
+          }
+        };
+        const r = await fetch("/api/stage-activities", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+        const data = await r.json();
+        if (!r.ok) throw new Error(data.error || "서버 오류");
+        inserted += data.inserted || 0;
+        totalCo2 += Number(data.total_co2_kg || 0);
+      }
+      alert(`내부 저장 완료: ${inserted}건 · 총 CO₂ ${totalCo2.toFixed(6)} kg`);
+    } catch (err) {
+      alert("내부 저장 실패: " + (err?.message || err));
+    } finally {
+      setInLoading(false);
+    }
   };
 
+  // 요약 표 데이터
+  const summaryRows = [
+    ...EXT_LABELS.map((label, i) => ({
+      type: "외부",
+      shipKey: ext.shipKey || "—",
+      start: ext.startDate || "—",
+      end: ext.endDate || "—",
+      name: label,
+      value: ext.items[i] || "—"
+    })),
+    ...INT_LABELS.map((label, i) => ({
+      type: "내부",
+      shipKey: inn.shipKey || "—",
+      start: inn.startDate || "—",
+      end: inn.endDate || "—",
+      name: label,
+      value: inn.steps[i] || "—"
+    }))
+  ];
+
   return (
-    <div style={{ padding: "8px 16px", maxWidth: 860 }}>
-      <h2 style={{ marginTop: 4 }}>Carb2 입력 (운용 · 기간 · 연료 단위 TON, 천단위 콤마)</h2>
+    <div className="carb1-container">
+      {/* ========== 외부 ========== */}
+      <section className="card">
+        <h3 className="section-title">① 외부 업체 (모든 칸 필수)</h3>
 
-      <div style={{ minHeight: "66vh" }}>
-        <form onSubmit={onSubmit} style={{ display: "grid", gap: 12 }}>
-          {/* shipKey */}
-          <div>
-            <div style={{ marginBottom: 6 }}>선박 식별자 (shipId 또는 코드)</div>
-            <input
-              name="shipKey"
-              value={form.shipKey}
-              onChange={onChange}
-              type="text"
-              placeholder="예: 1 또는 KOR-AB12"
-              autoComplete="off"
-            />
-          </div>
-
-          {/* date range */}
-          <div style={{ display: "grid", gap: 8, gridTemplateColumns: "1fr 1fr" }}>
-            <div>
-              <div style={{ marginBottom: 6 }}>운항 시작일</div>
-              <input name="startDate" value={form.startDate} onChange={onChange} type="date" />
-            </div>
-            <div>
-              <div style={{ marginBottom: 6 }}>운항 종료일</div>
+        <form onSubmit={submitExternal} style={{ display: "grid", gap: 12 }}>
+          <div className="grid-2">
+            <div className="field">
+              <label className="label">선박 식별자 (문자/숫자 모두 허용)</label>
               <input
-                name="endDate"
-                value={form.endDate}
-                onChange={onChange}
-                type="date"
-                min={form.startDate || undefined}
+                className="input"
+                type="text" name="shipKey" value={ext.shipKey} onChange={onChangeExt}
+                placeholder="예: 1, KOR-AB12, ANY-CODE-123" required
               />
             </div>
+            <div className="field" />
           </div>
 
-          {/* fuel type */}
-          <div>
-            <div style={{ marginBottom: 6 }}>연료</div>
-            <label>
-              <input
-                type="radio"
-                name="energyType"
-                value="MGO"
-                checked={form.energyType === "MGO"}
-                onChange={onChange}
-              />{" "}
-              MGO
-            </label>{" "}
-            <label>
-              <input
-                type="radio"
-                name="energyType"
-                value="HFO"
-                checked={form.energyType === "HFO"}
-                onChange={onChange}
-              />{" "}
-              HFO
-            </label>{" "}
-            <label>
-              <input
-                type="radio"
-                name="energyType"
-                value="LNG"
-                checked={form.energyType === "LNG"}
-                onChange={onChange}
-              />{" "}
-              LNG
-            </label>
-          </div>
-
-          {/* amount (ton, 소수 허용) */}
-          <div>
-            <div style={{ marginBottom: 6 }}>
-              연료 사용량 <small style={{ color: "#888" }}>(단위: {unit})</small>
+          <div className="grid-2">
+            <div className="field">
+              <label className="label">시작일</label>
+              <input className="date" type="date" name="startDate" value={ext.startDate} onChange={onChangeExt} required />
             </div>
-            <input
-              name="amount"
-              value={form.amount}
-              onChange={onChange}
-              type="text"                 // 콤마 입력 위해 text 사용
-              inputMode="decimal"
-              placeholder="예: 4,500.000"
-            />
-          </div>
-
-          {/* distance & capacity (정수, 콤마) */}
-          <div style={{ display: "grid", gap: 8, gridTemplateColumns: "1fr 1fr" }}>
-            <div>
-              <div style={{ marginBottom: 6 }}>운항거리 (nm)</div>
-              <input
-                name="distanceNm"
-                value={form.distanceNm}
-                onChange={onChange}
-                type="text"
-                inputMode="numeric"
-                placeholder="예: 1,250"
-              />
-            </div>
-            <div>
-              <div style={{ marginBottom: 6 }}>적재능력 (ton DWT)</div>
-              <input
-                name="capacityTon"
-                value={form.capacityTon}
-                onChange={onChange}
-                type="text"
-                inputMode="numeric"
-                placeholder="예: 52,000"
-              />
+            <div className="field">
+              <label className="label">종료일</label>
+              <input className="date" type="date" name="endDate" value={ext.endDate} onChange={onChangeExt} min={ext.startDate || undefined} required />
             </div>
           </div>
 
-          <button type="submit" disabled={loading}>
-            {loading ? "저장 중..." : "DB 저장"}
+          <div className="grid-2">
+            {EXT_LABELS.map((label, i) => (
+              <div className="field" key={i}>
+                <label className="label">{label} <small>(단위 t)</small></label>
+                <input
+                  className="input numeric"
+                  type="text" inputMode="decimal"
+                  value={ext.items[i]}
+                  onChange={(e) => onChangeExtItem(i, e.target.value)}
+                  placeholder="예: 1,250.5"
+                  required
+                />
+              </div>
+            ))}
+          </div>
+
+          <button type="submit" className="btn-primary" disabled={extLoading || !isExtReady}>
+            {extLoading ? "저장 중..." : "외부 DB 저장"}
           </button>
+        </form>
+      </section>
 
-          {/* 미리보기 표 */}
-          <div style={{ marginTop: 16 }}>
-            <table
-              style={{
-                width: "100%",
-                borderCollapse: "collapse",
-                border: "1px solid #2a3344"
-              }}
-            >
-              <thead>
-                <tr style={{ background: "#0b1220", color: "#9fb4cc" }}>
-                  <th style={th}>선박 식별자</th>
-                  <th style={th}>운항 시작일</th>
-                  <th style={th}>운항 종료일</th>
-                  <th style={th}>연료의 종류</th>
-                  <th style={th}>연료의 사용량</th>
-                  <th style={th}>운항거리</th>
-                  <th style={th}>적재능력</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td style={td}>{preview.shipKey}</td>
-                  <td style={td}>{preview.startDate}</td>
-                  <td style={td}>{preview.endDate}</td>
-                  <td style={td}>{preview.fuelType}</td>
-                  <td style={td}>{preview.amount}</td>
-                  <td style={td}>{preview.distanceNm}</td>
-                  <td style={td}>{preview.capacityTon}</td>
-                </tr>
-              </tbody>
-            </table>
-            <div style={{ fontSize: 12, color: "#7a8aa6", marginTop: 6 }}>
-              * DB 연결 전이라도, 입력 칸의 현재 값이 실시간으로 표시됩니다.
+      {/* ========== 내부 ========== */}
+      <section className="card">
+        <h3 className="section-title">② 조선소 내부 정보 입력 (모든 칸 필수)</h3>
+
+        <form onSubmit={submitInternal} style={{ display: "grid", gap: 12 }}>
+          <div className="grid-2">
+            <div className="field">
+              <label className="label">선박 식별자 (문자/숫자 모두 허용)</label>
+              <input
+                className="input"
+                type="text" name="shipKey" value={inn.shipKey} onChange={onChangeInn}
+                placeholder="예: 1, KOR-AB12, ANY-CODE-123" required
+              />
+            </div>
+            <div className="field" />
+          </div>
+
+          <div className="grid-2">
+            <div className="field">
+              <label className="label">시작일</label>
+              <input className="date" type="date" name="startDate" value={inn.startDate} onChange={onChangeInn} required />
+            </div>
+            <div className="field">
+              <label className="label">종료일</label>
+              <input className="date" type="date" name="endDate" value={inn.endDate} onChange={onChangeInn} min={inn.startDate || undefined} required />
             </div>
           </div>
+
+          <div className="grid-2">
+            {INT_LABELS.map((label, i) => (
+              <div className="field" key={i}>
+                <label className="label">{label} <small>(단위 t)</small></label>
+                <input
+                  className="input numeric"
+                  type="text" inputMode="decimal"
+                  value={inn.steps[i]}
+                  onChange={(e) => onChangeInnStep(i, e.target.value)}
+                  placeholder="예: 2,000 또는 2,000.75"
+                  required
+                />
+              </div>
+            ))}
+          </div>
+
+          <button type="submit" className="btn-primary" disabled={inLoading || !isInnReady}>
+            {inLoading ? "저장 중..." : "내부 DB 저장"}
+          </button>
         </form>
-      </div>
+      </section>
+
+      {/* ========== 요약 표(1개) ========== */}
+      <section className="card">
+        <h3 className="section-title">입력 요약</h3>
+        <div className="table-wrap">
+          <table className="table">
+            <thead>
+              <tr>
+                <th>구분</th>
+                <th>선박 식별자</th>
+                <th>시작일</th>
+                <th>종료일</th>
+                <th>항목/단계</th>
+                <th>값</th>
+              </tr>
+            </thead>
+            <tbody>
+              {summaryRows.map((row, idx) => (
+                <tr key={idx}>
+                  <td>{row.type}</td>
+                  <td>{row.shipKey}</td>
+                  <td>{row.start}</td>
+                  <td>{row.end}</td>
+                  <td>{row.name}</td>
+                  <td>{row.value}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <div className="help">* 입력 값은 DB 저장 전에도 여기에서 즉시 확인할 수 있어.</div>
+      </section>
     </div>
   );
 }
-
-const th = { padding: "8px 10px", border: "1px solid #2a3344", textAlign: "left" };
-const td = { padding: "8px 10px", border: "1px solid #2a3344" };
 
 export default Carb1;
