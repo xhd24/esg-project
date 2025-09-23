@@ -221,6 +221,9 @@
 }
 .error-box {
   animation: errorIn 160ms ease-out;
+  transition: opacity 0.3s ease, transform 0.3s ease;
+  opacity: 1;
+  transform: translateY(0);
 }
 
 /* 인풋 에러 상태 강조(이미 input-error 사용 중) */
@@ -234,4 +237,8 @@
 /* 마지막 여백 미세 조정(선택) */
 .field .error-box:last-child {
   margin-bottom: 2px;
+}
+.error-box.leaving {
+  opacity: 0;
+  transform: translateY(-2px);
 }
