@@ -1,0 +1,94 @@
+.assessment-container {
+    display: flex;
+    height: 100vh;
+    font-family: 'Arial', sans-serif;
+}
+
+.assessment-sidebar {
+    width: 250px;
+    border-right: 1px solid #ccc;
+    padding: 20px;
+    background: #f9f9f9;
+}
+
+.assessment-sidebar ul {
+    list-style: none;
+    padding: 0;
+}
+
+.assessment-sidebar li {
+    margin-bottom: 10px;
+    cursor: pointer;
+    padding: 8px;
+    border-radius: 4px;
+    transition: 0.2s;
+}
+
+.assessment-sidebar li:hover {
+    background: #f0f0f0;
+}
+
+.assessment-sidebar li.active {
+    background: #007bff;
+    color: white;
+    font-weight: bold;
+}
+
+.assessment-content {
+    flex: 1;
+    padding: 20px;
+    overflow-y: auto;
+}
+
+.question-box {
+    margin-bottom: 20px;
+    padding: 15px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    background: #fff;
+}
+
+.question-desc {
+    color: #555;
+    font-size: 0.9rem;
+    margin-bottom: 10px;
+}
+
+.submit-btn {
+    margin-top: 20px;
+    padding: 10px 20px;
+    background: #28a745;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 1rem;
+}
+
+.submit-btn:hover {
+    background: #218838;
+}
+
+.question-box {
+    margin-bottom: 20px;
+    padding: 15px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    background: #fff;
+}
+
+/* 질문 텍스트: 굵게 강조 */
+.question-text {
+    font-weight: bold;
+    font-size: 1.05rem;
+    margin-bottom: 6px;
+    color: #222;
+}
+
+/* 질문 설명: 회색, 작게 */
+.question-description {
+    color: #555;
+    font-size: 0.9rem;
+    margin-bottom: 10px;
+    line-height: 1.4;
+}
