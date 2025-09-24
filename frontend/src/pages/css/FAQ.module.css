@@ -63,6 +63,7 @@
 /* 인풋 공통 스타일 */
 .queryList input[type="text"],
 .queryList input[type="email"],
+.queryList input[type="title"],
 .queryList textarea {
   flex: 1;
   padding: 8px 12px;
@@ -95,6 +96,11 @@
   resize: vertical;
   min-height: 100px;
   
+}
+
+.queryList .miniText {
+  font-size: 12px;
+  color: gray;
 }
 
 /* 버튼 */

@@ -12,13 +12,14 @@ import './index.css';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import Sidebar from "./pages/Sidebar.jsx";
 import Report from "./pages/Report.jsx";
-import History from "./pages/History.jsx";
 import logo from './assets/images/logo.png';
 import { useState } from "react";
 import { FAQWrite, FAQHistory } from "./pages/Query.jsx";
 import Carb1 from "./pages/Carb1.jsx";
 import Carb2 from "./pages/Carb2.jsx";
 import Carb3 from "./pages/Carb3.jsx";
+import FAQRes from "./pages/FAQRes.jsx";
+import FAQDetail from "./pages/FAQDetail.jsx";
 
 function App() {
   const [isSidebarOpen, setSidebarOpen] = useState(false);
@@ -62,7 +63,7 @@ function App() {
               <Route path='/find-password' element={<FindPassword />} />
               <Route path='/carbon' element={<Carbon />} />
               <Route path='/carbon' element={<Carbon />}>
-                <Route index element={<Carb1 />} />    
+                <Route index element={<Carb1 />} />
                 <Route path='c2' element={<Carb2 />} />
                 <Route path='c3' element={<Carb3 />} />
               </Route>
@@ -72,7 +73,8 @@ function App() {
                 <Route path='write' element={<FAQWrite />} /> {/* /faq/write */}
               </Route>
               <Route path='/report' element={<Report />} />
-              <Route path='/history' element={<History />} />
+              <Route path='/faq_res' element={<FAQRes />} />
+              <Route path='/faq_res/:id' element={<FAQDetail />} />
             </Routes>
           </main>
         </div>

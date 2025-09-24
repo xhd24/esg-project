@@ -1,18 +1,19 @@
-import {Router} from 'express';
-import { getQueryHx,addQuery } from '../db.js';
+import { Router } from 'express';
+import { getQueryHx, addQuery } from '../db.js';
 
 const router = Router();
 
 //목록
-router.get('/',async(req,res)=>{
-    const posts = await getQueryHx();
-    res.json(posts);
+router.post('/', async (req, res) => {
+  const { userId } = req.body;
+  const posts = await getQueryHx(userId);
+  res.json(posts);
 });
 
 //글작석
 router.post("/write", async (req, res) => {
-  const { title, content, user_id } = req.body;
-  await addQuery(title, content, user_id);
+  const { inquiry_title, requester, company, email, category, content } = req.body;
+  await addQuery(inquiry_title, requester, company, email, category, content);
   res.json({ success: true });
 });
 
