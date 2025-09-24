@@ -59,15 +59,6 @@ function App() {
               <Route path='/login' element={<Login />} />
               <Route path='/find-id' element={<FindId />} />
               <Route path='/find-password' element={<FindPassword />} />
-              <Route path='/carbon' element={<Carbon />} />
-                <Route index element={<Carb1 />} />
-                <Route path='c2' element={<Carb2 />} />
-                <Route path='c3' element={<Carb3 />} />
-              <Route path="/" element={<Home />} />
-              <Route path="/signup" element={<Signup />} />
-              <Route path="/login" element={<Login />} />
-              <Route path="/find-id" element={<FindId />} />
-              <Route path="/find-password" element={<FindPassword />} />
 
               {/* Carbon 섹션 */}
               <Route path="/carbon" element={<Carbon />}>

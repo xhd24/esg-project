@@ -2,9 +2,6 @@ import express from 'express';
 import cors from 'cors';
 import faqRouter from './routes/faq.js';
 import faqresRouter from './routes/faq_res.js';
-import express from "express";
-import cors from "cors";
-import faqRouter from "./routes/faq.js";
 import signupRouter from "./routes/signup.js";
 
 const app = express();
