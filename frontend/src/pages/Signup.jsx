@@ -6,13 +6,14 @@ function Signup() {
   const [formData, setFormData] = useState({
     login_id: "",
     name: "",
-    email: "",         // ✅ 이메일 추가
+    email: "",
     password: "",
     confirmPassword: "",
     company: "",
     gender: "",
     position: "",
-    role: "USER",      // 기본 권한
+    department: "",
+    role: "USER", // 기본 권한
   });
 
   const handleChange = (e) => {
@@ -28,7 +29,8 @@ function Signup() {
     if (!formData.login_id) return alert("아이디를 입력해주세요.");
     if (!formData.email) return alert("이메일을 입력해주세요.");
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(formData.email)) return alert("유효한 이메일 주소를 입력해주세요.");
+    if (!emailRegex.test(formData.email))
+      return alert("유효한 이메일 주소를 입력해주세요.");
     if (!formData.password) return alert("비밀번호를 입력해주세요.");
     if (formData.password.length < 8)
       return alert("비밀번호는 8자 이상이어야 합니다.");
@@ -38,10 +40,11 @@ function Signup() {
       return alert("비밀번호가 일치하지 않습니다.");
     if (!formData.company) return alert("회사를 선택해주세요.");
     if (!formData.position) return alert("직급을 선택해주세요.");
+    if (!formData.department) return alert("부서를 선택해주세요.");
     if (!formData.gender) return alert("성별을 선택해주세요.");
 
     try {
-      const res = await axios.post("http://localhost:5000/signup", {
+      const res = await axios.post("http://localhost:3000/signup", {
         ...formData,
       });
       alert("회원가입 성공! userId=" + res.data.userId);
@@ -113,7 +116,7 @@ function Signup() {
             />
           </div>
 
-          {/* 회사 선택 */}
+          {/* 회사 */}
           <div>
             <label>회사명</label>
             <select
@@ -128,7 +131,7 @@ function Signup() {
             </select>
           </div>
 
-          {/* 직급 선택 */}
+          {/* 직급 */}
           <div>
             <label>직급</label>
             <select
@@ -140,12 +143,25 @@ function Signup() {
               <option value="사원">사원</option>
               <option value="대리">대리</option>
               <option value="과장">과장</option>
-              <option value="차장">차장</option>
-              <option value="부장">부장</option>
             </select>
           </div>
 
-          {/* 성별 선택 */}
+          {/* 부서 */}
+          <div>
+            <label>부서</label>
+            <select
+              name="department"
+              value={formData.department}
+              onChange={handleChange}
+            >
+              <option value="">선택하세요</option>
+              <option value="ESG전략팀">ESG전략팀</option>
+              <option value="환경/에너지팀">환경/에너지팀</option>
+              <option value="IR/공시팀">IR/공시팀</option>
+            </select>
+          </div>
+
+          {/* 성별 */}
           <div>
             <label>성별</label>
             <div className="radio-group">
@@ -172,6 +188,7 @@ function Signup() {
             </div>
           </div>
 
+          {/* 기본 권한 */}
           <input type="hidden" name="role" value={formData.role} />
 
           <button type="submit">회원가입</button>

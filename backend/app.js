@@ -8,7 +8,10 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-app.use("/faq", faqRouter);
-app.use("/signup", signupRouter);
+app.use("/faq", faqRouter);        
+app.use("/signup", signupRouter); 
 
-app.listen(5000);
+const PORT = 3000;
+app.listen(PORT, () => {
+  console.log(`✅ 서버 실행 중: http://localhost:${PORT}`);
+});
