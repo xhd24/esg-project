@@ -4,24 +4,16 @@ import "./css/Signup.css";
 
 function Signup() {
   const [formData, setFormData] = useState({
-    username: "",
-    emailLocal: "",
-    emailDomain: "naver.com",
-    customDomain: "",
+    login_id: "",
     name: "",
+    email: "",         // ✅ 이메일 추가
     password: "",
     confirmPassword: "",
     company: "",
-    category: "",
     gender: "",
     position: "",
-    department: "",
+    role: "USER",      // 기본 권한
   });
-
-  const fullEmail =
-    formData.emailDomain === "custom"
-      ? `${formData.emailLocal}@${formData.customDomain}`
-      : `${formData.emailLocal}@${formData.emailDomain}`;
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -31,12 +23,12 @@ function Signup() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // ✅ 입력 누락 체크
+    // ✅ 입력값 검증
     if (!formData.name) return alert("성명을 입력해주세요.");
-    if (!formData.username) return alert("아이디를 입력해주세요.");
-    if (!formData.emailLocal) return alert("이메일 아이디를 입력해주세요.");
-    if (formData.emailDomain === "custom" && !formData.customDomain)
-      return alert("이메일 도메인을 입력해주세요.");
+    if (!formData.login_id) return alert("아이디를 입력해주세요.");
+    if (!formData.email) return alert("이메일을 입력해주세요.");
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(formData.email)) return alert("유효한 이메일 주소를 입력해주세요.");
     if (!formData.password) return alert("비밀번호를 입력해주세요.");
     if (formData.password.length < 8)
       return alert("비밀번호는 8자 이상이어야 합니다.");
@@ -44,16 +36,13 @@ function Signup() {
       return alert("비밀번호 확인을 입력해주세요.");
     if (formData.password !== formData.confirmPassword)
       return alert("비밀번호가 일치하지 않습니다.");
-    if (!formData.company) return alert("기업명을 입력해주세요.");
-    if (!formData.category) return alert("카테고리를 선택해주세요.");
+    if (!formData.company) return alert("회사를 선택해주세요.");
     if (!formData.position) return alert("직급을 선택해주세요.");
-    if (!formData.department) return alert("부서를 선택해주세요.");
     if (!formData.gender) return alert("성별을 선택해주세요.");
 
     try {
-      const res = await axios.post("http://localhost:5000/api/signup", {
+      const res = await axios.post("http://localhost:5000/signup", {
         ...formData,
-        email: fullEmail,
       });
       alert("회원가입 성공! userId=" + res.data.userId);
     } catch (err) {
@@ -82,8 +71,8 @@ function Signup() {
             <label>아이디</label>
             <input
               type="text"
-              name="username"
-              value={formData.username}
+              name="login_id"
+              value={formData.login_id}
               onChange={handleChange}
             />
           </div>
@@ -91,36 +80,13 @@ function Signup() {
           {/* 이메일 */}
           <div>
             <label>이메일</label>
-            <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
-              <input
-                type="text"
-                name="emailLocal"
-                value={formData.emailLocal}
-                onChange={handleChange}
-                style={{ flex: "1" }}
-              />
-              <span>@</span>
-              <select
-                name="emailDomain"
-                value={formData.emailDomain}
-                onChange={handleChange}
-                style={{ flex: "1" }}
-              >
-                <option value="naver.com">naver.com</option>
-                <option value="gmail.com">gmail.com</option>
-                <option value="custom">직접 입력</option>
-              </select>
-              {formData.emailDomain === "custom" && (
-                <input
-                  type="text"
-                  name="customDomain"
-                  placeholder="직접 입력"
-                  value={formData.customDomain}
-                  onChange={handleChange}
-                  style={{ flex: "1" }}
-                />
-              )}
-            </div>
+            <input
+              type="email"
+              name="email"
+              value={formData.email}
+              onChange={handleChange}
+              placeholder="example@example.com"
+            />
           </div>
 
           {/* 비밀번호 */}
@@ -147,119 +113,39 @@ function Signup() {
             />
           </div>
 
-          {/* 기업명 */}
+          {/* 회사 선택 */}
           <div>
-            <label>기업명</label>
-            <input
-              type="text"
+            <label>회사명</label>
+            <select
               name="company"
               value={formData.company}
               onChange={handleChange}
-            />
+            >
+              <option value="">선택하세요</option>
+              <option value="삼성중공업">삼성중공업</option>
+              <option value="한화오션">한화오션</option>
+              <option value="현대중공업">현대중공업</option>
+            </select>
           </div>
 
-          {/* 카테고리 */}
-          <div>
-            <label>카테고리</label>
-            <div className="radio-group">
-              <label>
-                <input
-                  type="radio"
-                  name="category"
-                  value="조선"
-                  checked={formData.category === "조선"}
-                  onChange={handleChange}
-                />{" "}
-                조선
-              </label>
-              <label>
-                <input
-                  type="radio"
-                  name="category"
-                  value="자동차"
-                  checked={formData.category === "자동차"}
-                  onChange={handleChange}
-                />{" "}
-                자동차
-              </label>
-            </div>
-          </div>
-
-          {/* 직급 */}
+          {/* 직급 선택 */}
           <div>
             <label>직급</label>
-            <div className="radio-group">
-              <label>
-                <input
-                  type="radio"
-                  name="position"
-                  value="사원"
-                  checked={formData.position === "사원"}
-                  onChange={handleChange}
-                />{" "}
-                사원
-              </label>
-              <label>
-                <input
-                  type="radio"
-                  name="position"
-                  value="대리"
-                  checked={formData.position === "대리"}
-                  onChange={handleChange}
-                />{" "}
-                대리
-              </label>
-              <label>
-                <input
-                  type="radio"
-                  name="position"
-                  value="과장"
-                  checked={formData.position === "과장"}
-                  onChange={handleChange}
-                />{" "}
-                과장
-              </label>
-            </div>
+            <select
+              name="position"
+              value={formData.position}
+              onChange={handleChange}
+            >
+              <option value="">선택하세요</option>
+              <option value="사원">사원</option>
+              <option value="대리">대리</option>
+              <option value="과장">과장</option>
+              <option value="차장">차장</option>
+              <option value="부장">부장</option>
+            </select>
           </div>
 
-          {/* 부서 */}
-          <div>
-            <label>부서</label>
-            <div className="radio-group">
-              <label>
-                <input
-                  type="radio"
-                  name="department"
-                  value="ESG전략팀"
-                  checked={formData.department === "ESG전략팀"}
-                  onChange={handleChange}
-                />{" "}
-                ESG전략팀
-              </label>
-              <label>
-                <input
-                  type="radio"
-                  name="department"
-                  value="환경/에너지 팀"
-                  checked={formData.department === "환경/에너지 팀"}
-                  onChange={handleChange}
-                />{" "}
-                환경/에너지 팀
-              </label>
-              <label>
-                <input
-                  type="radio"
-                  name="department"
-                  value="IR/공시팀"
-                  checked={formData.department === "IR/공시팀"}
-                  onChange={handleChange}
-                />{" "}
-                IR/공시팀
-              </label>
-            </div>
-          </div>
-
-          {/* 성별 */}
+          {/* 성별 선택 */}
           <div>
             <label>성별</label>
             <div className="radio-group">
@@ -267,8 +153,8 @@ function Signup() {
                 <input
                   type="radio"
                   name="gender"
-                  value="남"
-                  checked={formData.gender === "남"}
+                  value="MALE"
+                  checked={formData.gender === "MALE"}
                   onChange={handleChange}
                 />{" "}
                 남
@@ -277,14 +163,16 @@ function Signup() {
                 <input
                   type="radio"
                   name="gender"
-                  value="여"
-                  checked={formData.gender === "여"}
+                  value="FEMALE"
+                  checked={formData.gender === "FEMALE"}
                   onChange={handleChange}
                 />{" "}
                 여
               </label>
             </div>
           </div>
+
+          <input type="hidden" name="role" value={formData.role} />
 
           <button type="submit">회원가입</button>
         </form>
