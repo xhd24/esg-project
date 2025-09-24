@@ -16,11 +16,12 @@ function Login() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
+    
     try {
       const res = await axios.post("http://localhost:5000/api/login", formData);
       if (res.data.success) {
         alert("로그인 성공! 환영합니다 " + res.data.user.full_name);
+        sessionStorage.setItem("userId", formData.username);
       } else {
         alert("아이디 또는 비밀번호가 올바르지 않습니다.");
       }

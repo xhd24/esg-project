@@ -11,13 +11,14 @@ import "./index.css";
 import "bootstrap/dist/css/bootstrap.min.css";
 import Sidebar from "./pages/Sidebar.jsx";
 import Report from "./pages/Report.jsx";
-import History from "./pages/History.jsx";
-import logo from "./assets/images/logo.png";
+import logo from './assets/images/logo.png';
 import { useState } from "react";
 import { FAQWrite, FAQHistory } from "./pages/Query.jsx";
 import Carb1 from "./pages/Carb1.jsx";
 import Carb2 from "./pages/Carb2.jsx";
 import Carb3 from "./pages/Carb3.jsx";
+import FAQRes from "./pages/FAQRes.jsx";
+import FAQDetail from "./pages/FAQDetail.jsx";
 
 // ★ Report 하위 페이지들 임포트
 import C1Result from "./pages/C1.result.jsx";
@@ -53,6 +54,15 @@ function App() {
 
           <main style={{ padding: "20px" }}>
             <Routes>
+              <Route path='/' element={<Home />} />
+              <Route path='/signup' element={<Signup />} />
+              <Route path='/login' element={<Login />} />
+              <Route path='/find-id' element={<FindId />} />
+              <Route path='/find-password' element={<FindPassword />} />
+              <Route path='/carbon' element={<Carbon />} />
+                <Route index element={<Carb1 />} />
+                <Route path='c2' element={<Carb2 />} />
+                <Route path='c3' element={<Carb3 />} />
               <Route path="/" element={<Home />} />
               <Route path="/signup" element={<Signup />} />
               <Route path="/login" element={<Login />} />
@@ -81,8 +91,8 @@ function App() {
                 <Route path="c2.result" element={<C2Result />} />
                 <Route path="c3.result" element={<C3Result />} />
               </Route>
-
-              <Route path="/history" element={<History />} />
+              <Route path='/faq_res' element={<FAQRes />} />
+              <Route path='/faq_res/:id' element={<FAQDetail />} />
             </Routes>
           </main>
         </div>

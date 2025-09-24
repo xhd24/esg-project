@@ -1,24 +1,38 @@
 import mysql from 'mysql2/promise';
 
 export const pool = mysql.createPool({
-    host: "localhost",
-    user: "root",
-    password: "Dohui112618@",
-    database: "node_react_board",
-    waitForConnections: true,
-    connectionLimit: 10,
+  host: "project-esg.ch84qkaky60x.ap-southeast-2.rds.amazonaws.com",
+  user: "admin",
+  password: "qwer1234",
+  database: "esg_project",
+  waitForConnections: true,
+  connectionLimit: 10,
 });
 
-export async function getQueryHx() {
-    const [rows] = await pool.query(
-        "SELECT post_id, title, user_id, created_at FROM posts ORDER BY post_id DESC"
-    );
-    return rows;
+export async function getQueryHx(userId) {
+  const [rows] = await pool.query(
+    "SELECT category, inquiry_title, inquiry_date FROM faq WHERE requester=? ORDER BY faq_id DESC", [userId]
+  );
+  return rows;
 }
 
-export async function addQuery(title, content, user_id) {
+export async function getQueryHxAll() {
+  const [rows] = await pool.query(
+    "SELECT * FROM faq ORDER BY faq_id DESC"
+  );
+  return rows;
+}
+
+export async function getQueryDetail(faqId) {
+  const [rows] = await pool.query(
+    "SELECT * FROM faq WHERE faq_id=? ORDER BY faq_id DESC", [faqId]
+  );
+  return rows;
+}
+
+export async function addQuery(inquiry_title, requester, company, email, category, content) {
   await pool.query(
-    "INSERT INTO posts (title, content, user_id) VALUES (?, ?, ?)",
-    [title, content, user_id]
+    "INSERT INTO faq (inquiry_title, requester,company,email, category, content) VALUES (?, ?, ?, ?,?,?)",
+    [inquiry_title, requester, company, email, category, content]
   );
 }
