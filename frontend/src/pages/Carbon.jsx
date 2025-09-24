@@ -7,7 +7,7 @@ function Carbon() {
   return (
     <div className={styles.container}>
       {/* 네비게이션 */}
-      <nav className={styles.nav}>
+      <nav className={styles.nav} style={{ paddingLeft: 103 }}>
         <Link
           to=""
           className={`${styles.link} ${location.pathname === "/carbon" ? styles.active : ""}`}

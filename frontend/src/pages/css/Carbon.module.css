@@ -32,3 +32,10 @@
   color: #fff;
   border-color: #34a853;
 }
+/* Carbon.module.css */
+.nav {
+  display: flex;        /* 가로로 배치 */
+  align-items: center;
+  gap: 30px;            /* ← 버튼 간 간격 (원하는 값으로 조절) */
+  padding-left: 32px;   /* 이미 쓰는 왼쪽 오프셋 유지/조절 */
+}

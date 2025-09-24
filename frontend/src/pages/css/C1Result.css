@@ -1,0 +1,97 @@
+/* 레이아웃 전체 – 폭 더 넓힘 */
+.c1r-wrap {
+  width: min(95vw, 1600px);
+  margin: 0 auto;
+  padding: 20px;
+
+  /* 공통 변수 */
+  --side-padding: 50px;  /* 좌우 여백(상단/하단 동일) */
+  --gap: 45px;           /* 상단 두 박스 사이 여백: 28px + 5px (요청 반영) */
+}
+
+/* 상단 2칸 – 동일 높이 + 보기 좋은 간격
+   ☑ gap을 고려해서 각 칸을 (100% - gap - 2px)/2 로 계산해
+      하단 박스의 좌우 끝과 정확히 맞춤 */
+/* 상단 2칸 – 동일 높이 + 보기 좋은 간격 */
+.c1r-top {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);  /* ✅ calc 제거 */
+  gap: var(--gap);
+  margin-bottom: 20px;
+  padding-left: var(--side-padding);
+  padding-right: var(--side-padding);
+  align-items: stretch;
+  box-sizing: border-box;
+
+  padding-right: calc(var(--side-padding) + 23px);
+}
+
+/* 하단 1칸 – 상단과 동일 좌우 여백(사이즈는 그대로 유지) */
+.c1r-bottom {
+  margin-bottom: 56px;
+  padding-left: var(--side-padding);
+  padding-right: var(--side-padding);
+}
+
+/* 카드 공통 스타일 */
+.c1r-card {
+  box-sizing: border-box;  /* 경계 포함 폭 계산 */
+  background: #ffffff;
+  border: 1px solid #e3ebea;
+  border-radius: 14px;
+  box-shadow:
+    0 1px 0 rgba(0,0,0,0.02),
+    0 8px 24px -14px rgba(0,0,0,0.15);
+  overflow: hidden;
+
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+/* 상단 박스: 세로 조금 줄인 버전(동일 적용) */
+.c1r-square {
+  aspect-ratio: 4 / 3;
+  min-height: 487px;
+}
+
+/* 하단 박스 – 사이즈 변경 없음(기준 유지) */
+.c1r-rect {
+  width: 100%;
+  min-height: 500px;
+  aspect-ratio: 16 / 6;
+}
+
+/* 카드 내부 */
+.c1r-title {
+  margin: 0;
+  padding: 16px 18px 12px;
+  font-size: 30px;
+  font-weight: 700;
+  color: #2e5d50;
+  border-bottom: 1px solid #eef5f3;
+  background: linear-gradient(0deg, #f5fbf9, #f5fbf9);
+}
+
+.c1r-body {
+  padding: 18px;
+  color: #33413f;
+  font-size: 15px;
+  flex: 1;
+}
+
+/* 반응형 */
+@media (max-width: 720px) {
+  .c1r-top { 
+    grid-template-columns: 1fr; 
+    gap: 16px;
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+  .c1r-bottom {
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+  .c1r-square { aspect-ratio: auto; min-height: 220px; }
+  .c1r-rect   { aspect-ratio: auto; min-height: 240px; }
+}
