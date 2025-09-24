@@ -242,3 +242,8 @@
   opacity: 0;
   transform: translateY(-2px);
 }
+/* Carbon.module.css */
+.nav {
+  /* 기존 스타일들 ... */
+  padding-left: 32px; /* 원하는 값으로 */
+}

@@ -1,0 +1,116 @@
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 20px;
+  font-size: 18px;
+  color: #333;
+  background-color: #fff;
+  border-radius: 6px;
+  overflow: hidden; /* border-radius 적용 */
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+}
+
+/* 헤더 */
+.table thead {
+  background-color: #f5f5f5;
+}
+
+.table thead td {
+  font-weight: 600;
+  padding: 14px;
+  text-align: center;
+  border-bottom: 2px solid #ddd;
+}
+
+/* 본문 */
+.table tbody td {
+  padding: 14px;
+  border-bottom: 1px solid #eee;
+  text-align: center;
+}
+
+/* 마지막 줄 밑줄 제거 */
+.table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+/* 행 hover */
+.table tbody tr:hover {
+  background-color: #f9f9f9;
+}
+
+/* 반응형 (좁은 화면에서 스크롤) */
+.table-wrapper {
+  overflow-x: auto;
+}
+.detailWrapper {
+  max-width: 800px;
+  margin: 40px auto;
+  padding: 24px 32px;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+  font-family: 'Noto Sans KR', sans-serif;
+  line-height: 1.6;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.title {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: #222;
+  flex: 1;
+}
+
+.category {
+  background: #e8f4ff;
+  color: #0070f3;
+  font-weight: 500;
+  padding: 4px 10px;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  white-space: nowrap;
+}
+
+.meta {
+  font-size: 0.9rem;
+  color: #666;
+  margin-bottom: 24px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.separator {
+  color: #aaa;
+}
+
+.company {
+  font-weight: 500;
+  color: #444;
+}
+
+.email {
+  font-style: italic;
+  color: #555;
+}
+
+.date {
+  color: #999;
+}
+
+.content {
+  font-size: 1rem;
+  color: #333;
+  white-space: pre-line; /* 줄바꿈 유지 */
+  border-top: 1px solid #eee;
+  padding-top: 16px;
+}
