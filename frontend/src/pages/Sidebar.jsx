@@ -59,11 +59,14 @@ const Sidebar = ({ width = 280, isOpen, setOpen }) => {
           />
         )}
       </button>
-<br/>
+      <br />
       <div className={styles.content}>
         <ul className="nav flex-column">
           <li className="nav-item">
             <Link to="/report" className="nav-link"><span className={styles.white}>Reports</span></Link>
+          </li>
+          <li className="nav-item">
+            <Link to="/ESG_reports" className="nav-link"><span className={styles.white}>ESG_Reports</span></Link>
           </li>
           <li className="nav-item">
             <Link to="/history" className="nav-link"><span className={styles.white}>History</span></Link>

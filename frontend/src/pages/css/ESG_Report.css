@@ -1,0 +1,48 @@
+.report-container {
+    padding: 20px;
+}
+
+.report-container h2 {
+    font-size: 24px;
+    font-weight: bold;
+    margin-bottom: 8px;
+}
+
+.report-container p {
+    color: #888;
+    margin-bottom: 20px;
+}
+
+.report-cards {
+    display: grid;
+    gap: 16px;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    margin-top: 16px;
+}
+
+/* 상세 카드 */
+.report-detail-card {
+    border: 1px solid #eee;
+    border-radius: 12px;
+    padding: 16px;
+    transition: all 0.2s ease-in-out;
+}
+
+.report-detail-card h3 {
+    margin-top: 0;
+    font-size: 18px;
+}
+
+.report-detail-card .score {
+    font-size: 22px;
+    font-weight: 700;
+}
+
+.report-detail-card .total-score {
+    font-size: 28px;
+    font-weight: 700;
+}
+
+.report-detail-card small {
+    color: #666;
+}

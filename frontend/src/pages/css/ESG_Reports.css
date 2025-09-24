@@ -1,0 +1,114 @@
+.reports-container {
+    padding: 20px;
+}
+
+.reports-title {
+    font-size: 24px;
+    font-weight: bold;
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+/* 전체 레이아웃 */
+.reports-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    /* 2열 */
+    gap: 20px;
+}
+
+/* 2025 카드 */
+.reports-card:first-child {
+    grid-column: span 2;
+    /* 1행 전체 차지 */
+    width: 1000px;
+    /* 원하는 폭 */
+    height: 500px;
+    /* 원하는 높이 */
+    margin: 0 auto;
+    /* 가운데 정렬 */
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+/* 2024 카드 */
+.reports-card:nth-child(2) {
+    width: 492px;
+    height: 250px;
+    justify-self: end;
+    /* 오른쪽 정렬 */
+    align-items: center;
+    padding: 12px;
+}
+
+/* 2023 카드 */
+.reports-card:nth-child(3) {
+    width: 492px;
+    height: 250px;
+    justify-self: start;
+    /* 왼쪽 정렬 */
+    align-items: center;
+    padding: 12px;
+}
+
+/* 카드 공통 */
+.reports-card {
+    border: 1px solid #eee;
+    border-radius: 12px;
+    padding: 16px;
+    transition: all 0.2s ease-in-out;
+    text-align: center;
+}
+
+.reports-card:hover {
+    background-color: #f9f9f9;
+    border-color: #1890ff;
+    cursor: pointer;
+}
+
+.reports-card h3 {
+    
+    font-size: 18px;
+    margin: 0 0 8px 0; /* 하단 고정용 여백 */
+}
+
+
+
+/* 2025 카드 안의 h3를 하단에 배치 */
+.reports-card:first-child h3 {
+    margin-top: auto;   /* 위쪽 여백 자동 -> 아래로 밀림 */
+    margin-bottom: 16px; /* 원하는 만큼 여백 */
+}
+
+
+/* 2025 카드 전용 이미지 공간 */
+.reports-image-placeholder-2025 {
+    width: 100%;
+    height: 450px;
+    /* 2025 전용 크기 */
+    border-radius: 8px;
+    background: #f0f0f0;
+    color: #aaa;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 12px;
+    font-size: 14px;
+}
+
+/* 2024/2023 공통 */
+.reports-image-placeholder-small {
+    width: 100%;
+    height: 200px;
+    /* 2024/2023 전용 크기 */
+    border-radius: 8px;
+    background: #f0f0f0;
+    color: #aaa;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 12px;
+    font-size: 14px;
+}
