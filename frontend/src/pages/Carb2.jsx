@@ -5,7 +5,8 @@ import "./css/Carb1.css";
 /* ---------- 공통 포맷/검증 ---------- */
 function sanitizeNumeric(input) {
   if (input == null) return "";
-  let s = String(input).replace(/[^0-9.]/g, "");
+  // 쉼표 제거 후 숫자/소수점만 남김
+  let s = String(input).replace(/,/g, "").replace(/[^0-9.]/g, "");
   const parts = s.split(".");
   if (parts.length > 1) s = parts[0] + "." + parts.slice(1).join("").replace(/\./g, "");
   if (s.startsWith(".")) s = "0" + s;
@@ -15,6 +16,7 @@ function formatNumericWithComma(input) {
   const s = sanitizeNumeric(input);
   if (s === "") return "";
   const [i, d] = s.split(".");
+  // ✅ 정수부만 3자리 콤마. (이전: (?!^) 때문에 오동작)
   const iWithComma = i.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
   return d !== undefined ? `${iWithComma}.${d}` : iWithComma;
 }
@@ -25,26 +27,27 @@ function formatIntWithComma(input) {
 }
 const toNumber = (s) => Number(String(s ?? "").replace(/,/g, "") || 0);
 
-// 소수 허용(최대 1개)의 원본 입력 검증 → 포맷 + 에러
+// 소수 허용(최대 1개)의 원본 입력 검증 → 포맷 + 에러 (쉼표 허용)
 function validateNumericRaw(raw) {
   if (raw === "") return { formatted: "", error: null };
-  const hasBadChar = /[^0-9.]/.test(raw);
-  const dotCount = (raw.match(/\./g) || []).length;
-  const startsWithDot = raw.startsWith(".");
+  const hasBadChar = /[^0-9.,]/.test(raw);
+  const rawNoComma = raw.replace(/,/g, "");
+  const dotCount = (rawNoComma.match(/\./g) || []).length;
+  const startsWithDot = rawNoComma.startsWith(".");
   let error = null;
-  if (hasBadChar) error = "숫자와 소수점만 입력 가능해요.";
+  if (hasBadChar) error = "숫자, 쉼표(,), 소수점만 입력 가능해요.";
   else if (dotCount > 1) error = "소수점은 1개만 사용할 수 있어요.";
   else if (startsWithDot) error = "소수점 앞에 숫자를 넣어주세요 (예: 0.5).";
   const formatted = formatNumericWithComma(raw);
   return { formatted, error };
 }
 
-// 정수 전용의 원본 입력 검증 → 포맷 + 에러
+// 정수 전용의 원본 입력 검증 → 포맷 + 에러 (쉼표 허용)
 function validateIntRaw(raw) {
   if (raw === "") return { formatted: "", error: null };
-  const hasBadChar = /[^0-9]/.test(raw);
+  const hasBadChar = /[^0-9,]/.test(raw);
   let error = null;
-  if (hasBadChar) error = "숫자만 입력할 수 있어요.";
+  if (hasBadChar) error = "숫자와 쉼표(,)만 입력할 수 있어요.";
   const formatted = formatIntWithComma(raw);
   return { formatted, error };
 }
@@ -53,8 +56,8 @@ function validateIntRaw(raw) {
 const LS_KEY = "carb2_form_v1";
 
 /* ---------- 에러 UI 타이밍 ---------- */
-const ERROR_FADE_MS = 300;     // 사라질 때 페이드 시간
-const ERROR_AUTO_HIDE_MS = 3000; // 자동 숨김 대기 시간
+const ERROR_FADE_MS = 300;
+const ERROR_AUTO_HIDE_MS = 3000;
 
 function Carb2() {
   const CATEGORY = "운용";
@@ -63,28 +66,28 @@ function Carb2() {
     shipKey: "",
     startDate: "",
     endDate: "",
-    energyType: "MGO", // MGO/HFO/LNG
-    amount: "",        // ton (소수 허용)
-    distanceNm: "",    // nm (정수)
-    capacityTon: ""    // ton DWT (정수)
+    energyType: "MGO",
+    amount: "",
+    distanceNm: "",
+    capacityTon: ""
   });
   const [loading, setLoading] = useState(false);
 
-  // 에러 메시지 & 페이드 상태
+  // 저장 눌렀을 때 표에 보여줄 스냅샷
+  const [lastSaved, setLastSaved] = useState(null);
+
+  // 에러 상태
   const [amountErr, setAmountErr] = useState("");
   const [distanceErr, setDistanceErr] = useState("");
   const [capacityErr, setCapacityErr] = useState("");
-
   const [amountLeaving, setAmountLeaving] = useState(false);
   const [distanceLeaving, setDistanceLeaving] = useState(false);
   const [capacityLeaving, setCapacityLeaving] = useState(false);
 
-  // 타이머 ref
   const amountTimer = useRef({ hideId: null, clearId: null });
   const distanceTimer = useRef({ hideId: null, clearId: null });
   const capacityTimer = useRef({ hideId: null, clearId: null });
 
-  // 타이머 정리
   const resetTimer = (ref) => {
     if (ref.current.hideId) clearTimeout(ref.current.hideId);
     if (ref.current.clearId) clearTimeout(ref.current.clearId);
@@ -99,7 +102,7 @@ function Carb2() {
     };
   }, []);
 
-  /* ---------- 1) 마운트 시 복원 ---------- */
+  // 1) 복원
   useEffect(() => {
     try {
       const saved = localStorage.getItem(LS_KEY);
@@ -114,7 +117,7 @@ function Carb2() {
         const today = `${yyyy}-${mm}-${dd}`;
         setForm((f) => ({ ...f, startDate: today, endDate: today }));
       }
-    } catch (_) {
+    } catch {
       const d = new Date();
       const yyyy = d.getFullYear();
       const mm = String(d.getMonth() + 1).padStart(2, "0");
@@ -124,37 +127,30 @@ function Carb2() {
     }
   }, []);
 
-  /* ---------- 2) 변경 시 자동 저장 (디바운스 300ms) ---------- */
+  // 2) 변경 시 자동 저장
   const saveTimer = useRef(null);
   useEffect(() => {
     clearTimeout(saveTimer.current);
     saveTimer.current = setTimeout(() => {
       try {
         localStorage.setItem(LS_KEY, JSON.stringify(form));
-      } catch (_) {}
+      } catch {}
     }, 300);
     return () => clearTimeout(saveTimer.current);
   }, [form]);
 
-  /* ---------- onChange 핸들러 ---------- */
+  // onChange
   const onChangeBasic = (e) => {
     const { name, value } = e.target;
     setForm((f) => ({ ...f, [name]: value }));
   };
-
   const onChangeAmount = (e) => {
     const { formatted, error } = validateNumericRaw(e.target.value);
-
-    // 값 세팅
     setForm((f) => ({ ...f, amount: formatted }));
-    // 타이머 초기화 + leaving 해제
     resetTimer(amountTimer);
     setAmountLeaving(false);
-    // 에러 메시지 적용
     setAmountErr(error || "");
-
     if (error) {
-      // 3초 후 leaving → ERROR_FADE_MS 후 실제 삭제
       amountTimer.current.hideId = setTimeout(() => {
         setAmountLeaving(true);
         amountTimer.current.clearId = setTimeout(() => {
@@ -165,15 +161,12 @@ function Carb2() {
       }, ERROR_AUTO_HIDE_MS);
     }
   };
-
   const onChangeDistance = (e) => {
     const { formatted, error } = validateIntRaw(e.target.value);
-
     setForm((f) => ({ ...f, distanceNm: formatted }));
     resetTimer(distanceTimer);
     setDistanceLeaving(false);
     setDistanceErr(error || "");
-
     if (error) {
       distanceTimer.current.hideId = setTimeout(() => {
         setDistanceLeaving(true);
@@ -185,15 +178,12 @@ function Carb2() {
       }, ERROR_AUTO_HIDE_MS);
     }
   };
-
   const onChangeCapacity = (e) => {
     const { formatted, error } = validateIntRaw(e.target.value);
-
     setForm((f) => ({ ...f, capacityTon: formatted }));
     resetTimer(capacityTimer);
     setCapacityLeaving(false);
     setCapacityErr(error || "");
-
     if (error) {
       capacityTimer.current.hideId = setTimeout(() => {
         setCapacityLeaving(true);
@@ -206,7 +196,7 @@ function Carb2() {
     }
   };
 
-  /* ---------- ready & submit ---------- */
+  // ready & submit
   const isReady =
     form.shipKey.trim().length > 0 &&
     form.startDate &&
@@ -242,6 +232,17 @@ function Carb2() {
       return alert("모든 수치는 0보다 커야 합니다.");
     }
 
+    // 표에 즉시 반영될 스냅샷
+    setLastSaved({
+      shipKey: form.shipKey.trim(),
+      startDate: form.startDate,
+      endDate: form.endDate,
+      energyType: form.energyType,
+      amount: form.amount,
+      distanceNm: form.distanceNm,
+      capacityTon: form.capacityTon
+    });
+
     const numericOnly = /^\d+$/.test(form.shipKey.trim());
     const shipPayload = numericOnly
       ? { shipId: Number(form.shipKey.trim()) }
@@ -269,37 +270,41 @@ function Carb2() {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload)
-        });
-        const data = await r.json();
-        if (!r.ok) throw new Error(data.error || "서버 오류");
-        totalInserted += data.inserted || 0;
-        totalCo2 += Number(data.total_co2_kg || 0);
+        }).catch(() => null);
+
+        if (r) {
+          const data = await r.json();
+          if (!r.ok) throw new Error(data.error || "서버 오류");
+          totalInserted += data.inserted || 0;
+          totalCo2 += Number(data.total_co2_kg || 0);
+        }
       }
 
       alert(`저장 완료: ${totalInserted}건 · 총 CO₂ ${totalCo2.toFixed(6)} kg`);
 
-      // 초기화: 필요 시 주석 처리 가능
       const cleared = { ...form, shipKey: "", amount: "", distanceNm: "", capacityTon: "" };
       setForm(cleared);
       localStorage.setItem(LS_KEY, JSON.stringify(cleared));
     } catch (err) {
-      alert("저장 실패: " + err.message);
+      alert("저장 요청 실패(서버 미응답일 수 있음). 표에는 방금 값이 반영됩니다.");
     } finally {
       setLoading(false);
     }
   };
 
-  /* ---------- 단위/미리보기 ---------- */
+  // 표 표시용(마지막 저장본)
   const unit = "ton";
-  const preview = {
-    shipKey: form.shipKey || "—",
-    startDate: form.startDate || "—",
-    endDate: form.endDate || "—",
-    fuelType: form.energyType || "—",
-    amount: form.amount ? `${form.amount} ${unit}` : "—",
-    distanceNm: form.distanceNm ? `${form.distanceNm} nm` : "—",
-    capacityTon: form.capacityTon ? `${form.capacityTon} ton` : "—"
-  };
+  const preview = lastSaved
+    ? {
+        shipKey: lastSaved.shipKey || "—",
+        startDate: lastSaved.startDate || "—",
+        endDate: lastSaved.endDate || "—",
+        fuelType: lastSaved.energyType || "—",
+        amount: lastSaved.amount ? `${lastSaved.amount} ${unit}` : "—",
+        distanceNm: lastSaved.distanceNm ? `${lastSaved.distanceNm} nm` : "—",
+        capacityTon: lastSaved.capacityTon ? `${lastSaved.capacityTon} ton` : "—"
+      }
+    : null;
 
   return (
     <div className="carb1-container">
@@ -440,32 +445,36 @@ function Carb2() {
             {loading ? "저장 중..." : "DB 저장"}
           </button>
 
-          {/* 미리보기 표 */}
+          {/* 저장한 뒤에만 표시 */}
           <div className="table-wrap" style={{ marginTop: 12 }}>
-            <table className="table">
-              <thead>
-                <tr>
-                  <th>선박 식별자</th>
-                  <th>운항 시작일</th>
-                  <th>운항 종료일</th>
-                  <th>연료의 종류</th>
-                  <th>연료의 사용량</th>
-                  <th>운항거리</th>
-                  <th>적재능력</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td>{preview.shipKey}</td>
-                  <td>{preview.startDate}</td>
-                  <td>{preview.endDate}</td>
-                  <td>{preview.fuelType}</td>
-                  <td>{preview.amount}</td>
-                  <td>{preview.distanceNm}</td>
-                  <td>{preview.capacityTon}</td>
-                </tr>
-              </tbody>
-            </table>
+            {!lastSaved ? (
+              <div className="help">* 아직 저장된 데이터가 없습니다. “DB 저장”을 누르면 아래 표에 표시됩니다.</div>
+            ) : (
+              <table className="table">
+                <thead>
+                  <tr>
+                    <th>선박 식별자</th>
+                    <th>운항 시작일</th>
+                    <th>운항 종료일</th>
+                    <th>연료의 종류</th>
+                    <th>연료의 사용량</th>
+                    <th>운항거리</th>
+                    <th>적재능력</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>{preview?.shipKey ?? "—"}</td>
+                    <td>{preview?.startDate ?? "—"}</td>
+                    <td>{preview?.endDate ?? "—"}</td>
+                    <td>{preview?.fuelType ?? "—"}</td>
+                    <td>{preview?.amount ?? "—"}</td>
+                    <td>{preview?.distanceNm ?? "—"}</td>
+                    <td>{preview?.capacityTon ?? "—"}</td>
+                  </tr>
+                </tbody>
+              </table>
+            )}
             <div className="help">* 페이지를 이동해도 입력값이 자동 저장됩니다.</div>
           </div>
         </form>
