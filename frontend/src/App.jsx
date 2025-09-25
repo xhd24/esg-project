@@ -11,7 +11,7 @@ import "./index.css";
 import "bootstrap/dist/css/bootstrap.min.css";
 import Sidebar from "./pages/Sidebar.jsx";
 import Report from "./pages/Report.jsx";
-import logo from './assets/images/logo.png';
+import logo from "./assets/images/logo.png";
 import { useState } from "react";
 import { FAQWrite, FAQHistory } from "./pages/Query.jsx";
 import Carb1 from "./pages/Carb1.jsx";
@@ -20,10 +20,13 @@ import Carb3 from "./pages/Carb3.jsx";
 import FAQRes from "./pages/FAQRes.jsx";
 import FAQDetail from "./pages/FAQDetail.jsx";
 
-// ★ Report 하위 페이지들 임포트
+// Report 하위 페이지
 import C1Result from "./pages/C1.result.jsx";
 import C2Result from "./pages/C2.result.jsx";
 import C3Result from "./pages/C3.result.jsx";
+
+// ★ 추가: 탄소배출 안내 페이지
+import ESGBack from "./pages/esg_back.jsx";
 
 function App() {
   const [isSidebarOpen, setSidebarOpen] = useState(false);
@@ -45,7 +48,10 @@ function App() {
             <img src={logo} className="logo" alt="logo" />
             <ul className="nav">
               <li className="nav-item"><Link to="/" className="nav-link">Home</Link></li>
+
+              {/* ⬇︎ 이 버튼을 누르면 ESGBack 으로 이동 */}
               <li className="nav-item"><Link to="/carbon" className="nav-link">탄소배출량(가제)</Link></li>
+
               <li className="nav-item"><Link to="/assessment" className="nav-link">ESG 평가 (가제)</Link></li>
               <li className="nav-item"><Link to="/faq" className="nav-link">FAQ</Link></li>
               <li className="nav-item"><Link to="/login" className="nav-link login"><span className="green">로그인</span></Link></li>
@@ -54,14 +60,18 @@ function App() {
 
           <main style={{ padding: "20px" }}>
             <Routes>
-              <Route path='/' element={<Home />} />
-              <Route path='/signup' element={<Signup />} />
-              <Route path='/login' element={<Login />} />
-              <Route path='/find-id' element={<FindId />} />
-              <Route path='/find-password' element={<FindPassword />} />
+              <Route path="/" element={<Home />} />
+              <Route path="/signup" element={<Signup />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/find-id" element={<FindId />} />
+              <Route path="/find-password" element={<FindPassword />} />
 
-              {/* Carbon 섹션 */}
-              <Route path="/carbon" element={<Carbon />}>
+              {/* ★ 탄소배출 섹션 */}
+              {/* 1) /carbon → 안내 페이지(ESGBack) */}
+              <Route path="/carbon" element={<ESGBack />} />
+
+              {/* 2) /carbon/forms → 기존 C1/C2/C3 탭 레이아웃 */}
+              <Route path="/carbon/forms" element={<Carbon />}>
                 <Route index element={<Carb1 />} />
                 <Route path="c2" element={<Carb2 />} />
                 <Route path="c3" element={<Carb3 />} />
@@ -75,15 +85,16 @@ function App() {
                 <Route path="write" element={<FAQWrite />} />
               </Route>
 
-              {/* ★ Report 레이아웃 + 하위 라우트 */}
+              {/* Report 섹션 */}
               <Route path="/report" element={<Report />}>
                 <Route index element={<C1Result />} />
                 <Route path="c1.result" element={<C1Result />} />
                 <Route path="c2.result" element={<C2Result />} />
                 <Route path="c3.result" element={<C3Result />} />
               </Route>
-              <Route path='/faq_res' element={<FAQRes />} />
-              <Route path='/faq_res/:id' element={<FAQDetail />} />
+
+              <Route path="/faq_res" element={<FAQRes />} />
+              <Route path="/faq_res/:id" element={<FAQDetail />} />
             </Routes>
           </main>
         </div>
