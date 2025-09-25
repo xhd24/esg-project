@@ -12,19 +12,22 @@
 /* 전체 레이아웃 */
 .reports-grid {
     display: grid;
-    grid-template-columns: 1fr 1fr;
-    /* 2열 */
+    grid-template-columns: repeat(2, 1fr);
+    /* 동일한 2열 */
     gap: 20px;
+    /* 카드 사이 간격 */
+    justify-content: center;
+    /* 전체 중앙 정렬 */
+    max-width: 1000px;
+    /* 2025 카드와 동일한 폭 */
+    margin: 0 auto;
+    /* 가운데 정렬 */
 }
 
 /* 2025 카드 */
 .reports-card:first-child {
     grid-column: span 2;
     /* 1행 전체 차지 */
-    width: 1000px;
-    /* 원하는 폭 */
-    height: 500px;
-    /* 원하는 높이 */
     margin: 0 auto;
     /* 가운데 정렬 */
     display: flex;
@@ -35,31 +38,28 @@
 
 /* 2024 카드 */
 .reports-card:nth-child(2) {
-    width: 492px;
-    height: 250px;
-    justify-self: end;
-    /* 오른쪽 정렬 */
-    align-items: center;
-    padding: 12px;
+    width: 100%;
+    height: auto;  /* 고정 높이 제거 */
+    padding: 0;
 }
 
 /* 2023 카드 */
 .reports-card:nth-child(3) {
-    width: 492px;
-    height: 250px;
-    justify-self: start;
-    /* 왼쪽 정렬 */
-    align-items: center;
-    padding: 12px;
+    width: 100%;
+    height: auto;  /* 고정 높이 제거 */
+    padding: 0;
 }
 
 /* 카드 공통 */
 .reports-card {
-    border: 1px solid #eee;
-    border-radius: 12px;
-    padding: 16px;
+    border: none;
+    /* 테두리 제거 */
+    border-radius: 0;
+    /* 둥근 모서리 제거 (필요 없으면 유지 가능) */
     transition: all 0.2s ease-in-out;
     text-align: center;
+    overflow: hidden;
+    /* 이미지가 넘칠 경우 둥근 모서리에 맞춤 */
 }
 
 .reports-card:hover {
@@ -68,47 +68,36 @@
     cursor: pointer;
 }
 
-.reports-card h3 {
-    
-    font-size: 18px;
-    margin: 0 0 8px 0; /* 하단 고정용 여백 */
-}
+
 
 
 
 /* 2025 카드 안의 h3를 하단에 배치 */
 .reports-card:first-child h3 {
-    margin-top: auto;   /* 위쪽 여백 자동 -> 아래로 밀림 */
-    margin-bottom: 16px; /* 원하는 만큼 여백 */
+    margin-top: auto;
+    /* 위쪽 여백 자동 -> 아래로 밀림 */
+    margin-bottom: 16px;
+    /* 원하는 만큼 여백 */
 }
 
 
-/* 2025 카드 전용 이미지 공간 */
-.reports-image-placeholder-2025 {
+/* 2025 이미지 */
+.reports-image-2025 {
     width: 100%;
-    height: 450px;
-    /* 2025 전용 크기 */
+    max-width: 1000px;
+    /* 기존 카드 폭 제한 */
+    height: auto;
+    /* 원본 비율 유지 */
     border-radius: 8px;
-    background: #f0f0f0;
-    color: #aaa;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-bottom: 12px;
-    font-size: 14px;
+    object-fit: cover;
+    /* margin-bottom: 12px; */
 }
 
-/* 2024/2023 공통 */
-.reports-image-placeholder-small {
+/* 2024/2023 이미지 */
+.reports-image-small {
     width: 100%;
-    height: 200px;
-    /* 2024/2023 전용 크기 */
+    height: auto;  /* 원본 비율 유지 */
     border-radius: 8px;
-    background: #f0f0f0;
-    color: #aaa;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-bottom: 12px;
-    font-size: 14px;
+    object-fit: cover;
+    display: block;
 }

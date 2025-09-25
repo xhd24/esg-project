@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from "react";
-import "./css/ESG_Report.css";  // CSS 불러오기
+import "./css/ESG_Report_2025.css";  // CSS 불러오기
 
 const REPORT_KEY = "ESG_REPORT_V1";
 
-function ESG_Report() {
+function ESG_Report_2025() {
     const [report, setReport] = useState(null);
 
     useEffect(() => {
@@ -77,8 +77,23 @@ function ESG_Report() {
                     <div>아니오(또는 미응답): {noCounts.Governance}</div>
                 </div>
             </div>
+            {/* ✅ 하단 결과 카드 영역 */}
+            <div className="report-bottom">
+                <div className="report-bottom-card">
+                    <h4 className="report-bottom-title">결과 A</h4>
+                    <div className="report-bottom-body">
+                        여기에 A 결과/지표/차트 등을 표시
+                    </div>
+                </div>
+                <div className="report-bottom-card">
+                    <h4 className="report-bottom-title">결과 B</h4>
+                    <div className="report-bottom-body">
+                        여기에 B 결과/지표/차트 등을 표시
+                    </div>
+                </div>
+            </div>
         </div>
     );
 }
 
-export default ESG_Report;
+export default ESG_Report_2025;

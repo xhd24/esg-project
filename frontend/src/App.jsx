@@ -12,7 +12,9 @@ import "bootstrap/dist/css/bootstrap.min.css";
 import Sidebar from "./pages/Sidebar.jsx";
 import Report from "./pages/Report.jsx";
 import ESG_Reports from "./pages/ESG_Reports.jsx";
-import ESG_Report from "./pages/ESG_Report.jsx";
+import ESG_Report_2025 from "./pages/ESG_Report_2025.jsx";
+import ESG_Report_2024 from "./pages/ESG_Report_2024.jsx";
+import ESG_Report_2023 from "./pages/ESG_Report_2023.jsx";
 import logo from './assets/images/logo.png';
 import { useState } from "react";
 import { FAQWrite, FAQHistory } from "./pages/Query.jsx";
@@ -21,6 +23,7 @@ import Carb2 from "./pages/Carb2.jsx";
 import Carb3 from "./pages/Carb3.jsx";
 import FAQRes from "./pages/FAQRes.jsx";
 import FAQDetail from "./pages/FAQDetail.jsx";
+import Footer from "./pages/Footer.jsx";
 
 // ★ Report 하위 페이지들 임포트
 import C1Result from "./pages/C1.result.jsx";
@@ -86,11 +89,15 @@ function App() {
               </Route>
               <Route path='/report' element={<Report />} />
               <Route path='/ESG_reports' element={<ESG_Reports />} />  {/* 리스트 */}
-              <Route path='/ESG_report' element={<ESG_Report />} />   {/* 상세 */}
+              <Route path='/ESG_report_2025' element={<ESG_Report_2025 />} />   {/* 상세 */}
+              <Route path='/ESG_report_2024' element={<ESG_Report_2024 />} />   {/* 상세 */}
+              <Route path='/ESG_report_2023' element={<ESG_Report_2023 />} />   {/* 상세 */}
               <Route path='/faq_res' element={<FAQRes />} />
               <Route path='/faq_res/:id' element={<FAQDetail />} />
             </Routes>
           </main>
+          {/* ✅ Footer 추가 */}
+          <Footer />
         </div>
       </div>
     </BrowserRouter>
