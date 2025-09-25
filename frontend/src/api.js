@@ -31,3 +31,13 @@ export async function writeQuery(inquiry_title, requester, company, email, categ
   });
   return res.json();
 }
+
+//로그인
+export async function login(id, pw) {
+  const res = await fetch(`${BASE}/login`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ id, pw })
+  });
+  return res.json();
+}

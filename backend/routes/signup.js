@@ -1,6 +1,15 @@
 import express from "express";
 import bcrypt from "bcryptjs";
-import { pool } from "../login.js"; // DB 연결 풀 import
+import mysql from 'mysql2/promise';
+
+export const pool = mysql.createPool({
+  host: "project-esg.ch84qkaky60x.ap-southeast-2.rds.amazonaws.com",
+  user: "admin",
+  password: "qwer1234",
+  database: "esg_project",
+  waitForConnections: true,
+  connectionLimit: 10,
+});
 
 const router = express.Router();
 

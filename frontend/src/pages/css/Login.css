@@ -41,19 +41,21 @@
 }
 
 .login-form button {
-  width: 100%;
-  padding: 0.8rem;
+  display: inline-block;
+  margin-top: 20px;
+  padding: 10px 20px;
+  background-color: #34a853;
+  color: #fff;
+  font-weight: 600;
   font-size: 15px;
-  background: linear-gradient(135deg, #4a90e2, #357ab8);
-  color: white;
   border: none;
-  border-radius: 10px;
+  border-radius: 6px;
   cursor: pointer;
-  transition: background 0.2s ease;
+  transition: background-color 0.2s ease;
 }
 
 .login-form button:hover {
-  background: linear-gradient(135deg, #357ab8, #2a5f91);
+  background-color: #2a7a3d;
 }
 
 .login-links {
@@ -63,10 +65,21 @@
 }
 
 .login-links a {
-  color: #007bff;
+  color: #34a853;
   text-decoration: none;
 }
 
 .login-links a:hover {
   text-decoration: underline;
+}
+
+.error-message {
+  color: red;
+  margin-top: 10px;
+  font-weight: bold;
+}
+.success-message {
+  color: green;
+  margin-top: 10px;
+  font-weight: bold;
 }

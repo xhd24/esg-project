@@ -1,13 +1,14 @@
 /* 레이아웃 전체 – 폭 더 넓힘 */
 .c1r-wrap {
-  width: min(95vw, 1600px);
+  width: 100%;          /* ✅ 부모 기준으로 맞춤 */
+  max-width: 1600px;     /* 최대폭 제한 */
   margin: 0 auto;
   padding: 20px;
 
-  /* 공통 변수 */
-  --side-padding: 50px;  /* 좌우 여백(상단/하단 동일) */
-  --gap: 45px;           /* 상단 두 박스 사이 여백: 28px + 5px (요청 반영) */
+  --side-padding: 50px;
+  --gap: 45px;
 }
+
 
 /* 상단 2칸 – 동일 높이 + 보기 좋은 간격
    ☑ gap을 고려해서 각 칸을 (100% - gap - 2px)/2 로 계산해

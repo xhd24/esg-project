@@ -1,29 +1,14 @@
 {
   "name": "my-project",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "private": true,
   "scripts": {
     "start": "concurrently \"npm run dev --prefix backend\" \"npm run dev --prefix frontend\""
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "type": "commonjs",
   "devDependencies": {
     "concurrently": "^9.2.1"
   },
   "dependencies": {
-    "body-parser": "^2.2.0",
-    "bootstrap": "^5.3.8",
-    "cors": "^2.8.5",
-    "crypto": "^1.0.1",
-    "express": "^5.1.0",
-    "framer-motion": "^12.23.16",
-    "mysql2": "^3.15.0",
-    "nodemon": "^3.1.10",
-    "react": "^18.3.1",
-    "react-bootstrap": "^2.10.10",
-    "react-dom": "^18.3.1"
+    "bcryptjs": "^3.0.2"
   }
 }
