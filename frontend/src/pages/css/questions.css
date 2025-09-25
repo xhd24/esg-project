@@ -110,13 +110,22 @@
   background:var(--card);
   border:1px solid var(--line);
   border-radius:12px;
-  box-shadow:var(--shadow);
-  transition:border-color .15s ease, box-shadow .15s ease;
+
+  /* 🔽 하이라이트(미응답) 투명도 변수 + 트랜지션 */
+  --miss-alpha: 0; /* 0=감춤, 1=표시 */
+  box-shadow:
+    var(--shadow),
+    0 0 0 2px rgba(255, 120, 120, var(--miss-alpha)),
+    0 0 0 8px rgba(255, 240, 240, var(--miss-alpha)) inset;
+  transition: border-color .1s ease, box-shadow .45s ease, transform .1s ease;
 }
 
 .question-box:hover{
   border-color:#dfe7e3;
-  box-shadow:0 6px 18px rgba(15,61,43,.08);
+  box-shadow:
+    0 6px 18px rgba(15,61,43,.08),
+    0 0 0 2px rgba(255, 120, 120, var(--miss-alpha)),
+    0 0 0 8px rgba(255, 240, 240, var(--miss-alpha)) inset;
 }
 
 /* 질문 텍스트/설명 */
@@ -201,7 +210,7 @@
   font-weight:600;
 }
 
-/* 제출 버튼 */
+/* 제출 버튼 (원본) */
 .submit-btn{
   margin-top:16px;
   padding:10px 14px;
@@ -215,7 +224,6 @@
   cursor:pointer;
   transition:filter .12s ease, transform .06s ease, box-shadow .15s ease;
 }
-
 .submit-btn:hover{ filter:brightness(1.05); }
 .submit-btn:active{ transform:translateY(1px); }
 .submit-btn:disabled{
@@ -306,10 +314,346 @@
   transform:scale(1.15);
 }
 
+/* ===== 액션 버튼 그룹 (제출/초기화 나란히) ===== */
+.btn-row{
+  display: flex;
+  gap: 10px;
+  margin-top: 16px;
+  align-items: center;
+  flex-wrap: wrap;
+}
 
+/* 제출 버튼 – 살짝 더 밝고 액티브한 톤으로 오버라이드 */
+.submit-btn{
+  padding: 10px 14px;
+  border: none;
+  border-radius: 10px;
+  font-weight: 800;
+  font-size: .95rem;
+  color: #0b2a1b;
+  background: #40c38a;
+  box-shadow: 0 6px 16px rgba(64,195,138,.18);
+  cursor: pointer;
+  transition: filter .12s ease, transform .06s ease, box-shadow .15s ease;
+}
+.submit-btn:hover{ filter: brightness(1.06); }
+.submit-btn:active{ transform: translateY(1px); }
+.submit-btn:disabled{
+  filter: grayscale(.25) opacity(.7);
+  box-shadow: none;
+  cursor: not-allowed;
+}
 
+/* 초기화 버튼 (원본) */
+.reset-btn{
+  padding: 10px 14px;
+  border: 1px solid var(--line, #e6ece9);
+  border-radius: 10px;
+  font-weight: 800;
+  font-size: .95rem;
+  color: #1f3b31;
+  background: #ffffff;
+  box-shadow: 0 2px 10px var(--shadow-soft, rgba(15,61,43,.05));
+  cursor: pointer;
+  transition: background .12s ease, border-color .12s ease, transform .06s ease, box-shadow .15s ease;
+}
+.reset-btn:hover{
+  background: var(--g50, #f4fbf7);
+  border-color: var(--g200, #cfeee0);
+  box-shadow: 0 4px 14px rgba(15,61,43,.06);
+}
+.reset-btn:active{ transform: translateY(1px); }
 
+/* 🔄 미응답 항목 시각 강조 – 페이드 아웃 방식 */
+.question-box.missing{
+  --miss-alpha: 1;
+  scroll-margin-top: 90px;
+}
 
+/* === 버튼 공통 (원본) === */
+.btn {
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  padding:10px 16px;
+  border-radius:12px;
+  font-weight:800;
+  font-size:.95rem;
+  cursor:pointer;
+  transition:filter .12s ease, transform .06s ease, box-shadow .15s ease, background .15s ease, border-color .15s ease;
+  user-select:none;
+}
 
+/* 버튼 행 – 가운데 정렬 (원본) */
+.btn-row{
+  display:flex;
+  justify-content:center;
+  gap:12px;
+  margin-top:18px;
+  flex-wrap:wrap;
+}
 
+/* 프라이머리(제출) (원본) */
+.btn--primary{
+  color:#0b2a1b;
+  background:#40c38a;
+  border:1px solid #36b37e;
+  box-shadow:0 6px 16px rgba(64,195,138,.18);
+}
+.btn--primary:hover{ filter:brightness(1.06); }
+.btn--primary:active{ transform:translateY(1px); }
+.btn--primary:disabled{
+  filter:grayscale(.25) opacity(.7);
+  box-shadow:none;
+  cursor:not-allowed;
+}
 
+/* 고스트(초기화) (원본) */
+.btn--ghost{
+  color:#1f3b31;
+  background:#ffffff;
+  border:1px solid var(--line, #e6ece9);
+  box-shadow:0 2px 10px var(--shadow-soft, rgba(15,61,43,.05));
+}
+.btn--ghost:hover{
+  background:var(--g50, #f4fbf7);
+  border-color:var(--g200, #cfeee0);
+  box-shadow:0 4px 14px rgba(15,61,43,.06);
+}
+.btn--ghost:active{ transform:translateY(1px); }
+
+/* === Missing Answers Alert (Modal) === */
+.alert-backdrop{
+  position:fixed; inset:0; z-index:999;
+  background:rgba(10,20,16,.35);
+  backdrop-filter:blur(2px);
+  display:flex; align-items:center; justify-content:center;
+  padding:20px;
+}
+
+.alert{
+  width:min(560px, 96vw);
+  background:#fff;
+  border:1px solid var(--line);
+  border-radius:14px;
+  box-shadow:0 18px 40px rgba(15,61,43,.18);
+  overflow:hidden;
+  animation:alertIn .16s ease-out;
+}
+
+@keyframes alertIn{
+  from{ transform:translateY(6px) scale(.98); opacity:0 }
+  to  { transform:translateY(0)   scale(1);    opacity:1 }
+}
+
+.alert-head{
+  padding:14px 16px;
+  background:linear-gradient(180deg,#f7fffb,#f2fff8);
+  border-bottom:1px solid var(--line);
+}
+.alert-title{
+  margin:0; font-size:16px; font-weight:800; color:#143c2b;
+  display:flex; align-items:center; gap:10px;
+}
+.alert-dot{
+  width:10px; height:10px; border-radius:999px; background:var(--g500);
+  box-shadow:0 0 0 4px #e9f7ef;
+}
+
+.alert-body{
+  padding:16px;
+  color:var(--ink700);
+  font-size:.95rem; line-height:1.45;
+}
+.alert-list{
+  margin:10px 0 0; padding-left:18px; max-height:180px; overflow:auto;
+}
+.alert-list li{ margin:4px 0; }
+
+.alert-actions{
+  display:flex; justify-content:flex-end; gap:10px;
+  padding:14px 16px; border-top:1px solid var(--line); background:#fff;
+}
+
+/* 재사용 버튼(모달용) */
+.alert-btn{
+  padding:10px 14px; border-radius:10px; font-weight:800; font-size:.92rem;
+  cursor:pointer; user-select:none; transition:filter .12s ease, transform .06s ease, box-shadow .15s ease, background .15s ease, border-color .15s ease;
+}
+.alert-btn--ghost{
+  color:#1f3b31; background:#fff; border:1px solid var(--line);
+}
+.alert-btn--ghost:hover{ background:var(--g50); border-color:var(--g200); }
+.alert-btn--ghost:active{ transform:translateY(1px); }
+
+.alert-btn--primary{
+  color:#0b2a1b; background:#40c38a; border:1px solid #36b37e;
+  box-shadow:0 6px 16px rgba(64,195,138,.18);
+}
+.alert-btn--primary:hover{ filter:brightness(1.06); }
+.alert-btn--primary:active{ transform:translateY(1px); }
+
+/* ===== Alert Modal ===== */
+.modal-overlay{
+  position:fixed;
+  inset:0;
+  z-index:100;
+  display:grid;
+  place-items:center;
+  background:rgba(12, 28, 22, .36);
+  backdrop-filter:saturate(120%) blur(2px);
+}
+
+.modal-card{
+  width:min(520px, 92vw);
+  background:#fff;
+  border:1px solid var(--line);
+  border-radius:14px;
+  box-shadow:0 18px 40px rgba(15,61,43,.18);
+  padding:16px 16px 14px;
+  animation:modal-pop .18s ease-out;
+}
+
+@keyframes modal-pop{
+  from{ transform:translateY(6px) scale(.98); opacity:0; }
+  to{ transform:translateY(0) scale(1); opacity:1; }
+}
+
+.modal-title{
+  margin:0 0 8px;
+  font-size:16px;
+  font-weight:800;
+  color:var(--ink700);
+}
+
+.modal-message{
+  margin:0 0 14px;
+  color:var(--ink500);
+  line-height:1.55;
+  white-space:pre-line;
+}
+
+.modal-actions{
+  display:flex;
+  justify-content:flex-end;
+  gap:8px;
+}
+
+/* =========================
+   Actions: Submit / Reset (unified)
+   ========================= */
+
+/* === Force-unify bottom buttons (Submit & Reset) === */
+/* ⬇ 이 블록은 반드시 파일 '맨 아래'에 위치해야 합니다 */
+.btn-row .submit-btn,
+.btn-row .reset-btn{
+  /* 레이아웃/사이즈(크게) */
+  display:inline-flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  gap:10px !important;
+
+  padding:16px 32px !important;      /* 더 큰 버튼 */
+  font-size:1.10rem !important;
+  font-weight:800 !important;
+  line-height:1 !important;
+  border-radius:16px !important;
+
+  /* 동일한 색/외형 */
+  color:#ffffff !important;
+  background:linear-gradient(180deg,#45cf96,#36b37e) !important;
+  border:1px solid #2d9c6d !important;
+  box-shadow:0 12px 26px rgba(15,61,43,.12) !important;
+
+  cursor:pointer !important;
+  transition:
+    filter .12s ease,
+    transform .06s ease,
+    box-shadow .15s ease,
+    background .15s ease !important;
+}
+
+.btn-row .submit-btn:hover,
+.btn-row .reset-btn:hover{
+  background:linear-gradient(180deg,#41c78f,#33ad78) !important;
+  box-shadow:0 14px 28px rgba(64,195,138,.22) !important;
+}
+
+.btn-row .submit-btn:active,
+.btn-row .reset-btn:active{
+  transform:translateY(1px) !important;
+}
+
+.btn-row .submit-btn:focus-visible,
+.btn-row .reset-btn:focus-visible{
+  outline:3px solid rgba(109,202,159,.35) !important;
+  outline-offset:2px !important;
+}
+
+.btn-row{
+  justify-content:center !important;
+  gap:24px !important;          /* 버튼 간격 */
+  margin-top:22px !important;
+}
+/* =========================
+   Bottom Actions — unify both buttons (Submit/Reset)
+   ========================= */
+
+/* 공통 규격: 두 버튼 모두 같은 사이즈/모양 */
+.btn-row .btn{
+  display:inline-flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  gap:10px !important;
+
+  /* ⬆ 사이즈 업 */
+  padding:16px 32px !important;
+  font-size:1.10rem !important;
+  font-weight:800 !important;
+  line-height:1 !important;
+
+  border-radius:16px !important;
+  border:1px solid transparent !important;
+
+  /* 동일한 그림자/전환 */
+  box-shadow:0 12px 26px rgba(15,61,43,.12) !important;
+  transition:
+    filter .12s ease,
+    transform .06s ease,
+    box-shadow .15s ease,
+    background .15s ease,
+    border-color .15s ease,
+    color .15s ease !important;
+}
+
+.btn-row .btn:active{ transform:translateY(1px) !important; }
+.btn-row .btn:focus-visible{
+  outline:3px solid rgba(109,202,159,.35) !important;
+  outline-offset:2px !important;
+}
+
+/* Primary(제출하기) — 동일 외형 + 그린 풀필 */
+.btn-row .btn--primary{
+  color:#ffffff !important;
+  background:linear-gradient(180deg,#45cf96,#36b37e) !important;
+  border-color:#2d9c6d !important;
+}
+.btn-row .btn--primary:hover{
+  background:linear-gradient(180deg,#41c78f,#33ad78) !important;
+  box-shadow:0 14px 28px rgba(64,195,138,.22) !important;
+}
+
+/* Ghost(초기화) — 동일 외형 + 민트 톤 풀필 */
+.btn-row .btn--ghost{
+  color:#114b35 !important;
+  background:linear-gradient(180deg,#f2fff8,#e9f7ef) !important;
+  border-color:#cfeee0 !important;
+}
+.btn-row .btn--ghost:hover{
+  background:linear-gradient(180deg,#ecfff5,#e3f3ea) !important;
+  box-shadow:0 14px 28px rgba(15,61,43,.12) !important;
+}
+
+/* 버튼 간격 약간 넓게 */
+.btn-row{ gap:24px !important; }

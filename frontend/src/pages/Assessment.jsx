@@ -1,11 +1,15 @@
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import "./css/questions.css";
 
 function Assessment() {
+  // ===== 기본 설정 =====
   const categories = ["Environment", "Social", "Governance"];
   const [selectedCategory, setSelectedCategory] = useState("Environment");
 
-  // 카테고리별 샘플 질문 리스트
+  // 모달 상태
+  const [modal, setModal] = useState(null);
+
+  // 모든 질문(원문 유지)
   const questions = {
     Environment: [
       { id: 1, category: "Environment", text: "이사회는 기후변화 대응 전략을 심의하고 승인합니까?", description: "TCFD(기후관련 재무정보공개 협의체) 권고안 및 EU CSRD 지침은 이사회가 기후리스크 감독을 담당해야 한다고 규정합니다.", options: ["예", "아니오"] },
@@ -125,9 +129,137 @@ function Assessment() {
     ],
   };
 
+  // 응답 상태
+  const [answers, setAnswers] = useState({});
+  const questionRefs = useRef({});
+  const [highlightKey, setHighlightKey] = useState(null);
+
+  // ===== 스크롤: 맨 위로 올리기(컨테이너 + 윈도우) =====
+  const SCROLLER_SELECTOR = ".assessment-content";
+  const scrollToTopBoth = (behavior = "smooth") => {
+    const scroller = document.querySelector(SCROLLER_SELECTOR);
+    if (scroller) scroller.scrollTo({ top: 0, left: 0, behavior });
+    window.scrollTo({ top: 0, left: 0, behavior });
+  };
+
+  // 카테고리 변경 시 항상 맨 위로
+  useEffect(() => {
+    requestAnimationFrame(() => scrollToTopBoth("auto"));
+  }, [selectedCategory]);
+
+  // ===== 상태 변경 유틸 =====
+  const setAnswer = (cat, qid, value) => {
+    setAnswers((prev) => ({
+      ...prev,
+      [cat]: {
+        ...(prev[cat] || {}),
+        [qid]: value,
+      },
+    }));
+  };
+
+  const findUnansweredIn = (cat) => {
+    const list = questions[cat] || [];
+    const current = answers[cat] || {};
+    return list.filter((q) => !current[q.id]);
+  };
+
+  // 미응답 안내 모달(첫 미응답으로 이동)
+  const showMissingModal = (cat, unanswered) => {
+    const first = unanswered[0];
+    const key = `${cat}-${first.id}`;
+    const message = `${cat} 카테고리에 미응답 문항이 ${unanswered.length}개 있어요.\n첫 미응답 문항(#${first.id}) 위치로 이동합니다.`;
+
+    setModal({
+      title: "미응답 문항 안내",
+      message,
+      actions: [
+        { label: "닫기", variant: "ghost", onClick: () => setModal(null) },
+        {
+          label: "이동",
+          variant: "primary",
+          onClick: () => {
+            const el = questionRefs.current[key];
+            const scroller = document.querySelector(SCROLLER_SELECTOR);
+            if (el?.scrollIntoView && scroller) {
+              el.scrollIntoView({ behavior: "smooth", block: "start" });
+            }
+            setHighlightKey(key);
+            setTimeout(() => setHighlightKey(null), 1400);
+            setModal(null);
+          },
+        },
+      ],
+    });
+  };
+
+  // ===== 네비게이션 =====
+  const goPrev = () => {
+    const idx = categories.indexOf(selectedCategory);
+    if (idx > 0) setSelectedCategory(categories[idx - 1]);
+  };
+
+  const goNext = () => {
+    const unanswered = findUnansweredIn(selectedCategory);
+    if (unanswered.length > 0) {
+      showMissingModal(selectedCategory, unanswered);
+      return;
+    }
+
+    const idx = categories.indexOf(selectedCategory);
+    if (idx < categories.length - 1) {
+      const nextCat = categories[idx + 1];
+
+      // ✅ Environment → Social 전환 시 안내 모달 (버튼: 취소 / 확인)
+      if (selectedCategory === "Environment" && nextCat === "Social") {
+        setModal({
+          title: "이동 안내",
+          message: "Social로 넘어갑니다.",
+          actions: [
+            {
+              label: "취소",
+              variant: "ghost",
+              onClick: () => setModal(null), // 이동 안 함
+            },
+            {
+              label: "확인",
+              variant: "primary",
+              onClick: () => {
+                setModal(null);
+                setSelectedCategory(nextCat); // 이동
+              },
+            },
+          ],
+        });
+        return;
+      }
+
+      // 그 외 구간은 바로 이동
+      setSelectedCategory(nextCat);
+    }
+  };
+
+  const submitAll = () => {
+    for (const cat of categories) {
+      const missing = findUnansweredIn(cat);
+      if (missing.length > 0) {
+        setSelectedCategory(cat);
+        setTimeout(() => showMissingModal(cat, missing), 0);
+        return;
+      }
+    }
+    console.log("[최종 제출 데이터]", answers);
+    setModal({
+      title: "제출 완료",
+      message: "수고하셨습니다. 모든 설문이 제출되었습니다.",
+      actions: [{ label: "확인", variant: "primary", onClick: () => setModal(null) }],
+    });
+  };
+
+  // ===== 렌더 =====
   return (
     <div className="assessment-container">
-      {/* 왼쪽 사이드바 */}
+      {/* 사이드바 */}
       <aside className="assessment-sidebar">
         <h3>카테고리</h3>
         <ul>
@@ -143,48 +275,115 @@ function Assessment() {
         </ul>
       </aside>
 
-      {/* 오른쪽 설문 영역 */}
+      {/* 본문 */}
       <main className="assessment-content">
         <h2>{selectedCategory} 설문조사</h2>
 
-        {questions[selectedCategory].map((q) => (
-          <div key={`${selectedCategory}-${q.id}`} className="question-box">
-            {/* 질문 텍스트 */}
-            <h4 className="question-text">
-              {q.id}. {q.text}
-            </h4>
+        {(questions[selectedCategory] || []).map((q) => {
+          const cat = q.category || selectedCategory;
+          const selected = answers[cat]?.[q.id] || "";
+          const key = `${cat}-${q.id}`;
+          const isMissing = highlightKey === key;
 
-            {/* description (선택적 표시) */}
-            {q.description && (
-              <p className="question-description">{q.description}</p>
-            )}
+          return (
+            <div
+              key={key}
+              className={`question-box ${isMissing ? "missing" : ""}`}
+              ref={(el) => (questionRefs.current[key] = el)}
+            >
+              <h4 className="question-text">
+                {q.id}. {q.text}
+              </h4>
 
-            {/* 옵션: pill 스타일 라디오 */}
-            <div className="option-pills">
-              {q.options.map((opt, idx) => {
-                const id = `q-${selectedCategory}-${q.id}-${idx}`;
-                return (
-                  <React.Fragment key={id}>
-                    <input
-                      className="pill-input"
-                      type="radio"
-                      id={id}
-                      name={`q-${selectedCategory}-${q.id}`}
-                      value={opt}
-                    />
-                    <label className="pill-label" htmlFor={id}>
-                      <span className="pill-dot" aria-hidden="true"></span>
-                      {opt}
-                    </label>
-                  </React.Fragment>
-                );
-              })}
+              {q.description && (
+                <p className="question-description">{q.description}</p>
+              )}
+
+              <div className="option-pills" role="radiogroup" aria-label={`q-${q.id}`}>
+                <input
+                  className="pill-input"
+                  type="radio"
+                  id={`q-${key}-yes`}
+                  name={`q-${key}`}
+                  value="예"
+                  checked={selected === "예"}
+                  onChange={() => setAnswer(cat, q.id, "예")}
+                />
+                <label className="pill-label" htmlFor={`q-${key}-yes`}>
+                  <span className="pill-dot" aria-hidden="true"></span>
+                  예
+                </label>
+
+                <input
+                  className="pill-input"
+                  type="radio"
+                  id={`q-${key}-no`}
+                  name={`q-${key}`}
+                  value="아니오"
+                  checked={selected === "아니오"}
+                  onChange={() => setAnswer(cat, q.id, "아니오")}
+                />
+                <label className="pill-label" htmlFor={`q-${key}-no`}>
+                  <span className="pill-dot" aria-hidden="true"></span>
+                  아니오
+                </label>
+              </div>
+            </div>
+          );
+        })}
+
+        {/* 하단 버튼 */}
+        <div className="btn-row">
+          {selectedCategory === "Environment" && (
+            <button className="btn btn--primary" onClick={goNext}>
+              다음
+            </button>
+          )}
+          {selectedCategory === "Social" && (
+            <>
+              <button className="btn btn--ghost" onClick={goPrev}>
+                뒤로가기
+              </button>
+              <button className="btn btn--primary" onClick={goNext}>
+                다음
+              </button>
+            </>
+          )}
+          {selectedCategory === "Governance" && (
+            <>
+              <button className="btn btn--ghost" onClick={goPrev}>
+                뒤로가기
+              </button>
+              <button className="btn btn--primary" onClick={submitAll}>
+                최종제출
+              </button>
+            </>
+          )}
+        </div>
+      </main>
+
+      {/* 모달 */}
+      {modal && (
+        <div className="modal-overlay" role="dialog" aria-modal="true">
+          <div className="modal-card">
+            <h3 className="modal-title">{modal.title}</h3>
+            <p className="modal-message">{modal.message}</p>
+            <div className="modal-actions">
+              {modal.actions?.map((a, idx) => (
+                <button
+                  key={idx}
+                  className={`alert-btn ${
+                    a.variant === "primary" ? "alert-btn--primary" : "alert-btn--ghost"
+                  }`}
+                  onClick={a.onClick}
+                >
+                  {a.label}
+                </button>
+              ))}
             </div>
           </div>
-        ))}
-
-        <button className="submit-btn">제출하기</button>
-      </main>
+        </div>
+      )}
     </div>
   );
 }
