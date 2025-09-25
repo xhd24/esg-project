@@ -45,3 +45,30 @@
   height: auto;
   margin-right: 40px; 
 }
+
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 10px; /* 텍스트와 버튼 간격 */
+  font-size: 16px;
+  font-weight: 500;
+  color: gray; /* 기본 텍스트 색 */
+}
+
+/* 로그아웃 버튼 */
+.logout-btn {
+  background-color: #198754;  /* Bootstrap green */
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 6px 14px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.logout-btn:hover {
+  background-color: #157347; /* hover 시 진한 초록 */
+  transform: translateY(-2px);
+}

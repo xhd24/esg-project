@@ -1,136 +1,179 @@
 :root {
-  --main-green: #2e7d32;   /* 진한 초록 */
-  --light-green: #81c784;  /* 연두 */
-  --hover-green: #66bb6a;  /* 버튼 hover 색 */
+  --main-green: #2e7d32;
+  --light-green: #81c784;
+  --hover-green: #66bb6a;
+  --dark-gray: #212121;
+  --light-gray: #f5f5f5;
 }
 
-.container {
-  text-align: center;
-  padding: 50px 20px;
+.home {
+  font-family: "Noto Sans KR", sans-serif;
+  overflow-x: hidden;
 }
 
-/* Fade-in 애니메이션 */
-.fadeIn {
-  opacity: 0;
-  animation: fadeInUp 1s ease forwards;
-}
-
-.fadeInDelay {
-  opacity: 0;
-  animation: fadeInUp 1s ease forwards;
-  animation-delay: 0.7s;
-}
-
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(30px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-/* 이미지 hover */
-.imgHover {
-  width: 60%;
-  margin: 30px auto;
-  border-radius: 20px;
-  transition: transform 0.3s ease;
-}
-
-.imgHover:hover {
-  transform: scale(1.05);
-}
-/* 배너 섹션 (이미지 + 텍스트 겹치기) */
-.banner {
+/* ✅ Hero (배경 이미지 단독) */
+.hero {
   position: relative;
-  display: inline-block;
-  width: 60%;
-  margin: 30px auto;
+  height: 80vh; /* 이미지가 화면 대부분을 차지 */
+  background-size: cover;
+  background-position: center;
 }
 
-.bannerImg {
-  width: 100%;
-  border-radius: 20px;
-}
-
-.textbox {
-  margin: 30px auto;
-  width: 60%;
-  padding: 3rem 0;
-  background-color: lightgray;
-  border-radius: 20px;
-}
-
-/* 텍스트/버튼 오버레이 */
-.overlay {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  color: var(--main-green);
+/* ✅ HeroContent (이미지 아래 따로 분리된 영역) */
+.heroContent {
   text-align: center;
+  padding: 3rem 1rem;
+  background: var(--light-gray);
+}
+
+.heroTitle {
+  font-size: clamp(2rem, 5vw, 3rem);
+  font-weight: 800;
+  margin-bottom: 1rem;
+  color: var(--main-green);
 }
 
 /* 타자 효과 */
 .typing {
   overflow: hidden;
   white-space: nowrap;
-  border-right: 3px solid var(--main-green);
+  border-right: 3px solid var(--light-green);
   width: 0;
-  margin: 20px auto;
+  margin: 0 auto;
   animation: typing 3s steps(40, end) forwards, blink 0.7s infinite;
 }
 
 @keyframes typing {
-  from { width: 0 }
-  to { width: 100% }
+  from {
+    width: 0;
+  }
+  to {
+    width: 100%;
+  }
 }
 
 @keyframes blink {
-  50% { border-color: transparent }
+  50% {
+    border-color: transparent;
+  }
 }
 
-/* 텍스트 스타일 */
-.mainText {
-  color: var(--main-green);
-  font-size: 1.5rem;
-  line-height: 1.5;
-  font-weight: bolder;
+.heroSubtitle {
+  font-size: 1.2rem;
+  margin-bottom: 2rem;
+  color: var(--dark-gray);
 }
 
-.subText {
-  color: white;
-  font-size: 1.8rem;
-  margin-top: 20px;
-}
-
-/* 버튼 스타일 */
+/* ✅ CTA 버튼 */
 .ctaBtn {
-  margin-top: 30px;
-  padding: 15px 30px;
-  font-size: 18px;
+  background: linear-gradient(90deg, var(--main-green), var(--light-green));
+  padding: 15px 40px;
+  border: none;
+  border-radius: 50px;
+  font-size: 1.2rem;
   font-weight: bold;
   color: white;
-  background-color: var(--light-green);
-  border: none;
-  border-radius: 30px;
   cursor: pointer;
   transition: all 0.3s ease;
 }
 
 .ctaBtn:hover {
-  background-color: var(--hover-green);
-  transform: scale(1.1);
+  background: linear-gradient(90deg, var(--hover-green), var(--main-green));
+  transform: scale(1.08);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
 }
 
-/* 스크롤 애니메이션: 아래에서 올라오기 */
+/* ✅ Features Section */
+.features {
+  display: flex;
+  justify-content: space-around;
+  align-items: start;
+  padding: 4rem 2rem;
+  background: white;
+  flex-wrap: wrap;
+  gap: 2rem;
+}
+
+.feature {
+  max-width: 250px;
+  text-align: center;
+}
+
+/* ✅ Feature 아이콘 wrapper */
+.featureIcon {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+/* ✅ 아이콘 이미지 */
+.icon {
+  width: 80px;   /* 기본 크기 */
+  height: 80px;
+  object-fit: contain;
+  transition: transform 0.3s ease;
+}
+
+.icon:hover {
+  transform: scale(1.1); /* 마우스 올리면 살짝 커짐 */
+}
+
+/* ✅ 반응형 아이콘 크기 */
+@media (max-width: 1024px) {
+  .icon {
+    width: 70px;
+    height: 70px;
+  }
+}
+
+@media (max-width: 768px) {
+  .icon {
+    width: 60px;
+    height: 60px;
+  }
+}
+
+@media (max-width: 480px) {
+  .icon {
+    width: 50px;
+    height: 50px;
+  }
+}
+
+.featureTitle {
+  font-size: 1.3rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+}
+
+/* ✅ Stats Section */
+.stats {
+  display: flex;
+  justify-content: center;
+  gap: 3rem;
+  padding: 4rem 2rem;
+  background: var(--light-gray);
+  text-align: center;
+  flex-wrap: wrap;
+  transition: opacity 1s ease, transform 1s ease;
+}
+
+.statNumber {
+  font-size: 2.5rem;
+  font-weight: 800;
+  color: var(--main-green);
+}
+
+.statLabel {
+  font-size: 1rem;
+  color: var(--dark-gray);
+}
+
+/* Scroll 애니메이션 */
 .bannerHidden {
   opacity: 0;
-  transform: translateY(100px); /* 밑에서 시작 */
-  transition: opacity 1s ease, transform 1s ease;
+  transform: translateY(100px);
 }
 
 .bannerShow {
@@ -138,22 +181,78 @@
   transform: translateY(0);
 }
 
-.textHidden {
-  opacity: 0;
-  transform: translateY(50px); /* 더 아래에서 시작 */
+/* ✅ 중간 배너 (main_esg2) */
+.banner {
+  position: relative;
+  width: 100%;
+  height: 800px; /* 원하는 높이 고정 */
+  overflow: hidden; /* 잘려나간 부분 숨김 */
 }
 
-.textShow {
-  animation: slideUp 1.2s ease forwards; /* 1.2초 동안 부드럽게 */
+.bannerImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;       /* 이미지 비율 유지 + 영역 채움 */
+  object-position: center top; /* 이미지의 "위쪽" 기준으로 잘라서 보여줌 */
+  display: block;
 }
 
-@keyframes slideUp {
-  from {
-    opacity: 0;
-    transform: translateY(50px);
+.overlay {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: white;
+  text-align: center;
+}
+
+.subText {
+  font-size: 1.8rem;
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
+}
+
+.banner button {
+  margin: 3rem 2rem;
+  background: white;
+  color: var(--main-green);
+  font-weight: bold;
+  padding: 12px 30px;
+  border-radius: 30px;
+  border: none;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.banner button:hover {
+  background: var(--light-green);
+  color: white;
+}
+
+/* ✅ 반응형 */
+@media (max-width: 768px) {
+  .hero {
+    height: 60vh;
   }
-  to {
-    opacity: 1;
-    transform: translateY(0);
+
+  .heroTitle {
+    font-size: 1.8rem;
+  }
+
+  .heroSubtitle {
+    font-size: 1rem;
+  }
+
+  .features {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .stats {
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+
+  .subText {
+    font-size: 1.2rem;
   }
 }

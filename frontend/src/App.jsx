@@ -14,7 +14,7 @@ import Report from "./pages/Report.jsx";
 import ESG_Reports from "./pages/ESG_Reports.jsx";
 import ESG_Report from "./pages/ESG_Report.jsx";
 import logo from './assets/images/logo.png';
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { FAQWrite, FAQHistory } from "./pages/Query.jsx";
 import Carb1 from "./pages/Carb1.jsx";
 import Carb2 from "./pages/Carb2.jsx";
@@ -32,8 +32,34 @@ import ESGBack from "./pages/esg_back.jsx";
 
 function App() {
   const [isSidebarOpen, setSidebarOpen] = useState(false);
+  const [isLogin, setIsLogin] = useState(false);
+  const [userId, setUserId] = useState('');
   const sidebarWidth = 280;
 
+  const logout = () => {
+    sessionStorage.clear();
+    setIsLogin(false);
+    setUserId('');
+  };
+
+  useEffect(() => {
+    const storedLogin = sessionStorage.getItem("isLogin") === "true";
+    const storedUserId = sessionStorage.getItem("userId");
+
+    setIsLogin(storedLogin);
+    setUserId(storedUserId || "");
+  }, []);
+
+  useEffect(() => {
+    const syncLoginState = () => {
+      setIsLogin(sessionStorage.getItem("isLogin") === "true");
+      setUserId(sessionStorage.getItem("userId") || "");
+    };
+
+    window.addEventListener("storage", syncLoginState);
+    return () => window.removeEventListener("storage", syncLoginState);
+  }, []);
+  
   return (
     <BrowserRouter>
       <div style={{ display: "flex" }}>
@@ -47,13 +73,26 @@ function App() {
           }}
         >
           <nav className="main_nav">
-            <img src={logo} className="logo" alt="logo" />
+            <a href='/'>
+            <img src={logo} className="logo" alt="logo"/>
+            </a>
             <ul className="nav">
               <li className="nav-item"><Link to='/' className="nav-link">Home</Link></li>
               <li className="nav-item"><Link to='/carbon' className="nav-link">탄소배출량(거제)</Link></li>
               <li className="nav-item"><Link to='/assessment' className="nav-link">ESG 평가 (거제)</Link></li>
               <li className="nav-item"><Link to='/faq' className="nav-link">FAQ</Link></li>
-              <li className="nav-item"><Link to='/login' className="nav-link login"><span className="green">로그인</span></Link></li>
+              {isLogin ? (
+                <li className="nav-item user-info">
+                  <span>{userId}님 안녕하세요!</span>
+                  <button className="logout-btn" onClick={logout}>로그아웃</button>
+                </li>
+              ) : (
+                <li className="nav-item">
+                  <Link to='/login' className="nav-link login">
+                    <span className="green">로그인</span>
+                  </Link>
+                </li>
+              )}
             </ul>
           </nav>
 

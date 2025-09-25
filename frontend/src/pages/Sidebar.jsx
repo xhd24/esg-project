@@ -7,7 +7,7 @@ import { Link } from "react-router-dom";
 
 const Sidebar = ({ width = 280, isOpen, setOpen }) => {
   const side = useRef();
-  const [author, setAuthor] = useState(false);
+  const [userId, setUserId] = useState('');
 
   const toggleMenu = () => {
     setOpen(!isOpen);
@@ -20,15 +20,20 @@ const Sidebar = ({ width = 280, isOpen, setOpen }) => {
     }
   };
 
-  useEffect(() => {
-    const userId = sessionStorage.getItem('userId');
 
-    if (userId == 'user1') {
-      setAuthor(true);
-    } else {
-      setAuthor(false);
-    }
-  }, [])
+  useEffect(() => {
+    const storedUserId = sessionStorage.getItem("userId");
+    setUserId(storedUserId || "");
+  }, []);
+
+  useEffect(() => {
+    const syncLoginState = () => {
+      setUserId(sessionStorage.getItem("userId") || "");
+    };
+
+    window.addEventListener("storage", syncLoginState);
+    return () => window.removeEventListener("storage", syncLoginState);
+  }, []);
 
   useEffect(() => {
     window.addEventListener('click', handleClose);
@@ -79,7 +84,7 @@ const Sidebar = ({ width = 280, isOpen, setOpen }) => {
           <li className="nav-item">
             <Link to="/ESG_reports" className="nav-link"><span className={styles.white}>ESG_Reports</span></Link>
           </li>
-          {author ?
+          {userId==='admin' ?
             <li className="nav-item">
               <Link to="/faq_res" className="nav-link"><span className={styles.white}>문의 사항 관리</span></Link>
             </li> :

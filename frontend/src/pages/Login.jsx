@@ -1,46 +1,49 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
-import axios from "axios";
+import { Link, useNavigate } from "react-router-dom";
+import { Modal, Button } from "react-bootstrap";
+import { login } from "../api.js";
 import "./css/Login.css";
 
 function Login() {
-  const [formData, setFormData] = useState({
-    username: "",
-    password: "",
-  });
+  const [id, setId] = useState('');
+  const [pw, setPw] = useState('');
+  const [show, setShow] = useState(false);
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-  };
+  const [message, setMessage] = useState(null);
+  const [isError, setIsError] = useState(false);
 
-  const handleSubmit = async (e) => {
+  const navigate = useNavigate();
+
+  const handleLogin = async (e) => {
     e.preventDefault();
-    
-    try {
-      const res = await axios.post("http://localhost:5000/api/login", formData);
-      if (res.data.success) {
-        alert("로그인 성공! 환영합니다 " + res.data.user.full_name);
-        sessionStorage.setItem("userId", formData.username);
-      } else {
-        alert("아이디 또는 비밀번호가 올바르지 않습니다.");
-      }
-    } catch (err) {
-      alert("로그인 실패: " + (err.response?.data?.error || err.message));
+    const res = await login(id, pw);
+
+    if (res.success) {
+      sessionStorage.setItem("userId", res.userId);
+      sessionStorage.setItem("isLogin", "true");
+      window.dispatchEvent(new Event("storage"));
+      setIsError(false);
+      setMessage("로그인 성공! 메인 페이지로 이동합니다.");
+      setShow(true); // ✅ Modal 열기
+      setTimeout(() => navigate("/"), 1500);
+    } else {
+      setIsError(true);
+      setMessage(res.error || "로그인에 실패했습니다.");
+      setShow(true); // ✅ Modal 열기
     }
   };
 
   return (
     <div className="login-container">
       <h2>로그인</h2>
-      <form className="login-form" onSubmit={handleSubmit}>
+      <form className="login-form" onSubmit={handleLogin}>
         <div>
           <label>아이디</label>
           <input
             type="text"
-            name="username"
-            value={formData.username}
-            onChange={handleChange}
+            name="userId"
+            value={id}
+            onChange={(e) => setId(e.target.value)}
             required
             placeholder="아이디 입력"
           />
@@ -50,21 +53,33 @@ function Login() {
           <input
             type="password"
             name="password"
-            value={formData.password}
-            onChange={handleChange}
+            value={pw}
+            onChange={(e) => setPw(e.target.value)}
             required
             placeholder="비밀번호 입력"
           />
         </div>
         <button type="submit">로그인</button>
+
       </form>
       <div className="login-links">
         <Link to="/signup">회원가입</Link>
-        <span> | </span>
-        <Link to="/find-id">아이디 찾기</Link>
-        <span> | </span>
-        <Link to="/find-password">비밀번호 찾기</Link>
       </div>
+
+      {/* ✅ Modal */}
+      <Modal show={show} onHide={() => setShow(false)}>
+        <Modal.Header closeButton>
+          <Modal.Title>알림</Modal.Title>
+        </Modal.Header>
+        <Modal.Body style={{ color: isError ? "red" : "green" }}>
+          {message}
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => setShow(false)}>
+            닫기
+          </Button>
+        </Modal.Footer>
+      </Modal>
     </div>
   );
 }

@@ -1,5 +1,7 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import axios from "axios";
+import { Modal, Button } from "react-bootstrap";
 import "./css/Signup.css";
 
 function Signup() {
@@ -16,6 +18,12 @@ function Signup() {
     role: "USER", // 기본 권한
   });
 
+  const [show, setShow] = useState(false);       // ✅ 모달 표시 여부
+  const [message, setMessage] = useState("");    // ✅ 메시지
+  const [isError, setIsError] = useState(false); // ✅ 에러 여부
+
+  const navigate = useNavigate(); // ✅ 페이지 이동 훅
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
@@ -25,32 +33,42 @@ function Signup() {
     e.preventDefault();
 
     // ✅ 입력값 검증
-    if (!formData.name) return alert("성명을 입력해주세요.");
-    if (!formData.login_id) return alert("아이디를 입력해주세요.");
-    if (!formData.email) return alert("이메일을 입력해주세요.");
+    if (!formData.name) return showModal("성명을 입력해주세요.", true);
+    if (!formData.login_id) return showModal("아이디를 입력해주세요.", true);
+    if (!formData.email) return showModal("이메일을 입력해주세요.", true);
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(formData.email))
-      return alert("유효한 이메일 주소를 입력해주세요.");
-    if (!formData.password) return alert("비밀번호를 입력해주세요.");
+      return showModal("유효한 이메일 주소를 입력해주세요.", true);
+    if (!formData.password) return showModal("비밀번호를 입력해주세요.", true);
     if (formData.password.length < 8)
-      return alert("비밀번호는 8자 이상이어야 합니다.");
+      return showModal("비밀번호는 8자 이상이어야 합니다.", true);
     if (!formData.confirmPassword)
-      return alert("비밀번호 확인을 입력해주세요.");
+      return showModal("비밀번호 확인을 입력해주세요.", true);
     if (formData.password !== formData.confirmPassword)
-      return alert("비밀번호가 일치하지 않습니다.");
-    if (!formData.company) return alert("회사를 선택해주세요.");
-    if (!formData.position) return alert("직급을 선택해주세요.");
-    if (!formData.department) return alert("부서를 선택해주세요.");
-    if (!formData.gender) return alert("성별을 선택해주세요.");
+      return showModal("비밀번호가 일치하지 않습니다.", true);
+    if (!formData.company) return showModal("회사를 선택해주세요.", true);
+    if (!formData.position) return showModal("직급을 선택해주세요.", true);
+    if (!formData.department) return showModal("부서를 선택해주세요.", true);
+    if (!formData.gender) return showModal("성별을 선택해주세요.", true);
 
     try {
-      const res = await axios.post("http://localhost:3000/signup", {
+      await axios.post("http://localhost:3000/signup", {
         ...formData,
       });
-      alert("회원가입 성공! userId=" + res.data.userId);
+      showModal("회원가입 완료! 로그인 페이지로 이동합니다.", false);
+
+      // ✅ 1.5초 후 로그인 페이지로 이동
+      setTimeout(() => navigate("/login"), 1500);
     } catch (err) {
-      alert("회원가입 실패: " + (err.response?.data?.error || err.message));
+      showModal("회원가입 실패. 다시 시도해주세요.", true);
     }
+  };
+
+  // ✅ 모달 메시지 표시 함수
+  const showModal = (msg, error = false) => {
+    setMessage(msg);
+    setIsError(error);
+    setShow(true);
   };
 
   return (
@@ -194,6 +212,21 @@ function Signup() {
           <button type="submit">회원가입</button>
         </form>
       </div>
+
+      {/* ✅ Modal */}
+      <Modal show={show} onHide={() => setShow(false)}>
+        <Modal.Header closeButton>
+          <Modal.Title>알림</Modal.Title>
+        </Modal.Header>
+        <Modal.Body style={{ color: isError ? "red" : "green" }}>
+          {message}
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => setShow(false)}>
+            닫기
+          </Button>
+        </Modal.Footer>
+      </Modal>
     </div>
   );
 }
