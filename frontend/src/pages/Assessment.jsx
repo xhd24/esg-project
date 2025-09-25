@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import questions from "../../../backend/questions"; // 질문 가져오기
-import { calculateScore } from "../../../backend/scoreQuestions.js"; // 계산 함수 import
+import { calculateScore } from "../../../backend/scoreQuestions.js"; // 점수 계산 함수
 import "./css/questions.css";
 
 const REPORT_KEY = "ESG_REPORT_V1";
@@ -15,24 +15,26 @@ function Assessment() {
   });
 
   const [saved, setSaved] = useState(false);
-  const toastRef = useRef(null); // ✅ 저장 배지 ref 추가
+  const toastRef = useRef(null);
+
+  // 모달 상태
+  const [modal, setModal] = useState(null);
 
   const totals = { Environment: 50, Social: 55, Governance: 55 };
   const weights = { Environment: 35, Social: 35, Governance: 30 };
 
-  // 라디오 버튼 선택 시 값 저장
+  // 라디오 버튼 응답 저장
   const handleAnswer = (category, qIndex, value) => {
     const updated = { ...answers };
     updated[category][qIndex] = value === "예" ? 1 : 0;
     setAnswers(updated);
-    setSaved(false); // 응답 변경 시 저장 알림 초기화
+    setSaved(false); // 새 답변이 생기면 저장 안내 초기화
   };
 
+  // 제출하기
   const handleSubmit = () => {
-    // 1) 점수 계산
-    const scores = calculateScore(answers); // {Environment, Social, Governance, total}
+    const scores = calculateScore(answers);
 
-    // 2) 예/아니오 개수 집계(미응답은 0으로 간주)
     const yesCounts = {};
     const noCounts = {};
     categories.forEach((cat) => {
@@ -41,23 +43,28 @@ function Assessment() {
       noCounts[cat] = totals[cat] - yes;
     });
 
-    // 3) 저장 payload 구성
     const payload = {
       savedAt: new Date().toISOString(),
       totals,
       weights,
-      scores,       // 소수점은 ESG_Report에서 포맷팅
+      scores,
       yesCounts,
       noCounts,
-      answers,      // 상세 보기용(원하면 리포트에서 활용)
+      answers,
     };
 
-    // 4) localStorage 저장
     localStorage.setItem(REPORT_KEY, JSON.stringify(payload));
     setSaved(true);
+
+    // 저장 완료 모달 표시
+    setModal({
+      title: "제출 완료",
+      message: "수고하셨습니다. 결과가 저장되었습니다.",
+      actions: [{ label: "확인", variant: "primary", onClick: () => setModal(null) }],
+    });
   };
 
-  // ✅ 저장 직후 배지 위치로 스크롤 이동
+  // 저장 직후 배지로 스크롤
   useEffect(() => {
     if (saved && toastRef.current) {
       toastRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -66,7 +73,7 @@ function Assessment() {
 
   return (
     <div className="assessment-container">
-      {/* 왼쪽 사이드바 */}
+      {/* 사이드바 */}
       <aside className="assessment-sidebar">
         <h3>카테고리</h3>
         <ul>
@@ -82,7 +89,7 @@ function Assessment() {
         </ul>
       </aside>
 
-      {/* 오른쪽 설문 영역 */}
+      {/* 본문 */}
       <main className="assessment-content">
         <h2>{selectedCategory} 설문조사</h2>
 
@@ -94,47 +101,96 @@ function Assessment() {
             style={{
               marginBottom: 12,
               padding: 10,
-              border: "1px solid #1890ff", // 파랑 테두리
-              background: "#e6f7ff", // 연한 파랑 배경
+              border: "1px solid #1890ff",
+              background: "#e6f7ff",
               borderRadius: 8,
-              color: "#0050b3", // 글자 진한 파랑
-              fontWeight: "bold"
+              color: "#0050b3",
+              fontWeight: "bold",
             }}
           >
             ℹ️ 결과가 저장되었습니다. 사이드바의 <b>ESG Report</b>에서 확인하세요.
           </div>
         )}
 
-        {questions[selectedCategory].map((q, idx) => (
-          <div key={q.id} className="question-box">
-            <h4 className="question-text">
-              {q.id}. {q.text}
-            </h4>
+        {questions[selectedCategory].map((q, idx) => {
+          const selected = answers[selectedCategory][idx];
 
-            {q.description && (
-              <p className="question-description">{q.description}</p>
-            )}
+          return (
+            <div key={q.id} className="question-box">
+              <h4 className="question-text">
+                {q.id}. {q.text}
+              </h4>
 
-            {q.options.map((opt, oIdx) => (
-              <label key={oIdx} style={{ display: "block", cursor: "pointer" }}>
+              {q.description && (
+                <p className="question-description">{q.description}</p>
+              )}
+
+              <div className="option-pills" role="radiogroup">
                 <input
+                  className="pill-input"
                   type="radio"
-                  name={`${selectedCategory}-${idx}`}
-                  value={opt}
-                  checked={answers[selectedCategory][idx] === (opt === "예" ? 1 : 0)}
+                  id={`q-${selectedCategory}-${idx}-yes`}
+                  name={`q-${selectedCategory}-${idx}`}
+                  value="예"
+                  checked={selected === 1}
                   onChange={(e) => handleAnswer(selectedCategory, idx, e.target.value)}
-                  style={{ marginRight: 6 }}
                 />
-                {opt}
-              </label>
-            ))}
-          </div>
-        ))}
+                <label
+                  className="pill-label"
+                  htmlFor={`q-${selectedCategory}-${idx}-yes`}
+                >
+                  <span className="pill-dot" aria-hidden="true"></span>
+                  예
+                </label>
+
+                <input
+                  className="pill-input"
+                  type="radio"
+                  id={`q-${selectedCategory}-${idx}-no`}
+                  name={`q-${selectedCategory}-${idx}`}
+                  value="아니오"
+                  checked={selected === 0}
+                  onChange={(e) => handleAnswer(selectedCategory, idx, e.target.value)}
+                />
+                <label
+                  className="pill-label"
+                  htmlFor={`q-${selectedCategory}-${idx}-no`}
+                >
+                  <span className="pill-dot" aria-hidden="true"></span>
+                  아니오
+                </label>
+              </div>
+            </div>
+          );
+        })}
 
         <button className="submit-btn" onClick={handleSubmit}>
           제출하기
         </button>
       </main>
+
+      {/* 모달 */}
+      {modal && (
+        <div className="modal-overlay" role="dialog" aria-modal="true">
+          <div className="modal-card">
+            <h3 className="modal-title">{modal.title}</h3>
+            <p className="modal-message">{modal.message}</p>
+            <div className="modal-actions">
+              {modal.actions?.map((a, idx) => (
+                <button
+                  key={idx}
+                  className={`alert-btn ${
+                    a.variant === "primary" ? "alert-btn--primary" : "alert-btn--ghost"
+                  }`}
+                  onClick={a.onClick}
+                >
+                  {a.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
