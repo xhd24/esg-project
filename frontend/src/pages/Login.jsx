@@ -20,6 +20,7 @@ function Login() {
 
     if (res.success) {
       sessionStorage.setItem("userId", res.userId);
+      sessionStorage.setItem("userKey", res.userKey);
       sessionStorage.setItem("isLogin", "true");
       window.dispatchEvent(new Event("storage"));
       setIsError(false);

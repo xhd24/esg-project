@@ -41,3 +41,29 @@ export async function login(id, pw) {
   });
   return res.json();
 }
+
+//c1 - 1 저장
+export async function carb1InputQuery(ext) {
+  const res = await fetch(`${BASE}/carbon/c1`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ ext })
+  });
+  return res.json();
+}
+
+//c1 - 2 저장
+export async function carb1_1InputQuery(inn) {
+  const res = await fetch(`${BASE}/carbon/c2`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ inn })
+  });
+  return res.json();
+}
+
+//c3
+export async function getCarbon() {
+  const res = await fetch(`${BASE}/carbon/c3`);
+  return res.json();
+}
