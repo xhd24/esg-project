@@ -102,6 +102,24 @@ function Assessment() {
     setSaved(false);
   };
 
+  // ✅ 전체 예/전체 아니오 헬퍼
+  const pickOption = (q, target /* '예' | '아니오' */) => {
+    const opts = q.options || ["예", "아니오"];
+    // 옵션에 정확히 '예'/'아니오'가 있으면 그대로, 없으면 가장 첫 옵션으로 폴백
+    if (opts.includes(target)) return target;
+    return opts[0];
+  };
+
+  const setAllForCategory = (cat, target /* '예' | '아니오' */) => {
+    const qs = questions[cat] || [];
+    const nextMap = {};
+    for (const q of qs) {
+      nextMap[q.id] = pickOption(q, target);
+    }
+    setAnswers((prev) => ({ ...prev, [cat]: nextMap }));
+    setSaved(false);
+  };
+
   // 미응답 찾기
   const findUnansweredIds = (cat) => {
     const qs = questions[cat] || [];
@@ -272,7 +290,27 @@ function Assessment() {
 
       {/* 본문 */}
       <main className="assessment-content">
-        <h2>{selectedCategory} 설문조사</h2>
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <h2 style={{ marginRight: "auto" }}>{selectedCategory} 설문조사</h2>
+
+          {/* ✅ 전체 선택 버튼 */}
+          <button
+            className="btn btn--ghost"
+            onClick={() => setAllForCategory(selectedCategory, "예")}
+            disabled={loading || (questions[selectedCategory] || []).length === 0}
+            title="현재 카테고리의 모든 문항을 '예'로 선택"
+          >
+            전체 예
+          </button>
+          <button
+            className="btn btn--ghost"
+            onClick={() => setAllForCategory(selectedCategory, "아니오")}
+            disabled={loading || (questions[selectedCategory] || []).length === 0}
+            title="현재 카테고리의 모든 문항을 '아니오'로 선택"
+          >
+            전체 아니오
+          </button>
+        </div>
 
         {loading && <div style={{ marginBottom: 12 }}>불러오는 중…</div>}
         {error && (

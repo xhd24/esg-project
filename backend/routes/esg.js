@@ -1,7 +1,7 @@
 // routes/esg.js
 import express from 'express';
 import { pool } from '../db.js';
-import questionsSource from '../questions.js'; // { Environment:[], Social:[], Governance:[] }
+import questionsSource from '../questions.js';
 
 const router = express.Router();
 
@@ -10,9 +10,7 @@ router.use((req, _res, next) => {
   next();
 });
 
-/* =========================
-   Auth helpers
-   ========================= */
+/* ============ Auth ============ */
 function parseBearer(req) {
   const h = req.headers.authorization || '';
   const m = h.match(/^Bearer\s+(\S+)$/i);
@@ -26,13 +24,11 @@ async function requireAuth(req, res, next) {
     if (!userKey || Number.isNaN(userKey)) {
       return res.status(401).json({ error: 'Unauthorized' });
     }
-    // 존재 유저 확인(옵션)
     const [u] = await pool.query(
       'SELECT user_id FROM signup_login WHERE user_id = ? LIMIT 1',
       [userKey]
     );
     if (!u.length) return res.status(401).json({ error: 'Unauthorized' });
-
     req.user = { id: userKey };
     next();
   } catch (e) {
@@ -41,80 +37,64 @@ async function requireAuth(req, res, next) {
   }
 }
 
-/* =========================
-   질문 목록 (정적 소스에서 제공)
-   GET /esg/questions?category=Environment|Social|Governance
-   ========================= */
+/* ============ 질문 목록 (정적) ============ */
 router.get('/questions', requireAuth, async (req, res) => {
   const { category } = req.query;
+
+  const pick = (cat) =>
+    (questionsSource[cat] || []).map((q) => ({
+      id: q.id,
+      category: q.category,
+      text: q.text,
+      description: q.description || '',
+      options: q.options || ['예', '아니오'],
+    }));
+
   if (!category) {
-    // 모든 카테고리 합쳐서 내려주고 싶다면:
-    const all = ['Environment','Social','Governance'].flatMap(cat =>
-      (questionsSource[cat] || []).map(q => ({
-        id: q.id,
-        category: q.category,
-        text: q.text,
-        description: q.description || '',
-        options: q.options || ['예','아니오'],
-      }))
-    );
+    const all = ['Environment', 'Social', 'Governance'].flatMap(pick);
     return res.json({ questions: all });
   }
-
-  const list = (questionsSource[category] || []).map(q => ({
-    id: q.id,
-    category: q.category,
-    text: q.text,
-    description: q.description || '',
-    options: q.options || ['예','아니오'],
-  }));
-  res.json({ questions: list });
+  return res.json({ questions: pick(category) });
 });
 
-/* =========================
-   내 응답 조회
-   GET /esg/answers/me?category=...
-   - 최신 제출만 사용 (questionid별 MAX(inputdate))
-   ========================= */
+/* ============ 내 응답 조회 (최신 1건) ============ */
 router.get('/answers/me', requireAuth, async (req, res) => {
   const userId = req.user.id;
   const { category } = req.query;
 
-  // 전체 가져와서 앱 단에서 reduce 해도 되지만,
-  // 여기서는 MySQL에서 최근 것만 뽑아오는 간단 방식(서브쿼리)로 처리
+  // 최신 제출 1건
   const [rows] = await pool.query(
-    `
-    SELECT e.answerjson
-    FROM esg_user_answer e
-    JOIN (
-      SELECT JSON_EXTRACT(answerjson, '$.questionid') AS qid, MAX(inputdate) AS latest
-      FROM esg_user_answer
-      WHERE user_id = ?
-      GROUP BY JSON_EXTRACT(answerjson, '$.questionid')
-    ) t ON JSON_EXTRACT(e.answerjson, '$.questionid') = t.qid
-       AND e.inputdate = t.latest
-    WHERE e.user_id = ?
-    `,
-    [userId, userId]
+    `SELECT answerjson
+     FROM esg_user_answer
+     WHERE user_id = ?
+     ORDER BY inputdate DESC
+     LIMIT 1`,
+    [userId]
   );
 
-  // { [question_id]: '예'|'아니오' } 형태로 반환
   const map = {};
-  for (const r of rows) {
-    try {
-      const obj = JSON.parse(r.answerjson);
-      if (category && obj.category !== category) continue;
-      map[Number(obj.questionid)] = String(obj.answer || '');
-    } catch (_) {}
-  }
-  res.json({ answers: map });
+  if (!rows.length) return res.json({ answers: map });
+
+  try {
+    const payload = JSON.parse(rows[0].answerjson); // { submitted_at, answers: [...] }
+    const items = Array.isArray(payload.answers) ? payload.answers : [];
+    for (const item of items) {
+      if (category && item.category !== category) continue;
+      map[Number(item.questionid)] = String(item.answer || '');
+    }
+  } catch (_) {}
+  return res.json({ answers: map });
 });
 
-/* =========================
-   일괄 저장(업서트 대체: 삭제 후 삽입)
-   POST /esg/answers/bulk
-   body: { answers: [{category, questionid, question, answer}] }
-   ========================= */
+/* ============ 일괄 저장 (전체를 한 JSON으로 1레코드 저장) ============ */
+/*
+ body: {
+   answers: [
+     { category, questionid, question, answer },
+     ...
+   ]
+ }
+*/
 router.post('/answers/bulk', requireAuth, async (req, res) => {
   try {
     const userId = req.user.id;
@@ -124,67 +104,55 @@ router.post('/answers/bulk', requireAuth, async (req, res) => {
       return res.status(400).json({ error: 'answers empty' });
     }
 
-    // 유효성(최소 필드)
+    // 정리/검증
     const cleaned = answers
-      .map(a => ({
+      .map((a) => ({
         category: a.category,
         questionid: Number(a.questionid),
         question: String(a.question || ''),
         answer: String(a.answer || ''),
       }))
-      .filter(a => a.category && a.questionid);
+      .filter((a) => a.category && a.questionid);
 
     if (cleaned.length === 0) {
       return res.status(400).json({ error: 'no valid answers' });
     }
 
-    // 같은 user & questionid 기존 레코드 삭제(중복 방지)
-    const qids = [...new Set(cleaned.map(a => a.questionid))];
-    // JSON_EXTRACT(answerjson, '$.questionid') = ?
-    // 매개변수 바인딩 수 만큼 OR 조건 구성
-    const whereOr = qids.map(() => `JSON_EXTRACT(answerjson, '$.questionid') = ?`).join(' OR ');
+    // 저장할 JSON (원하면 여기에 meta 더 넣어도 됨)
+    const answerjson = {
+      submitted_at: new Date().toISOString(),
+      answers: cleaned,
+    };
+
+    // === 히스토리 유지형(권장): 매 제출 INSERT로 쌓기 ===
     await pool.query(
-      `DELETE FROM esg_user_answer WHERE user_id = ? AND (${whereOr})`,
-      [userId, ...qids]
+      `INSERT INTO esg_user_answer (user_id, answerjson, inputdate)
+       VALUES (?, ?, NOW())`,
+      [userId, JSON.stringify(answerjson)]
     );
 
-    // 새로 삽입
-    const now = new Date();
-    const values = cleaned.map(a => [userId, JSON.stringify(a), now]);
-    await pool.query(
-      `INSERT INTO esg_user_answer (user_id, answerjson, inputdate) VALUES ?`,
-      [values]
-    );
+    // === (옵션) 1인 1레코드만 유지하고 싶다면 위 INSERT 대신 아래 두 줄 사용 ===
+    // await pool.query(`DELETE FROM esg_user_answer WHERE user_id = ?`, [userId]);
+    // await pool.query(`INSERT INTO esg_user_answer (user_id, answerjson, inputdate) VALUES (?, ?, NOW())`, [userId, JSON.stringify(answerjson)]);
 
-    res.json({ success: true, saved_count: cleaned.length });
+    return res.json({ success: true, saved_count: cleaned.length });
   } catch (err) {
     console.error('[answers/bulk] error:', err);
     res.status(500).json({ error: 'Internal error while saving answers' });
   }
 });
 
-/* =========================
-   리포트 (카테고리별 집계: 최신 제출 기준)
-   GET /esg/report/me
-   ========================= */
+/* ============ 카테고리별 집계 (최신 1건) ============ */
 router.get('/report/me', requireAuth, async (req, res) => {
   const userId = req.user.id;
 
-  // 최신 제출로 합치기
   const [rows] = await pool.query(
-    `
-    SELECT e.answerjson
-    FROM esg_user_answer e
-    JOIN (
-      SELECT JSON_EXTRACT(answerjson, '$.questionid') AS qid, MAX(inputdate) AS latest
-      FROM esg_user_answer
-      WHERE user_id = ?
-      GROUP BY JSON_EXTRACT(answerjson, '$.questionid')
-    ) t ON JSON_EXTRACT(e.answerjson, '$.questionid') = t.qid
-       AND e.inputdate = t.latest
-    WHERE e.user_id = ?
-    `,
-    [userId, userId]
+    `SELECT answerjson
+     FROM esg_user_answer
+     WHERE user_id = ?
+     ORDER BY inputdate DESC
+     LIMIT 1`,
+    [userId]
   );
 
   const counters = {
@@ -193,18 +161,20 @@ router.get('/report/me', requireAuth, async (req, res) => {
     Governance: { yes: 0, no: 0, total: 0 },
   };
 
-  for (const r of rows) {
+  if (rows.length) {
     try {
-      const obj = JSON.parse(r.answerjson);
-      const cat = obj.category;
-      if (!counters[cat]) continue;
-      counters[cat].total += 1;
-      if (obj.answer === '예') counters[cat].yes += 1;
-      else if (obj.answer === '아니오') counters[cat].no += 1;
+      const payload = JSON.parse(rows[0].answerjson);
+      const items = Array.isArray(payload.answers) ? payload.answers : [];
+      for (const item of items) {
+        if (!counters[item.category]) continue;
+        counters[item.category].total += 1;
+        if (item.answer === '예') counters[item.category].yes += 1;
+        else if (item.answer === '아니오') counters[item.category].no += 1;
+      }
     } catch (_) {}
   }
 
-  const report = ['Environment','Social','Governance'].map(cat => ({
+  const report = ['Environment', 'Social', 'Governance'].map((cat) => ({
     category: cat,
     yes: counters[cat].yes,
     no: counters[cat].no,
