@@ -1,15 +1,15 @@
 import React, { useState, useRef, useEffect } from "react";
-import questions from "../../../backend/questions"; // 질문 가져오기
-import { calculateScore } from "../../../backend/scoreQuestions.js"; // 점수 계산 함수
+import questions from "../../../backend/questions";
+import { calculateScore } from "../../../backend/scoreQuestions.js";
 import "./css/questions.css";
 
 const REPORT_KEY = "ESG_REPORT_V1";
+const SCROLLER_SELECTOR = ".assessment-content";
 
 function Assessment() {
   const categories = ["Environment", "Social", "Governance"];
   const [selectedCategory, setSelectedCategory] = useState("Environment");
 
-  // 각 카테고리 응답
   const [answers, setAnswers] = useState({
     Environment: Array(50).fill(null),
     Social: Array(55).fill(null),
@@ -18,11 +18,8 @@ function Assessment() {
 
   const [saved, setSaved] = useState(false);
   const toastRef = useRef(null);
-
-  // 모달
   const [modal, setModal] = useState(null);
 
-  // 질문 DOM 참조 & 하이라이트(빨간 테두리)
   const questionRefs = useRef({});
   const [highlightKey, setHighlightKey] = useState(null);
 
@@ -33,7 +30,6 @@ function Assessment() {
   };
   const weights = { Environment: 35, Social: 35, Governance: 30 };
 
-  // 라디오 응답 저장
   const handleAnswer = (category, qIndex, value) => {
     setAnswers((prev) => {
       const updated = { ...prev };
@@ -46,34 +42,30 @@ function Assessment() {
   };
 
   // ---- 스크롤 유틸 ----
-  const SCROLLER_SELECTOR = ".assessment-content";
   const scrollToTopBoth = (behavior = "auto") => {
     const scroller = document.querySelector(SCROLLER_SELECTOR);
     if (scroller) scroller.scrollTo({ top: 0, left: 0, behavior });
     window.scrollTo({ top: 0, left: 0, behavior });
   };
+
   const scrollToQuestion = (cat, idx, behavior = "smooth") => {
     const key = `${cat}-${idx}`;
     const el = questionRefs.current[key];
     if (el?.scrollIntoView) el.scrollIntoView({ behavior, block: "start" });
-    // 빨간 테두리 하이라이트 부여 후 부드럽게 해제
     setHighlightKey(key);
     setTimeout(() => setHighlightKey(null), 1400);
   };
 
-  // 카테고리 바뀌면 맨 위로
   useEffect(() => {
     requestAnimationFrame(() => scrollToTopBoth("auto"));
   }, [selectedCategory]);
 
-  // 저장 후 토스트로 스크롤
   useEffect(() => {
     if (saved && toastRef.current) {
       toastRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
     }
   }, [saved]);
 
-  // ---- 미응답 찾기 ----
   const findUnansweredIndices = (cat) => {
     const count = totals[cat];
     const arr = answers[cat] || [];
@@ -84,7 +76,6 @@ function Assessment() {
     return missing;
   };
 
-  // ---- 네비게이션 ----
   const goPrev = () => {
     const idx = categories.indexOf(selectedCategory);
     if (idx > 0) setSelectedCategory(categories[idx - 1]);
@@ -135,7 +126,6 @@ function Assessment() {
     });
   };
 
-  // ---- 최종 제출 ----
   const submitAll = () => {
     for (const cat of categories) {
       const missing = findUnansweredIndices(cat);
@@ -164,7 +154,6 @@ function Assessment() {
     }
 
     const scores = calculateScore(answers);
-
     const yesCounts = {};
     const noCounts = {};
     categories.forEach((cat) => {
@@ -194,6 +183,83 @@ function Assessment() {
     });
   };
 
+  // ============================
+  // 플로팅 스크롤 버튼
+  // ============================
+  const [isBelowHalf, setIsBelowHalf] = useState(false); // true면 ↑
+  const [showFab, setShowFab] = useState(false);
+
+  useEffect(() => {
+    const scrollerEl = document.querySelector(SCROLLER_SELECTOR);
+    const useContainer =
+      scrollerEl && scrollerEl.scrollHeight > scrollerEl.clientHeight + 1;
+
+    const getState = () => {
+      if (useContainer) {
+        const max = scrollerEl.scrollHeight - scrollerEl.clientHeight;
+        const top = scrollerEl.scrollTop;
+        setShowFab(max > 0);
+        setIsBelowHalf(max > 0 ? top / max >= 0.5 : false);
+      } else {
+        const doc = document.documentElement;
+        const max = doc.scrollHeight - doc.clientHeight;
+        const top =
+          window.pageYOffset || doc.scrollTop || document.body.scrollTop || 0;
+        setShowFab(max > 0);
+        setIsBelowHalf(max > 0 ? top / max >= 0.5 : false);
+      }
+    };
+
+    let ticking = false;
+    const onScroll = () => {
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(() => {
+        getState();
+        ticking = false;
+      });
+    };
+
+    getState();
+
+    if (useContainer) {
+      scrollerEl.addEventListener("scroll", onScroll, { passive: true });
+    } else {
+      window.addEventListener("scroll", onScroll, { passive: true });
+    }
+    window.addEventListener("resize", onScroll);
+
+    return () => {
+      if (useContainer) {
+        scrollerEl.removeEventListener("scroll", onScroll);
+      } else {
+        window.removeEventListener("scroll", onScroll);
+      }
+      window.removeEventListener("resize", onScroll);
+    };
+  }, [selectedCategory]);
+
+  const handleFabClick = () => {
+    const scrollerEl = document.querySelector(SCROLLER_SELECTOR);
+    const useContainer =
+      scrollerEl && scrollerEl.scrollHeight > scrollerEl.clientHeight + 1;
+
+    if (useContainer) {
+      const max = scrollerEl.scrollHeight - scrollerEl.clientHeight;
+      scrollerEl.scrollTo({
+        top: isBelowHalf ? 0 : max,
+        behavior: "smooth",
+      });
+    } else {
+      const doc = document.documentElement;
+      const max = doc.scrollHeight - doc.clientHeight;
+      window.scrollTo({
+        top: isBelowHalf ? 0 : max,
+        behavior: "smooth",
+      });
+    }
+  };
+
   return (
     <div className="assessment-container">
       {/* 사이드바 */}
@@ -216,7 +282,6 @@ function Assessment() {
       <main className="assessment-content">
         <h2>{selectedCategory} 설문조사</h2>
 
-        {/* 저장 안내 배지 */}
         {saved && (
           <div
             ref={toastRef}
@@ -287,7 +352,6 @@ function Assessment() {
           );
         })}
 
-        {/* 하단 버튼 */}
         <div className="btn-row" style={{ marginTop: 16 }}>
           {selectedCategory === "Environment" && (
             <button className="btn btn--primary" onClick={goNext}>
@@ -295,7 +359,7 @@ function Assessment() {
             </button>
           )}
 
-          {selectedCategory === "Social" && (
+        {selectedCategory === "Social" && (
             <>
               <button className="btn btn--ghost" onClick={goPrev}>
                 뒤로가기
@@ -319,7 +383,6 @@ function Assessment() {
         </div>
       </main>
 
-      {/* 모달 */}
       {modal && (
         <div className="modal-overlay" role="dialog" aria-modal="true">
           <div className="modal-card">
@@ -341,6 +404,28 @@ function Assessment() {
           </div>
         </div>
       )}
+
+   {/* 플로팅 스크롤 버튼 — 홈과 동일한 chevron 아이콘 */}
+<button
+  type="button"
+  className={`scroll-fab ${showFab ? "" : "scroll-fab--hidden"} ${
+    isBelowHalf ? "scroll-fab--up" : "scroll-fab--down"
+  }`}
+  onClick={handleFabClick}
+  aria-label={isBelowHalf ? "맨 위로" : "맨 아래로"}
+  title={isBelowHalf ? "맨 위로" : "맨 아래로"}
+>
+  <svg
+    className="scroll-fab__icon"
+    viewBox="0 0 24 24"
+    aria-hidden="true"
+    fill="currentColor"
+  >
+    {/* Material Icons: expand_more (줄기 없는 V) */}
+    <path d="M16.59 8.59 12 13.17 7.41 8.59 6 10l6 6 6-6z" />
+  </svg>
+</button>
+
     </div>
   );
 }

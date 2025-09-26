@@ -256,3 +256,66 @@
     font-size: 1.2rem;
   }
 }
+
+
+
+
+
+
+
+/* 기존 .scroll-fab, :hover, :active, box-shadow 부분을 이걸로 교체하세요 */
+/* ───────── FAB (스크롤 위/아래) ───────── */
+.scrollFab {
+  position: fixed;
+  right: 24px;
+  bottom: 24px;
+  width: 56px;
+  height: 56px;
+  border: none;
+  border-radius: 9999px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  /* 그린/에메랄드 그라디언트 - 사이트 톤에 맞춤 */
+  background: linear-gradient(135deg, #34d399, #16a34a);
+  color: #fff;
+
+  box-shadow:
+    0 10px 22px rgba(22, 163, 74, 0.25),
+    0 3px 8px rgba(20, 83, 45, 0.18);
+
+  transition: transform .18s ease, box-shadow .18s ease, opacity .2s ease, background .2s ease;
+  z-index: 2000;
+}
+
+.scrollFab:hover {
+  transform: translateY(-2px);
+  box-shadow:
+    0 14px 28px rgba(22, 163, 74, 0.30),
+    0 6px 12px rgba(20, 83, 45, 0.22);
+  background: linear-gradient(135deg, #4ade80, #16a34a);
+}
+
+.scrollFab:active { transform: translateY(0); }
+
+.scrollFabHidden {
+  opacity: 0;
+  pointer-events: none;
+  transform: scale(.92);
+}
+
+.scrollFabIcon {
+  width: 24px;
+  height: 24px;
+  fill: currentColor;
+  transition: transform .18s ease;
+}
+
+/* 위로 모드일 땐 아이콘 180도 회전 */
+.scrollFabUp .scrollFabIcon { transform: rotate(180deg); }
+
+@media (max-width: 480px) {
+  .scrollFab { right: 16px; bottom: 16px; width: 52px; height: 52px; }
+}

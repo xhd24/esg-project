@@ -657,3 +657,68 @@
 
 /* 버튼 간격 약간 넓게 */
 .btn-row{ gap:24px !important; }
+
+
+
+
+/* ===== Floating Scroll FAB ===== */
+/* ===== Floating Scroll FAB ===== */
+/* === 플로팅 스크롤 FAB (assessment) === */
+/* 기존 .scroll-fab, :hover, :active, box-shadow 부분을 이걸로 교체하세요 */
+.scroll-fab {
+  position: fixed;
+  right: 24px;
+  bottom: 24px;
+  width: 56px;
+  height: 56px;
+  border: none;
+  border-radius: 9999px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  /* 🔄 브랜드 톤: 그린/에메랄드 그라디언트 */
+  background: linear-gradient(135deg, #34d399, #16a34a); /* from-emerald-400 → emerald-600 */
+  color: #fff;
+
+  /* 초록 기조 그림자 */
+  box-shadow:
+    0 10px 22px rgba(22, 163, 74, 0.25),
+    0 3px 8px rgba(20, 83, 45, 0.18);
+
+  transition: transform .18s ease, box-shadow .18s ease, opacity .2s ease, background .2s ease;
+  z-index: 2000;
+}
+
+.scroll-fab:hover {
+  transform: translateY(-2px);
+  box-shadow:
+    0 14px 28px rgba(22, 163, 74, 0.3),
+    0 6px 12px rgba(20, 83, 45, 0.22);
+  /* 살짝 더 밝게 */
+  background: linear-gradient(135deg, #4ade80, #16a34a); /* emerald-300 → 600 */
+}
+
+.scroll-fab:active {
+  transform: translateY(0);
+}
+
+.scroll-fab--hidden {
+  opacity: 0;
+  pointer-events: none;
+  transform: scale(.92);
+}
+
+.scroll-fab__icon {
+  width: 24px;
+  height: 24px;
+  fill: currentColor;
+  transition: transform .18s ease;
+}
+
+.scroll-fab--up .scroll-fab__icon { transform: rotate(180deg); }
+
+@media (max-width: 480px) {
+  .scroll-fab { right: 16px; bottom: 16px; width: 52px; height: 52px; }
+}

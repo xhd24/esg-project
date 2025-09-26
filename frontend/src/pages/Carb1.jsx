@@ -28,7 +28,6 @@ function sanitizeNumeric(input) {
   if (s.startsWith(".")) s = "0" + s;
   return s;
 }
-// 천 단위 콤마 포맷(소수점 유지)
 function formatNumericWithComma(input) {
   const s = sanitizeNumeric(input);
   if (s === "") return "";
@@ -36,8 +35,6 @@ function formatNumericWithComma(input) {
   const iWithComma = i.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
   return d !== undefined ? `${iWithComma}.${d}` : iWithComma;
 }
-
-// 원본(raw) 검사 → 포맷 + 에러
 function validateNumericRaw(raw) {
   if (raw === "") return { formatted: "", error: null };
   const hasBadChar = /[^0-9.,]/.test(raw);
@@ -51,11 +48,8 @@ function validateNumericRaw(raw) {
   const formatted = formatNumericWithComma(raw);
   return { formatted, error };
 }
-
-// 유틸
 const toNum = (v) => Number(String(v ?? "").replace(/,/g, "") || 0);
 
-// ----- 로컬스토리지 키 & 에러 애니메이션 -----
 const LS_KEY = "carb1_form_v1";
 const ERROR_FADE_MS = 300;
 const ERROR_AUTO_HIDE_MS = 3000;
@@ -164,7 +158,7 @@ export default function Carb1() {
   const isExtReady =
     ext.shipKey.trim() &&
     ext.startDate && ext.endDate &&
-    extErrs.every((m) => !m); // 외부 숫자칸은 일부 비워도 OK
+    extErrs.every((m) => !m);
 
   const isInnReady =
     inn.shipKey.trim() &&
@@ -243,17 +237,15 @@ export default function Carb1() {
 
   // ============================
   // 표에 표시할 데이터 만들기
-  // 외부: 값이 비거나 0이면 제외
-  // 내부: 값이 비어있으면 제외(0은 표시)
   // ============================
   const summaryRows = [];
   if (lastSavedExt) {
     EXT_LABELS.forEach((label, i) => {
       const v = lastSavedExt.items?.[i];
       const s = String(v ?? "").trim();
-      if (s === "") return;                 // 비어있으면 제외
+      if (s === "") return;
       const n = toNum(s);
-      if (!Number.isFinite(n) || n === 0) return; // 0 또는 NaN이면 제외
+      if (!Number.isFinite(n) || n === 0) return;
       summaryRows.push({
         type: "외부",
         shipKey: lastSavedExt.shipKey || "—",
@@ -268,7 +260,7 @@ export default function Carb1() {
     INT_LABELS.forEach((label, i) => {
       const v = lastSavedInn.steps?.[i];
       const s = String(v ?? "").trim();
-      if (s === "") return; // 내부는 비어있을 때만 제외(0은 표시)
+      if (s === "") return;
       summaryRows.push({
         type: "내부",
         shipKey: lastSavedInn.shipKey || "—",
@@ -279,6 +271,45 @@ export default function Carb1() {
       });
     });
   }
+
+  // ============================
+  // 플로팅 스크롤 버튼 상태/로직 (윈도우 스크롤)
+  // ============================
+  const [isBelowHalf, setIsBelowHalf] = useState(false); // true면 ↑ 표시/맨위로, false면 ↓ 표시/맨아래로
+  const [showFab, setShowFab] = useState(false);
+
+  useEffect(() => {
+    let ticking = false;
+    const handler = () => {
+      if (ticking) return;
+      ticking = true;
+      window.requestAnimationFrame(() => {
+        const doc = document.documentElement;
+        const scrollTop = window.pageYOffset || doc.scrollTop || 0;
+        const max = (doc.scrollHeight - doc.clientHeight) || 0;
+
+        // 컨텐츠가 넘치지 않으면 버튼 숨김
+        setShowFab(max > 0);
+
+        const ratio = max > 0 ? scrollTop / max : 0;
+        setIsBelowHalf(ratio >= 0.5);
+        ticking = false;
+      });
+    };
+    handler(); // 초기 계산
+    window.addEventListener("scroll", handler, { passive: true });
+    window.addEventListener("resize", handler);
+    return () => {
+      window.removeEventListener("scroll", handler);
+      window.removeEventListener("resize", handler);
+    };
+  }, []);
+
+  const onFabClick = () => {
+    const doc = document.documentElement;
+    const targetTop = isBelowHalf ? 0 : doc.scrollHeight;
+    window.scrollTo({ top: targetTop, behavior: "smooth" });
+  };
 
   return (
     <div className="carb1-container">
@@ -390,6 +421,20 @@ export default function Carb1() {
           </button>
         </form>
       </section>
+
+      {/* ⬇️ 플로팅 스크롤 버튼 (윈도우 스크롤 감지) */}
+      <button
+        type="button"
+        className={`scroll-fab ${showFab ? "" : "scroll-fab--hidden"} ${isBelowHalf ? "scroll-fab--up" : "scroll-fab--down"}`}
+        onClick={onFabClick}
+        aria-label={isBelowHalf ? "맨 위로" : "맨 아래로"}
+        title={isBelowHalf ? "맨 위로" : "맨 아래로"}
+      >
+        <svg className="scroll-fab__icon" viewBox="0 0 24 24" aria-hidden="true">
+          {/* 기본은 ↓, isBelowHalf 이면 CSS로 180도 회전 */}
+          <path d="M12 4c.55 0 1 .45 1 1v12.17l4.59-4.58c.39-.39 1.03-.39 1.41 0 .39.39.39 1.02 0 1.41l-6.3 6.3c-.39.39-1.02.39-1.41 0l-6.3-6.3a1.003 1.003 0 0 1 1.41-1.41L11 17.17V5c0-.55.45-1 1-1z"/>
+        </svg>
+      </button>
     </div>
   );
 }

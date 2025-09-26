@@ -11,13 +11,12 @@ function Report() {
             to="c1.result"
             className={`${styles.link} ${location.pathname === "/report/c1.result" || location.pathname === "/report" ? styles.active : ""}`}
           >
-            C1.result
-          </Link>
+내부/외부 공정 배출량          </Link>
           <Link
             to="c2.result"
             className={`${styles.link} ${location.pathname === "/report/c2.result" ? styles.active : ""}`}
           >
-            C2.result
+            운항 배출량
           </Link>
           <Link
             to="c3.result"
