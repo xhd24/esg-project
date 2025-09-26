@@ -45,8 +45,8 @@ router.post('/c2', async (req, res) => {
 });
 
 router.get('/c3', async (req, res) => {
-    const posts = await getCarbonQuery();
-    const posts2 = await getCarbonQuery2();
+    const posts = await getCarbonQuery() || '';
+    const posts2 = await getCarbonQuery2()  || '';
     res.json({posts:posts, posts2:posts2});
 });
 

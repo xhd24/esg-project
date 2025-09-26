@@ -6,7 +6,7 @@ const router = Router();
 //목록
 router.post('/', async (req, res) => {
   const { userId } = req.body;
-  const posts = await getQueryHx(userId);
+  const posts = await getQueryHx(userId) || '';
   res.json(posts);
 });
 

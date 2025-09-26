@@ -5,7 +5,7 @@ const router = Router();
 
 //목록
 router.get('/', async (req, res) => {
-  const posts = await getQueryHxAll();
+  const posts = await getQueryHxAll() || '';
   res.json(posts);
 });
 

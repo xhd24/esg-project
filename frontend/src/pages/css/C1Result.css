@@ -1,98 +1,118 @@
-/* 레이아웃 전체 – 폭 더 넓힘 */
-.c1r-wrap {
-  width: 100%;          /* ✅ 부모 기준으로 맞춤 */
-  max-width: 1600px;     /* 최대폭 제한 */
-  margin: 0 auto;
-  padding: 20px;
+/* ===== Palette (Carb1.css와 동일) ===== */
+:root {
+  --green-50: #f0fff4;
+  --green-100: #e6ffed;
+  --green-200: #c6f6d5;
+  --green-300: #9ae6b4;
+  --green-400: #68d391;
+  --green-500: #48bb78;
+  --green-600: #38a169;
+  --green-700: #2f855a;
 
-  --side-padding: 50px;
-  --gap: 45px;
+  --ink-900: #0a0f0c;
+  --ink-700: #2b3a33;
+  --ink-400: #7b8f86;
+
+  --bg-body: #f7faf7;
+  --bg-card: #ffffff;
+  --line: #dfe7e2;
+  --shadow: 0 6px 20px rgba(25, 94, 50, 0.08);
 }
 
+/* ===== Layout ===== */
+.c1r-wrap {
+  padding: 20px;
+  display: grid;
+  gap: 24px;
+  max-width: 1280px;
+  width: 100%;
+  margin: 0 auto;
+  background: var(--bg-body);
+}
 
-/* 상단 2칸 – 동일 높이 + 보기 좋은 간격
-   ☑ gap을 고려해서 각 칸을 (100% - gap - 2px)/2 로 계산해
-      하단 박스의 좌우 끝과 정확히 맞춤 */
-/* 상단 2칸 – 동일 높이 + 보기 좋은 간격 */
 .c1r-top {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);  /* ✅ calc 제거 */
-  gap: var(--gap);
-  margin-bottom: 20px;
-  padding-left: var(--side-padding);
-  padding-right: var(--side-padding);
-  align-items: stretch;
-  box-sizing: border-box;
-
-  padding-right: calc(var(--side-padding) + 23px);
+  gap: 24px;
+  grid-template-columns: 1fr 1fr;
 }
 
-/* 하단 1칸 – 상단과 동일 좌우 여백(사이즈는 그대로 유지) */
+@media (max-width: 860px) {
+  .c1r-top {
+    grid-template-columns: 1fr;
+  }
+}
+
 .c1r-bottom {
-  margin-bottom: 56px;
-  padding-left: var(--side-padding);
-  padding-right: var(--side-padding);
+  display: block;
 }
 
-/* 카드 공통 스타일 */
+/* ===== Card ===== */
 .c1r-card {
-  box-sizing: border-box;  /* 경계 포함 폭 계산 */
-  background: #ffffff;
-  border: 1px solid #e3ebea;
+  background: var(--bg-card);
+  border: 1px solid var(--line);
   border-radius: 14px;
-  box-shadow:
-    0 1px 0 rgba(0,0,0,0.02),
-    0 8px 24px -14px rgba(0,0,0,0.15);
-  overflow: hidden;
-
-  display: flex;
-  flex-direction: column;
-  height: 100%;
+  padding: 18px 18px 20px;
+  box-shadow: var(--shadow);
 }
 
-/* 상단 박스: 세로 조금 줄인 버전(동일 적용) */
-.c1r-square {
-  aspect-ratio: 4 / 3;
-  min-height: 487px;
-}
-
-/* 하단 박스 – 사이즈 변경 없음(기준 유지) */
-.c1r-rect {
-  width: 100%;
-  min-height: 500px;
-  aspect-ratio: 16 / 6;
-}
-
-/* 카드 내부 */
 .c1r-title {
-  margin: 0;
-  padding: 16px 18px 12px;
-  font-size: 30px;
+  margin: 0 0 14px;
+  color: var(--ink-900);
+  font-size: 18px;
   font-weight: 700;
-  color: #2e5d50;
-  border-bottom: 1px solid #eef5f3;
-  background: linear-gradient(0deg, #f5fbf9, #f5fbf9);
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding-left: 10px;
+  border-left: 6px solid var(--green-400);
 }
 
 .c1r-body {
-  padding: 18px;
-  color: #33413f;
-  font-size: 15px;
-  flex: 1;
+  min-height: 200px;
+  width: 100%;
+  /* 추가 */
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-/* 반응형 */
-@media (max-width: 720px) {
-  .c1r-top { 
-    grid-template-columns: 1fr; 
-    gap: 16px;
-    padding-left: 12px;
-    padding-right: 12px;
-  }
-  .c1r-bottom {
-    padding-left: 12px;
-    padding-right: 12px;
-  }
-  .c1r-square { aspect-ratio: auto; min-height: 220px; }
-  .c1r-rect   { aspect-ratio: auto; min-height: 240px; }
+
+/* 크기 가변 카드 */
+.c1r-square {
+  height: auto;
+}
+
+.c1r-rect {
+  height: auto;
+}
+
+/* ===== Tabs ===== */
+.c1r-tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.c1r-tabs button {
+  padding: 6px 14px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+  color: var(--ink-700);
+  cursor: pointer;
+  font-size: 14px;
+  transition: all .2s ease;
+}
+
+.c1r-tabs button:hover {
+  background: var(--green-50);
+  border-color: var(--green-300);
+}
+
+.c1r-tabs button.active {
+  background: var(--green-500);
+  color: #fff;
+  border-color: var(--green-500);
+  font-weight: 600;
+  box-shadow: 0 4px 10px rgba(72, 187, 120, 0.3);
 }
