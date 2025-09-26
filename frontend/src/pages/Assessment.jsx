@@ -1,18 +1,15 @@
+// frontend/src/pages/Assessment.jsx
 import React, { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "./css/questions.css";
-// ⚠️ 프론트에서 백엔드 경로를 직접 import 하면 번들에 포함되지 않습니다.
-// 별도 프론트 전용 파일로 복사해 두는 것을 권장합니다.
-import localQuestions from "../../../backend/questions";
+import { getEsgQuestions, getMyEsgAnswers, saveEsgAnswersBulk } from "../api";
 
-const API_BASE = "http://localhost:3000/esg";
 const REPORT_KEY = "ESG_REPORT_V1";
 
 function Assessment() {
   const navigate = useNavigate();
   const categories = ["Environment", "Social", "Governance"];
 
-  // 로그인 후 저장해 둔 PK만 사용 (sessionStorage 우선)
   const userKey =
     sessionStorage.getItem("userKey") || localStorage.getItem("userKey");
 
@@ -40,75 +37,7 @@ function Assessment() {
   const [loading, setLoading] = useState(!!userKey);
   const [error, setError] = useState("");
 
-  // --- 인증 헤더 (Authorization: Bearer {userKey}) ---
-  const authHeaders = {
-    "Content-Type": "application/json",
-    ...(userKey ? { Authorization: `Bearer ${userKey}` } : {}),
-  };
-
-  // --- 로컬 질문 헬퍼 ---
-  const getLocalQuestions = (category) => {
-    const list = (localQuestions?.[category] || []).map((q) => ({
-      id: q.id,
-      category: q.category,
-      text: q.text,
-      description: q.description,
-      options: q.options || ["예", "아니오"],
-    }));
-    return list;
-  };
-
-  // --- API helpers: 실패/빈값 시 로컬 폴백 ---
-  const fetchQuestions = async (category) => {
-    try {
-      const res = await fetch(`${API_BASE}/questions?category=${category}`, {
-        headers: authHeaders,
-      });
-
-      // 인증 실패 → 폴백은 안 하고 에러만 띄워 로그인 유도
-      if (res.status === 401) throw new Error("UNAUTHORIZED");
-
-      // 그 외 오류는 폴백 시도
-      if (!res.ok) throw new Error("BAD_RESPONSE");
-
-      const data = await res.json();
-      const fromApi = data.questions || [];
-
-      // DB가 비어 있으면 로컬로 폴백
-      return fromApi.length > 0 ? fromApi : getLocalQuestions(category);
-    } catch (e) {
-      if (e.message === "UNAUTHORIZED") throw e;
-      // 네트워크/서버 에러 → 로컬 폴백
-      return getLocalQuestions(category);
-    }
-  };
-
-  const fetchMyAnswers = async (category) => {
-    try {
-      const res = await fetch(`${API_BASE}/answers/me?category=${category}`, {
-        headers: authHeaders,
-      });
-      if (res.status === 401) throw new Error("UNAUTHORIZED");
-      const data = await res.json();
-      return data.answers || {};
-    } catch (e) {
-      // 응답이 없어도 화면은 보여줘야 하므로 빈 맵 리턴
-      if (e.message === "UNAUTHORIZED") throw e;
-      return {};
-    }
-  };
-
-  const bulkSubmit = async (payload) => {
-    const res = await fetch(`${API_BASE}/answers/bulk`, {
-      method: "POST",
-      headers: authHeaders,
-      body: JSON.stringify(payload),
-    });
-    if (res.status === 401) throw new Error("UNAUTHORIZED");
-    return res.json();
-  };
-
-  // --- 초기 로드 ---
+  // 초기 로드
   useEffect(() => {
     if (!userKey) {
       setLoading(false);
@@ -120,14 +49,14 @@ function Assessment() {
         const qObj = {};
         const aObj = {};
         for (const cat of categories) {
-          qObj[cat] = await fetchQuestions(cat); // ✅ API→로컬 폴백
-          aObj[cat] = await fetchMyAnswers(cat);
+          qObj[cat] = await getEsgQuestions(cat);
+          aObj[cat] = await getMyEsgAnswers(cat);
         }
         setQuestions(qObj);
         setAnswers(aObj);
         setError("");
       } catch (e) {
-        if (e.message === "UNAUTHORIZED") {
+        if (e?.message === "UNAUTHORIZED") {
           setError("세션이 만료되었거나 권한이 없습니다. 다시 로그인해 주세요.");
         } else {
           setError("데이터를 불러오지 못했어요. 잠시 후 다시 시도해 주세요.");
@@ -139,7 +68,7 @@ function Assessment() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userKey]);
 
-  // --- 스크롤/하이라이트 ---
+  // 스크롤/하이라이트
   const SCROLLER_SELECTOR = ".assessment-content";
   const scrollToTopBoth = (behavior = "auto") => {
     const scroller = document.querySelector(SCROLLER_SELECTOR);
@@ -164,7 +93,7 @@ function Assessment() {
     setTimeout(() => setHighlightKey(null), 1400);
   };
 
-  // --- 라디오 응답 ---
+  // 라디오 응답
   const handleAnswer = (category, questionId, option) => {
     setAnswers((prev) => ({
       ...prev,
@@ -173,14 +102,14 @@ function Assessment() {
     setSaved(false);
   };
 
-  // --- 미응답 찾기 ---
+  // 미응답 찾기
   const findUnansweredIds = (cat) => {
     const qs = questions[cat] || [];
     const map = answers[cat] || {};
     return qs.filter((q) => !map[q.id]).map((q) => q.id);
   };
 
-  // --- 네비게이션 ---
+  // 네비게이션
   const goPrev = () => {
     const idx = categories.indexOf(selectedCategory);
     if (idx > 0) setSelectedCategory(categories[idx - 1]);
@@ -230,7 +159,7 @@ function Assessment() {
     });
   };
 
-  // --- 최종 제출 ---
+  // 최종 제출 (JSON 저장 규격으로 구성)
   const submitAll = async () => {
     for (const cat of categories) {
       const missing = findUnansweredIds(cat);
@@ -258,20 +187,25 @@ function Assessment() {
       }
     }
 
-    // 서버 저장 페이로드
-    const payload = { answers: [] };
+    // 서버 저장 페이로드: [{category, questionid, question, answer}]
+    const toSave = [];
     categories.forEach((cat) => {
       const map = answers[cat] || {};
-      Object.entries(map).forEach(([qid, opt]) => {
-        payload.answers.push({
-          question_id: Number(qid),
-          selected_option: opt,
+      const qs = questions[cat] || [];
+      for (const q of qs) {
+        const opt = map[q.id];
+        if (!opt) continue;
+        toSave.push({
+          category: q.category,
+          questionid: Number(q.id),
+          question: q.text,
+          answer: opt,
         });
-      });
+      }
     });
 
     try {
-      const resp = await bulkSubmit(payload);
+      const resp = await saveEsgAnswersBulk(toSave);
       if (resp?.success) {
         setSaved(true);
         localStorage.setItem(
@@ -290,7 +224,7 @@ function Assessment() {
         throw new Error("SAVE_FAILED");
       }
     } catch (e) {
-      if (e.message === "UNAUTHORIZED") {
+      if (e?.message === "UNAUTHORIZED") {
         setModal({
           title: "로그인이 필요합니다",
           message: "세션이 만료되었어요. 다시 로그인해 주세요.",
@@ -306,11 +240,11 @@ function Assessment() {
     }
   };
 
-  // --- 렌더 가드 ---
+  // 렌더 가드
   if (!userKey) {
     return (
       <div style={{ padding: 24 }}>
-        로그인이 필요합니다.{" "}
+        로그인이 필요합니다{" "}
         <button className="btn btn--primary" onClick={() => navigate("/login")}>
           로그인 하러가기
         </button>

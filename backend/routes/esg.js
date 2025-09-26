@@ -1,7 +1,7 @@
 // routes/esg.js
 import express from 'express';
 import { pool } from '../db.js';
-import questionsSource from '../questions.js'; // ✅ 한 번만 import
+import questionsSource from '../questions.js'; // { Environment:[], Social:[], Governance:[] }
 
 const router = express.Router();
 
@@ -10,7 +10,9 @@ router.use((req, _res, next) => {
   next();
 });
 
-// ----- Auth helpers -----
+/* =========================
+   Auth helpers
+   ========================= */
 function parseBearer(req) {
   const h = req.headers.authorization || '';
   const m = h.match(/^Bearer\s+(\S+)$/i);
@@ -24,11 +26,13 @@ async function requireAuth(req, res, next) {
     if (!userKey || Number.isNaN(userKey)) {
       return res.status(401).json({ error: 'Unauthorized' });
     }
+    // 존재 유저 확인(옵션)
     const [u] = await pool.query(
       'SELECT user_id FROM signup_login WHERE user_id = ? LIMIT 1',
       [userKey]
     );
     if (!u.length) return res.status(401).json({ error: 'Unauthorized' });
+
     req.user = { id: userKey };
     next();
   } catch (e) {
@@ -37,146 +41,177 @@ async function requireAuth(req, res, next) {
   }
 }
 
-// ----- 질문 목록 -----
+/* =========================
+   질문 목록 (정적 소스에서 제공)
+   GET /esg/questions?category=Environment|Social|Governance
+   ========================= */
 router.get('/questions', requireAuth, async (req, res) => {
   const { category } = req.query;
-  let sql = `SELECT id, category, text, description, options FROM esg_questions`;
-  const params = [];
-  if (category) {
-    sql += ` WHERE category = ?`;
-    params.push(category);
+  if (!category) {
+    // 모든 카테고리 합쳐서 내려주고 싶다면:
+    const all = ['Environment','Social','Governance'].flatMap(cat =>
+      (questionsSource[cat] || []).map(q => ({
+        id: q.id,
+        category: q.category,
+        text: q.text,
+        description: q.description || '',
+        options: q.options || ['예','아니오'],
+      }))
+    );
+    return res.json({ questions: all });
   }
-  sql += ` ORDER BY id ASC`;
 
-  const [rows] = await pool.query(sql, params);
-  const normalized = rows.map(r => ({
-    id: r.id,
-    category: r.category,
-    text: r.text,
-    description: r.description,
-    options: (() => {
-      try { return JSON.parse(r.options); } catch { return ['예', '아니오']; }
-    })(),
+  const list = (questionsSource[category] || []).map(q => ({
+    id: q.id,
+    category: q.category,
+    text: q.text,
+    description: q.description || '',
+    options: q.options || ['예','아니오'],
   }));
-  res.json({ questions: normalized });
+  res.json({ questions: list });
 });
 
-// ----- 내 응답 조회 -----
+/* =========================
+   내 응답 조회
+   GET /esg/answers/me?category=...
+   - 최신 제출만 사용 (questionid별 MAX(inputdate))
+   ========================= */
 router.get('/answers/me', requireAuth, async (req, res) => {
   const userId = req.user.id;
   const { category } = req.query;
 
-  let sql = `
-    SELECT a.question_id, a.selected_option
-    FROM esg_user_answers a
-    JOIN esg_questions q ON q.id = a.question_id
-    WHERE a.user_id = ?
-  `;
-  const params = [userId];
-  if (category) { sql += ` AND q.category = ?`; params.push(category); }
-  sql += ` ORDER BY a.question_id ASC`;
+  // 전체 가져와서 앱 단에서 reduce 해도 되지만,
+  // 여기서는 MySQL에서 최근 것만 뽑아오는 간단 방식(서브쿼리)로 처리
+  const [rows] = await pool.query(
+    `
+    SELECT e.answerjson
+    FROM esg_user_answer e
+    JOIN (
+      SELECT JSON_EXTRACT(answerjson, '$.questionid') AS qid, MAX(inputdate) AS latest
+      FROM esg_user_answer
+      WHERE user_id = ?
+      GROUP BY JSON_EXTRACT(answerjson, '$.questionid')
+    ) t ON JSON_EXTRACT(e.answerjson, '$.questionid') = t.qid
+       AND e.inputdate = t.latest
+    WHERE e.user_id = ?
+    `,
+    [userId, userId]
+  );
 
-  const [rows] = await pool.query(sql, params);
+  // { [question_id]: '예'|'아니오' } 형태로 반환
   const map = {};
-  rows.forEach(r => { map[r.question_id] = r.selected_option; });
+  for (const r of rows) {
+    try {
+      const obj = JSON.parse(r.answerjson);
+      if (category && obj.category !== category) continue;
+      map[Number(obj.questionid)] = String(obj.answer || '');
+    } catch (_) {}
+  }
   res.json({ answers: map });
 });
 
-// ----- 일괄 저장(업서트) -----
+/* =========================
+   일괄 저장(업서트 대체: 삭제 후 삽입)
+   POST /esg/answers/bulk
+   body: { answers: [{category, questionid, question, answer}] }
+   ========================= */
 router.post('/answers/bulk', requireAuth, async (req, res) => {
   try {
     const userId = req.user.id;
-    const { answers } = req.body; // [{question_id, selected_option}]
+    const { answers } = req.body;
 
     if (!Array.isArray(answers) || answers.length === 0) {
       return res.status(400).json({ error: 'answers empty' });
     }
 
+    // 유효성(최소 필드)
+    const cleaned = answers
+      .map(a => ({
+        category: a.category,
+        questionid: Number(a.questionid),
+        question: String(a.question || ''),
+        answer: String(a.answer || ''),
+      }))
+      .filter(a => a.category && a.questionid);
+
+    if (cleaned.length === 0) {
+      return res.status(400).json({ error: 'no valid answers' });
+    }
+
+    // 같은 user & questionid 기존 레코드 삭제(중복 방지)
+    const qids = [...new Set(cleaned.map(a => a.questionid))];
+    // JSON_EXTRACT(answerjson, '$.questionid') = ?
+    // 매개변수 바인딩 수 만큼 OR 조건 구성
+    const whereOr = qids.map(() => `JSON_EXTRACT(answerjson, '$.questionid') = ?`).join(' OR ');
+    await pool.query(
+      `DELETE FROM esg_user_answer WHERE user_id = ? AND (${whereOr})`,
+      [userId, ...qids]
+    );
+
+    // 새로 삽입
     const now = new Date();
-    const values = answers.map(a => [
-      a.question_id, userId, a.selected_option, now
-    ]);
+    const values = cleaned.map(a => [userId, JSON.stringify(a), now]);
+    await pool.query(
+      `INSERT INTO esg_user_answer (user_id, answerjson, inputdate) VALUES ?`,
+      [values]
+    );
 
-    const sql = `
-      INSERT INTO esg_user_answers (question_id, user_id, selected_option, noted_at)
-      VALUES ?
-      ON DUPLICATE KEY UPDATE
-        selected_option = VALUES(selected_option),
-        noted_at = VALUES(noted_at)
-    `;
-
-    const [result] = await pool.query(sql, [values]);
-    res.json({ success: true, affected: result.affectedRows });
+    res.json({ success: true, saved_count: cleaned.length });
   } catch (err) {
     console.error('[answers/bulk] error:', err);
     res.status(500).json({ error: 'Internal error while saving answers' });
   }
 });
 
-// ----- 카테고리별 집계 -----
+/* =========================
+   리포트 (카테고리별 집계: 최신 제출 기준)
+   GET /esg/report/me
+   ========================= */
 router.get('/report/me', requireAuth, async (req, res) => {
   const userId = req.user.id;
 
-  const [rows] = await pool.query(`
-    SELECT q.category,
-           SUM(CASE WHEN a.selected_option = '예' THEN 1 ELSE 0 END) AS yes_count,
-           SUM(CASE WHEN a.selected_option = '아니오' THEN 1 ELSE 0 END) AS no_count,
-           COUNT(a.question_id) AS answered
-    FROM esg_questions q
-    LEFT JOIN esg_user_answers a
-      ON a.question_id = q.id AND a.user_id = ?
-    GROUP BY q.category
-    ORDER BY FIELD(q.category, 'Environment','Social','Governance')
-  `, [userId]);
+  // 최신 제출로 합치기
+  const [rows] = await pool.query(
+    `
+    SELECT e.answerjson
+    FROM esg_user_answer e
+    JOIN (
+      SELECT JSON_EXTRACT(answerjson, '$.questionid') AS qid, MAX(inputdate) AS latest
+      FROM esg_user_answer
+      WHERE user_id = ?
+      GROUP BY JSON_EXTRACT(answerjson, '$.questionid')
+    ) t ON JSON_EXTRACT(e.answerjson, '$.questionid') = t.qid
+       AND e.inputdate = t.latest
+    WHERE e.user_id = ?
+    `,
+    [userId, userId]
+  );
 
-  const [totalsRows] = await pool.query(`
-    SELECT category, COUNT(*) AS total
-    FROM esg_questions
-    GROUP BY category
-  `);
+  const counters = {
+    Environment: { yes: 0, no: 0, total: 0 },
+    Social: { yes: 0, no: 0, total: 0 },
+    Governance: { yes: 0, no: 0, total: 0 },
+  };
 
-  const totals = Object.fromEntries(totalsRows.map(r => [r.category, r.total]));
-  const report = rows.map(r => ({
-    category: r.category,
-    yes: Number(r.yes_count || 0),
-    no: Number(r.no_count || 0),
-    total: totals[r.category] || 0,
+  for (const r of rows) {
+    try {
+      const obj = JSON.parse(r.answerjson);
+      const cat = obj.category;
+      if (!counters[cat]) continue;
+      counters[cat].total += 1;
+      if (obj.answer === '예') counters[cat].yes += 1;
+      else if (obj.answer === '아니오') counters[cat].no += 1;
+    } catch (_) {}
+  }
+
+  const report = ['Environment','Social','Governance'].map(cat => ({
+    category: cat,
+    yes: counters[cat].yes,
+    no: counters[cat].no,
+    total: counters[cat].total,
   }));
 
   res.json({ report });
-});
-
-// ----- (관리용) 질문 시드 -----
-router.post('/admin/seed-questions', requireAuth, async (req, res) => {
-  try {
-    const [cnt] = await pool.query('SELECT COUNT(*) AS c FROM esg_questions');
-    if (cnt[0].c > 0) {
-      return res.json({ ok: true, message: 'Already seeded', inserted: 0 });
-    }
-
-    const rows = [];
-    for (const cat of ['Environment', 'Social', 'Governance']) {
-      for (const q of (questionsSource[cat] || [])) {
-        rows.push([
-          q.id,
-          q.category,
-          q.text,
-          q.description || '',
-          JSON.stringify(q.options || ['예','아니오']),
-        ]);
-      }
-    }
-
-    await pool.query(
-      `INSERT INTO esg_questions (id, category, text, description, options) VALUES ?`,
-      [rows]
-    );
-
-    res.json({ ok: true, message: 'Seeded', inserted: rows.length });
-  } catch (e) {
-    console.error('[seed-questions] error:', e);
-    res.status(500).json({ ok: false, error: 'Seed failed' });
-  }
 });
 
 export default router;
