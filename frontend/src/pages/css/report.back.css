@@ -1,0 +1,141 @@
+/* 페이지 전체 레이아웃 — 가운데 정렬의 기준 */
+.rb-page {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+}
+
+/* 가운데 고정 폭 컨테이너 */
+.rb-container {
+  width: 100%;
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 0 12px;
+}
+
+/* 상단 타이틀 */
+.rb-title {
+  text-align: center;
+  font-size: 28px;
+  font-weight: 700;
+  margin: 6px 0 16px;
+}
+
+/* 큰 카드 (1000 x 450) */
+.rb-hero {
+  width: 1000px;
+  height: 450px;
+  border-radius: 16px;
+  overflow: hidden;
+  margin: 0 auto;
+  box-shadow: 0 10px 24px rgba(0,0,0,0.08);
+  background: #f3f5f7;
+  position: relative;
+}
+
+/* 행(아래 두 장)을 가로로 중앙 정렬 */
+.rb-row {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+  margin-top: 18px;
+  flex-wrap: wrap;
+}
+
+/* 작은 카드 (492 x 250) */
+.rb-card {
+  width: 492px;
+  height: 250px;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 10px 24px rgba(0,0,0,0.08);
+  background: #f3f5f7;
+  position: relative;
+}
+
+/* 공통: 커버 이미지/버튼 */
+.rb-cover {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* ✅ 링크 오버레이(이미지 전체 클릭 가능) */
+.rb-btn {
+  all: unset;
+  position: absolute;
+  inset: 0;
+  display: block;
+  cursor: pointer;
+  z-index: 5;               /* 최상단으로 */
+  pointer-events: auto;
+}
+.rb-btn:focus-visible {
+  outline: 2px solid #2ee9b5;
+  outline-offset: 2px;
+}
+
+/* ✅ 텍스트/뱃지는 클릭을 막지 않도록 */
+.rb-center,
+.rb-badges {
+  position: absolute;
+  z-index: 2;               /* rb-btn 보다 낮게 */
+  pointer-events: none;     /* 클릭 통과 */
+}
+
+.rb-badges {
+  left: 16px;
+  bottom: 14px;
+  display: flex;
+  gap: 8px;
+}
+
+.rb-badge {
+  background: rgba(0,0,0,0.35);
+  color: #fff;
+  padding: 6px 10px;
+  border-radius: 9999px;
+  font-size: 12px;
+}
+
+.rb-hero .rb-badges { bottom: 18px; }
+
+.rb-center {
+  inset: 0;
+  display: grid;
+  place-items: center;
+  color: #fff;
+  text-align: center;
+  text-shadow: 0 2px 14px rgba(0,0,0,0.25);
+}
+
+.rb-y {
+  font-size: 36px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  opacity: .95;
+  margin-bottom: 6px;
+}
+.rb-esg {
+  font-size: 42px;
+  font-weight: 800;
+  color: #2ee9b5;
+  margin: 0;
+}
+.rb-report {
+  font-size: 34px;
+  font-weight: 800;
+  margin-top: -2px;
+}
+
+/* 반응형(좁아지면 세로 스택) */
+@media (max-width: 1080px) {
+  .rb-hero { width: 100%; height: 42vw; max-height: 450px; }
+  .rb-row  { justify-content: center; }
+  .rb-card { width: calc(50% - 8px); height: 22vw; min-width: 360px; max-width: 492px; }
+}
+@media (max-width: 760px) {
+  .rb-card { width: 100%; height: 260px; }
+}

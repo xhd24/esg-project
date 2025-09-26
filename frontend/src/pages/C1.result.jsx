@@ -7,7 +7,7 @@ export default function C1Result() {
       {/* 상단: 정사각형 느낌 카드 2개 */}
       <div className="c1r-top">
         <div className="c1r-card c1r-square">
-          <h4 className="c1r-title">결과 A</h4>
+          <h4 className="c1r-title">결과 Aq</h4>
           <div className="c1r-body">여기에 A 결과/지표/차트 등을 표시</div>
         </div>
         <div className="c1r-card c1r-square">

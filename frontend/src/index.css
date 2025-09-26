@@ -40,10 +40,12 @@
   padding: 8px 20px;
 }
 
+
 .logo {
-  width: 160px;                 /* ✅ 크기만 조절 */
+  width: 190px;                 /* ✅ 크기만 조절 */
   height: auto;
-  margin-right: 40px; 
+  margin-right: 40px;
+  margin-left: 10px;            /* ← 로고를 왼쪽에서 10px 밀어줌 */
 }
 
 .user-info {

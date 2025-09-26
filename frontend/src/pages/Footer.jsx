@@ -23,7 +23,7 @@ function Footer() {
                 </ul>
 
                 <div className={styles.contact}>
-                    <p>문의 : bundangboy@sexyboy.com | Tel : 010-9114-4753 | 대표이사 : 윤준영</p>
+                    <p>문의 : bundangboy@sexyboy.com | Tel : 010-9114-4753 | 대표이사 : 박진우</p>
                     <p className={styles.copy}>© 2025 ESG Monitoring. All Rights Reserved.</p>
                 </div>
             </div>

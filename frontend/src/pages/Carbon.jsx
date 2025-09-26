@@ -14,7 +14,7 @@ function Carbon() {
             `${styles.link} ${isActive ? styles.active : ""}`
           }
         >
-          C1
+          내부/외부 공정 배출량
         </NavLink>
 
         <NavLink
@@ -23,7 +23,7 @@ function Carbon() {
             `${styles.link} ${isActive ? styles.active : ""}`
           }
         >
-          C2
+          운항 배출량
         </NavLink>
 
         <NavLink
