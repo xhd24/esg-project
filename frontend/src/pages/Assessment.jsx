@@ -1,108 +1,203 @@
-import React, { useState, useRef, useEffect } from "react";
-import questions from "../../../backend/questions"; // 질문 가져오기
-import { calculateScore } from "../../../backend/scoreQuestions.js"; // 점수 계산 함수
+import React, { useEffect, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import "./css/questions.css";
+// ⚠️ 프론트에서 백엔드 경로를 직접 import 하면 번들에 포함되지 않습니다.
+// 별도 프론트 전용 파일로 복사해 두는 것을 권장합니다.
+import localQuestions from "../../../backend/questions";
 
+const API_BASE = "http://localhost:3000/esg";
 const REPORT_KEY = "ESG_REPORT_V1";
 
 function Assessment() {
+  const navigate = useNavigate();
   const categories = ["Environment", "Social", "Governance"];
+
+  // 로그인 후 저장해 둔 PK만 사용 (sessionStorage 우선)
+  const userKey =
+    sessionStorage.getItem("userKey") || localStorage.getItem("userKey");
+
   const [selectedCategory, setSelectedCategory] = useState("Environment");
 
-  // 각 카테고리 응답
+  const [questions, setQuestions] = useState({
+    Environment: [],
+    Social: [],
+    Governance: [],
+  });
+
+  // { [cat]: { [question_id]: '예'|'아니오' } }
   const [answers, setAnswers] = useState({
-    Environment: Array(50).fill(null),
-    Social: Array(55).fill(null),
-    Governance: Array(55).fill(null),
+    Environment: {},
+    Social: {},
+    Governance: {},
   });
 
   const [saved, setSaved] = useState(false);
   const toastRef = useRef(null);
-
-  // 모달
   const [modal, setModal] = useState(null);
-
-  // 질문 DOM 참조 & 하이라이트(빨간 테두리)
   const questionRefs = useRef({});
   const [highlightKey, setHighlightKey] = useState(null);
 
-  const totals = {
-    Environment: questions.Environment.length,
-    Social: questions.Social.length,
-    Governance: questions.Governance.length,
-  };
-  const weights = { Environment: 35, Social: 35, Governance: 30 };
+  const [loading, setLoading] = useState(!!userKey);
+  const [error, setError] = useState("");
 
-  // 라디오 응답 저장
-  const handleAnswer = (category, qIndex, value) => {
-    setAnswers((prev) => {
-      const updated = { ...prev };
-      const next = [...(updated[category] || [])];
-      next[qIndex] = value === "예" ? 1 : 0;
-      updated[category] = next;
-      return updated;
+  // --- 인증 헤더 (Authorization: Bearer {userKey}) ---
+  const authHeaders = {
+    "Content-Type": "application/json",
+    ...(userKey ? { Authorization: `Bearer ${userKey}` } : {}),
+  };
+
+  // --- 로컬 질문 헬퍼 ---
+  const getLocalQuestions = (category) => {
+    const list = (localQuestions?.[category] || []).map((q) => ({
+      id: q.id,
+      category: q.category,
+      text: q.text,
+      description: q.description,
+      options: q.options || ["예", "아니오"],
+    }));
+    return list;
+  };
+
+  // --- API helpers: 실패/빈값 시 로컬 폴백 ---
+  const fetchQuestions = async (category) => {
+    try {
+      const res = await fetch(`${API_BASE}/questions?category=${category}`, {
+        headers: authHeaders,
+      });
+
+      // 인증 실패 → 폴백은 안 하고 에러만 띄워 로그인 유도
+      if (res.status === 401) throw new Error("UNAUTHORIZED");
+
+      // 그 외 오류는 폴백 시도
+      if (!res.ok) throw new Error("BAD_RESPONSE");
+
+      const data = await res.json();
+      const fromApi = data.questions || [];
+
+      // DB가 비어 있으면 로컬로 폴백
+      return fromApi.length > 0 ? fromApi : getLocalQuestions(category);
+    } catch (e) {
+      if (e.message === "UNAUTHORIZED") throw e;
+      // 네트워크/서버 에러 → 로컬 폴백
+      return getLocalQuestions(category);
+    }
+  };
+
+  const fetchMyAnswers = async (category) => {
+    try {
+      const res = await fetch(`${API_BASE}/answers/me?category=${category}`, {
+        headers: authHeaders,
+      });
+      if (res.status === 401) throw new Error("UNAUTHORIZED");
+      const data = await res.json();
+      return data.answers || {};
+    } catch (e) {
+      // 응답이 없어도 화면은 보여줘야 하므로 빈 맵 리턴
+      if (e.message === "UNAUTHORIZED") throw e;
+      return {};
+    }
+  };
+
+  const bulkSubmit = async (payload) => {
+    const res = await fetch(`${API_BASE}/answers/bulk`, {
+      method: "POST",
+      headers: authHeaders,
+      body: JSON.stringify(payload),
     });
-    setSaved(false);
+    if (res.status === 401) throw new Error("UNAUTHORIZED");
+    return res.json();
   };
 
-  // ---- 스크롤 유틸 ----
+  // --- 초기 로드 ---
+  useEffect(() => {
+    if (!userKey) {
+      setLoading(false);
+      return;
+    }
+    (async () => {
+      try {
+        setLoading(true);
+        const qObj = {};
+        const aObj = {};
+        for (const cat of categories) {
+          qObj[cat] = await fetchQuestions(cat); // ✅ API→로컬 폴백
+          aObj[cat] = await fetchMyAnswers(cat);
+        }
+        setQuestions(qObj);
+        setAnswers(aObj);
+        setError("");
+      } catch (e) {
+        if (e.message === "UNAUTHORIZED") {
+          setError("세션이 만료되었거나 권한이 없습니다. 다시 로그인해 주세요.");
+        } else {
+          setError("데이터를 불러오지 못했어요. 잠시 후 다시 시도해 주세요.");
+        }
+      } finally {
+        setLoading(false);
+      }
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userKey]);
+
+  // --- 스크롤/하이라이트 ---
   const SCROLLER_SELECTOR = ".assessment-content";
   const scrollToTopBoth = (behavior = "auto") => {
     const scroller = document.querySelector(SCROLLER_SELECTOR);
     if (scroller) scroller.scrollTo({ top: 0, left: 0, behavior });
     window.scrollTo({ top: 0, left: 0, behavior });
   };
-  const scrollToQuestion = (cat, idx, behavior = "smooth") => {
-    const key = `${cat}-${idx}`;
-    const el = questionRefs.current[key];
-    if (el?.scrollIntoView) el.scrollIntoView({ behavior, block: "start" });
-    // 빨간 테두리 하이라이트 부여 후 부드럽게 해제
-    setHighlightKey(key);
-    setTimeout(() => setHighlightKey(null), 1400);
-  };
-
-  // 카테고리 바뀌면 맨 위로
   useEffect(() => {
     requestAnimationFrame(() => scrollToTopBoth("auto"));
   }, [selectedCategory]);
 
-  // 저장 후 토스트로 스크롤
   useEffect(() => {
     if (saved && toastRef.current) {
       toastRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
     }
   }, [saved]);
 
-  // ---- 미응답 찾기 ----
-  const findUnansweredIndices = (cat) => {
-    const count = totals[cat];
-    const arr = answers[cat] || [];
-    const missing = [];
-    for (let i = 0; i < count; i++) {
-      if (arr[i] !== 1 && arr[i] !== 0) missing.push(i);
-    }
-    return missing;
+  const scrollToQuestion = (cat, qid, behavior = "smooth") => {
+    const key = `${cat}-${qid}`;
+    const el = questionRefs.current[key];
+    if (el?.scrollIntoView) el.scrollIntoView({ behavior, block: "start" });
+    setHighlightKey(key);
+    setTimeout(() => setHighlightKey(null), 1400);
   };
 
-  // ---- 네비게이션 ----
+  // --- 라디오 응답 ---
+  const handleAnswer = (category, questionId, option) => {
+    setAnswers((prev) => ({
+      ...prev,
+      [category]: { ...(prev[category] || {}), [questionId]: option },
+    }));
+    setSaved(false);
+  };
+
+  // --- 미응답 찾기 ---
+  const findUnansweredIds = (cat) => {
+    const qs = questions[cat] || [];
+    const map = answers[cat] || {};
+    return qs.filter((q) => !map[q.id]).map((q) => q.id);
+  };
+
+  // --- 네비게이션 ---
   const goPrev = () => {
     const idx = categories.indexOf(selectedCategory);
     if (idx > 0) setSelectedCategory(categories[idx - 1]);
   };
-
   const goNext = () => {
     const current = selectedCategory;
     const idx = categories.indexOf(current);
     if (idx === categories.length - 1) return;
 
     const nextCat = categories[idx + 1];
-    const missing = findUnansweredIndices(current);
+    const missingIds = findUnansweredIds(current);
 
-    if (missing.length > 0) {
-      const firstIdx = missing[0];
+    if (missingIds.length > 0) {
+      const firstId = missingIds[0];
       setModal({
         title: "미응답 문항 안내",
-        message: `${current} 카테고리에 미응답 문항이 ${missing.length}개 있어요.\n첫 미응답 문항(#${firstIdx + 1}) 위치로 이동합니다.`,
+        message: `${current} 카테고리에 미응답 문항이 ${missingIds.length}개 있어요.\n첫 미응답 문항(#${firstId}) 위치로 이동합니다.`,
         actions: [
           { label: "취소", variant: "ghost", onClick: () => setModal(null) },
           {
@@ -110,7 +205,7 @@ function Assessment() {
             variant: "primary",
             onClick: () => {
               setModal(null);
-              scrollToQuestion(current, firstIdx, "smooth");
+              scrollToQuestion(current, firstId, "smooth");
             },
           },
         ],
@@ -135,17 +230,17 @@ function Assessment() {
     });
   };
 
-  // ---- 최종 제출 ----
-  const submitAll = () => {
+  // --- 최종 제출 ---
+  const submitAll = async () => {
     for (const cat of categories) {
-      const missing = findUnansweredIndices(cat);
+      const missing = findUnansweredIds(cat);
       if (missing.length > 0) {
-        const firstIdx = missing[0];
+        const firstId = missing[0];
         setSelectedCategory(cat);
         setTimeout(() => {
           setModal({
             title: "미응답 문항 안내",
-            message: `${cat} 카테고리에 미응답 문항이 ${missing.length}개 있어요.\n첫 미응답 문항(#${firstIdx + 1}) 위치로 이동합니다.`,
+            message: `${cat} 카테고리에 미응답 문항이 ${missing.length}개 있어요.\n첫 미응답 문항(#${firstId}) 위치로 이동합니다.`,
             actions: [
               { label: "취소", variant: "ghost", onClick: () => setModal(null) },
               {
@@ -153,7 +248,7 @@ function Assessment() {
                 variant: "primary",
                 onClick: () => {
                   setModal(null);
-                  scrollToQuestion(cat, firstIdx, "smooth");
+                  scrollToQuestion(cat, firstId, "smooth");
                 },
               },
             ],
@@ -163,36 +258,65 @@ function Assessment() {
       }
     }
 
-    const scores = calculateScore(answers);
-
-    const yesCounts = {};
-    const noCounts = {};
+    // 서버 저장 페이로드
+    const payload = { answers: [] };
     categories.forEach((cat) => {
-      const count = totals[cat];
-      const yes = (answers[cat] || []).slice(0, count).filter((v) => v === 1).length;
-      yesCounts[cat] = yes;
-      noCounts[cat] = count - yes;
+      const map = answers[cat] || {};
+      Object.entries(map).forEach(([qid, opt]) => {
+        payload.answers.push({
+          question_id: Number(qid),
+          selected_option: opt,
+        });
+      });
     });
 
-    const payload = {
-      savedAt: new Date().toISOString(),
-      totals,
-      weights,
-      scores,
-      yesCounts,
-      noCounts,
-      answers,
-    };
-
-    localStorage.setItem(REPORT_KEY, JSON.stringify(payload));
-    setSaved(true);
-
-    setModal({
-      title: "제출 완료",
-      message: "수고하셨습니다. 결과가 저장되었습니다.",
-      actions: [{ label: "확인", variant: "primary", onClick: () => setModal(null) }],
-    });
+    try {
+      const resp = await bulkSubmit(payload);
+      if (resp?.success) {
+        setSaved(true);
+        localStorage.setItem(
+          REPORT_KEY,
+          JSON.stringify({
+            savedAt: new Date().toISOString(),
+            answers,
+          })
+        );
+        setModal({
+          title: "제출 완료",
+          message: "수고하셨습니다. 결과가 저장되었습니다.",
+          actions: [{ label: "확인", variant: "primary", onClick: () => setModal(null) }],
+        });
+      } else {
+        throw new Error("SAVE_FAILED");
+      }
+    } catch (e) {
+      if (e.message === "UNAUTHORIZED") {
+        setModal({
+          title: "로그인이 필요합니다",
+          message: "세션이 만료되었어요. 다시 로그인해 주세요.",
+          actions: [{ label: "로그인", variant: "primary", onClick: () => navigate("/login") }],
+        });
+      } else {
+        setModal({
+          title: "오류",
+          message: "저장 중 오류가 발생했습니다.",
+          actions: [{ label: "확인", variant: "primary", onClick: () => setModal(null) }],
+        });
+      }
+    }
   };
+
+  // --- 렌더 가드 ---
+  if (!userKey) {
+    return (
+      <div style={{ padding: 24 }}>
+        로그인이 필요합니다.{" "}
+        <button className="btn btn--primary" onClick={() => navigate("/login")}>
+          로그인 하러가기
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className="assessment-container">
@@ -216,7 +340,16 @@ function Assessment() {
       <main className="assessment-content">
         <h2>{selectedCategory} 설문조사</h2>
 
-        {/* 저장 안내 배지 */}
+        {loading && <div style={{ marginBottom: 12 }}>불러오는 중…</div>}
+        {error && (
+          <div style={{ marginBottom: 12, color: "crimson" }}>
+            {error}{" "}
+            <button className="btn btn--ghost" onClick={() => navigate("/login")}>
+              로그인
+            </button>
+          </div>
+        )}
+
         {saved && (
           <div
             ref={toastRef}
@@ -231,13 +364,13 @@ function Assessment() {
               fontWeight: "bold",
             }}
           >
-            ℹ️ 결과가 저장되었습니다. 사이드바의 <b>ESG Report</b>에서 확인하세요.
+            ℹ️ 서버에 저장되었습니다. 사이드바의 <b>ESG Report</b>에서 확인하세요.
           </div>
         )}
 
-        {(questions[selectedCategory] || []).map((q, idx) => {
-          const selected = answers[selectedCategory][idx];
-          const key = `${selectedCategory}-${idx}`;
+        {(questions[selectedCategory] || []).map((q) => {
+          const selected = (answers[selectedCategory] || {})[q.id] || null;
+          const key = `${selectedCategory}-${q.id}`;
           const isMissing = highlightKey === key;
 
           return (
@@ -254,34 +387,26 @@ function Assessment() {
                 <p className="question-description">{q.description}</p>
               )}
 
-              <div className="option-pills" role="radiogroup">
-                <input
-                  className="pill-input"
-                  type="radio"
-                  id={`q-${selectedCategory}-${idx}-yes`}
-                  name={`q-${selectedCategory}-${idx}`}
-                  value="예"
-                  checked={selected === 1}
-                  onChange={(e) => handleAnswer(selectedCategory, idx, e.target.value)}
-                />
-                <label className="pill-label" htmlFor={`q-${selectedCategory}-${idx}-yes`}>
-                  <span className="pill-dot" aria-hidden="true"></span>
-                  예
-                </label>
-
-                <input
-                  className="pill-input"
-                  type="radio"
-                  id={`q-${selectedCategory}-${idx}-no`}
-                  name={`q-${selectedCategory}-${idx}`}
-                  value="아니오"
-                  checked={selected === 0}
-                  onChange={(e) => handleAnswer(selectedCategory, idx, e.target.value)}
-                />
-                <label className="pill-label" htmlFor={`q-${selectedCategory}-${idx}-no`}>
-                  <span className="pill-dot" aria-hidden="true"></span>
-                  아니오
-                </label>
+              <div className="option-pills" role="radiogroup" aria-label={`q-${q.id}`}>
+                {(q.options || ["예", "아니오"]).map((opt, i) => (
+                  <React.Fragment key={i}>
+                    <input
+                      className="pill-input"
+                      type="radio"
+                      id={`q-${key}-${i}`}
+                      name={`q-${key}`}
+                      value={opt}
+                      checked={selected === opt}
+                      onChange={(e) =>
+                        handleAnswer(selectedCategory, q.id, e.target.value)
+                      }
+                    />
+                    <label className="pill-label" htmlFor={`q-${key}-${i}`}>
+                      <span className="pill-dot" aria-hidden="true"></span>
+                      {opt}
+                    </label>
+                  </React.Fragment>
+                ))}
               </div>
             </div>
           );
