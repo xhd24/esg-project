@@ -53,3 +53,32 @@ export async function addQuery(inquiry_title, requester, company, email, categor
   );
 }
 
+//c1-1 작성
+export async function inputC1Query(userId, ioType, shipKey, startDate, endDate, step1, step2, step3, step4, step5) {
+  await pool.query(
+    "INSERT INTO ci (user_id,io_type,ship_id,start_date,end_date,out_step1,out_step2,out_step3,out_step4,out_step5) VALUES (?,?,?,?,?,?,?,?,?,?)",
+    [userId, ioType, shipKey, startDate, endDate, step1, step2, step3, step4, step5]
+  );
+}
+
+//c1-2 작성
+export async function inputC1_1Query(userId, ioType, shipKey, startDate, endDate, step1, step2, step3, step4, step5, step6, step7, step8) {
+  await pool.query(
+    "INSERT INTO ci (user_id,io_type,ship_id,start_date,end_date,in_step1,in_step2,in_step3,in_step4,in_step5,in_step6,in_step7,in_step8) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)",
+    [userId, ioType, shipKey, startDate, endDate, step1, step2, step3, step4, step5, step6, step7, step8]
+  );
+}
+
+export async function getCarbonQuery() {
+  const [rows] = await pool.query(
+    "SELECT * FROM ci ORDER BY ci_id DESC"
+  );
+  return rows;
+}
+
+export async function getCarbonQuery2() {
+  const [rows] = await pool.query(
+    "SELECT * FROM cii ORDER BY cii_id DESC"
+  );
+  return rows;
+}

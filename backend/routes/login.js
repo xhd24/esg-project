@@ -29,6 +29,7 @@ router.post('/', async (req, res) => {
     return res.json({
       success: true,
       userId: user.login_id,
+      userKey:user.user_id,
       message: "로그인 성공!"
     });
   } catch (err) {
