@@ -32,7 +32,7 @@ function Carbon() {
             `${styles.link} ${isActive ? styles.active : ""}`
           }
         >
-          C3
+          최신 입력값
         </NavLink>
       </nav>
 

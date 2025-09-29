@@ -13,12 +13,11 @@ export default function Visualization({ lastSavedExt, lastSavedInn }) {
     const innData = (lastSavedInn?.steps || [])
         .map((v, i) => ({ step: INT_LABELS[i], value: Number(v || 0) }))
         .filter(d => d.value > 0);
-
     return (
-        <div style={{ display: "flex", flexWrap: "wrap" }}>
+        <div style={{ display: "flex", flexWrap: "wrap"}}>
             {lastSavedExt && extData.length > 0 && (
 
-                <PieChart width={600} height={300}>
+                <PieChart width={600} height={350}>
                     <Pie data={extData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={120} label>
                         {extData.map((entry, idx) => (
                             <Cell key={idx} fill={COLORS[idx % COLORS.length]} />
@@ -27,14 +26,13 @@ export default function Visualization({ lastSavedExt, lastSavedInn }) {
                     <Tooltip />
                     <Legend />
                 </PieChart>
-
             )}
 
             {lastSavedInn && innData.length > 0 && (
-                <ResponsiveContainer width="100%" height={300}>
+                <ResponsiveContainer width="100%" height={350}>
                     <BarChart data={innData}>
                         <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis dataKey="step" />
+                        <XAxis dataKey="step" interval={0}/>
                         <YAxis />
                         <Tooltip />
                         <Legend />

@@ -2,10 +2,8 @@ import { useState, useEffect } from 'react';
 import { getCarbon } from '../api.js';
 import "./css/C1Result.css";
 import Visualization from './Visualization.jsx';
-import {
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
-  LineChart, Line
-} from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, LineChart, Line } from 'recharts';
+import { useParams } from 'react-router-dom';
 
 export default function C1Result() {
   const [extData, setExtData] = useState(null);
@@ -15,14 +13,16 @@ export default function C1Result() {
   const [activeTab, setActiveTab] = useState("ship"); // 탭 상태
 
   const userId = sessionStorage.getItem('userKey');
+  const { year } = useParams();
+  const yearNum = Number(year);
 
   useEffect(() => {
     getCarbon(userId).then((res) => {
-      const posts = res.posts || [];
+      const posts = (res.posts || []).filter(p=>{
+        const postYear = p.start_date ? new Date(p.start_date).getFullYear():null;
+        return postYear === yearNum;
+      });
 
-      // ==============================
-      // A. 외부 합산 데이터 (PieChart)
-      // ==============================
       const outs = posts.filter(p => p.io_type === "OUT");
       // 외부 합산
       if (outs.length > 0) {
@@ -37,12 +37,6 @@ export default function C1Result() {
         });
       }
 
-
-
-
-      // ==============================
-      // B. 내부 합산 데이터 (BarChart)
-      // ==============================
       const ins = posts.filter(p => p.io_type === "IN");
       // 내부 합산
       if (ins.length > 0) {
@@ -60,9 +54,6 @@ export default function C1Result() {
         });
       }
 
-      // ==============================
-      // C. 선박별 비교 (BarChart)
-      // ==============================
       const groupedByShip = {};
       posts.forEach(p => {
         const ship = p.ship_id;
@@ -83,9 +74,6 @@ export default function C1Result() {
       });
       setShipCompare(Object.values(groupedByShip));
 
-      // ==============================
-      // D. 기간별 추세 (LineChart)
-      // ==============================
       const groupedByDate = {};
       posts.forEach(p => {
         const date = p.start_date?.slice(0, 10);
@@ -110,86 +98,87 @@ export default function C1Result() {
   }, []);
 
   return (
-    <div className="c1r-wrap">
-      <div className="c1r-top">
-        {/* A: 외부 합산 시각화 */}
-        <div className="c1r-card c1r-square">
-          <h4 className="c1r-title">결과 A (외부 합산)</h4>
-          <div className="c1r-body">
-            {extData ? (
-              <div style={{ width: "100%", height: 300 }}>
-                <Visualization lastSavedExt={extData} />
-              </div>
-            ) : (
-              <p>외부 데이터가 없습니다.</p>
-            )}
+    <div>
+      <div className="c1r-wrap">
+        <div className="c1r-top">
+          <div className="c1r-card c1r-square">
+            <h4 className="c1r-title">조선소 외부 탄소 배출량 통계</h4>
+            <div className="c1r-body">
+              {extData ? (
+                <div style={{ width: "100%", height: 350 }}>
+                  <Visualization lastSavedExt={extData} />
+                </div>
+              ) : (
+                <p>외부 데이터가 없습니다.</p>
+              )}
+            </div>
+          </div>
+
+          <div className="c1r-card c1r-square">
+            <h4 className="c1r-title">조선소 내부 탄소 배출량 통계</h4>
+            <div className="c1r-body">
+              {innData ? (
+                <div style={{ width: "100%", height: 350, fontSize:'13px'}}>
+                  <Visualization lastSavedInn={innData} />
+                  {console.log(innData)}
+                </div>
+              ) : (
+                <p>내부 데이터가 없습니다.</p>
+              )}
+            </div>
           </div>
         </div>
 
-        {/* B: 내부 합산 시각화 */}
-        <div className="c1r-card c1r-square">
-          <h4 className="c1r-title">결과 B (내부 합산)</h4>
-          <div className="c1r-body">
-            {innData ? (
-              <div style={{ width: "100%", height: 300 }}>
-                <Visualization lastSavedInn={innData} />
-              </div>
-            ) : (
-              <p>내부 데이터가 없습니다.</p>
-            )}
-          </div>
-        </div>
-      </div>
+        <div className="c1r-bottom">
+          <div className="c1r-card c1r-rect">
+            <h4 className="c1r-title">
+              {activeTab === "ship" ? "선박별 탄소배출량 합계" : "기간별 탄소 배출량 합계"}
+            </h4>
 
-      {/* C: 탭 - 선박별 / 기간별 */}
-      <div className="c1r-bottom">
-        <div className="c1r-card c1r-rect">
-          <h4 className="c1r-title">결과 C (비교 분석)</h4>
+            <div className="c1r-tabs">
+              <button
+                className={activeTab === "ship" ? "active" : ""}
+                onClick={() => setActiveTab("ship")}
+              >
+                선박별 비교
+              </button>
+              <button
+                className={activeTab === "date" ? "active" : ""}
+                onClick={() => setActiveTab("date")}
+              >
+                기간별 추세
+              </button>
+            </div>
 
-          {/* 탭 버튼 */}
-          <div className="c1r-tabs">
-            <button
-              className={activeTab === "ship" ? "active" : ""}
-              onClick={() => setActiveTab("ship")}
-            >
-              선박별 비교
-            </button>
-            <button
-              className={activeTab === "date" ? "active" : ""}
-              onClick={() => setActiveTab("date")}
-            >
-              기간별 추세
-            </button>
-          </div>
+            <div className="c1r-body" style={{ height: 400 }}>
+              {activeTab === "ship" && (
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={shipCompare}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="ship_id" />
+                    <YAxis />
+                    <Tooltip />
+                    <Legend />
+                    <Bar dataKey="외부합계" fill="#8884d8" />
+                    <Bar dataKey="내부합계" fill="#82ca9d" />
+                  </BarChart>
+                </ResponsiveContainer>
+              )}
 
-          <div className="c1r-body" style={{ height: 400 }}>
-            {activeTab === "ship" && (
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={shipCompare}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="ship_id" />
-                  <YAxis />
-                  <Tooltip />
-                  <Legend />
-                  <Bar dataKey="외부합계" fill="#8884d8" />
-                  <Bar dataKey="내부합계" fill="#82ca9d" />
-                </BarChart>
-              </ResponsiveContainer>
-            )}
-
-            {activeTab === "date" && (
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={dateTrend}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="date" />
-                  <YAxis />
-                  <Tooltip />
-                  <Legend />
-                  <Line type="monotone" dataKey="외부합계" stroke="#8884d8" />
-                  <Line type="monotone" dataKey="내부합계" stroke="#82ca9d" />
-                </LineChart>
-              </ResponsiveContainer>
-            )}
+              {activeTab === "date" && (
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={dateTrend}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="date" />
+                    <YAxis />
+                    <Tooltip />
+                    <Legend />
+                    <Line type="monotone" dataKey="외부합계" stroke="#8884d8" />
+                    <Line type="monotone" dataKey="내부합계" stroke="#82ca9d" />
+                  </LineChart>
+                </ResponsiveContainer>
+              )}
+            </div>
           </div>
         </div>
       </div>

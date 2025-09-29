@@ -215,7 +215,7 @@ export default function Carb1() {
       steps: cleanItems.slice()
     });
     const payload = {
-      ...ext,
+      ...inn,
       items: cleanItems
     };
     const res = await carb1_1InputQuery(payload);

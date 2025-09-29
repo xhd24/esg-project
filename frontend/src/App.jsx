@@ -26,9 +26,7 @@ import FAQDetail from "./pages/FAQDetail.jsx";
 import Footer from "./pages/Footer.jsx";
 
 // 결과 화면
-import C1Result from "./pages/C1.result.jsx";
-import C2Result from "./pages/C2.result.jsx";
-import C3Result from "./pages/C3.result.jsx";
+import CarbonReport from "./pages/CarbonReport.jsx";
 
 // 탄소배출 안내
 import ESGBack from "./pages/esg_back.jsx";
@@ -153,9 +151,7 @@ function App() {
               <Route path="/report" element={<ReportBack />} />
 
               {/* 연도별 → 결과 화면 매핑 */}
-              <Route path="/report/2025" element={<C1Result />} />
-              <Route path="/report/2024" element={<C2Result />} />
-              <Route path="/report/2023" element={<C3Result />} />
+              <Route path="/report/:year" element={<CarbonReport />} />
 
               {/* 그 외 연도는 공통 페이지에서 처리 (옵션) */}
               <Route path="/report/:year" element={<ReportYear />} />
