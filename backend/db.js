@@ -69,16 +69,17 @@ export async function inputC1_1Query(userId, ioType, shipKey, startDate, endDate
   );
 }
 
-export async function getCarbonQuery() {
+export async function getCarbonQuery(userId) {
+
   const [rows] = await pool.query(
-    "SELECT * FROM ci ORDER BY ci_id DESC"
+    "SELECT * FROM ci WHERE user_id=? ORDER BY ci_id DESC",[userId]
   );
   return rows;
 }
 
-export async function getCarbonQuery2() {
+export async function getCarbonQuery2(userId) {
   const [rows] = await pool.query(
-    "SELECT * FROM cii ORDER BY cii_id DESC"
+    "SELECT * FROM cii WHERE user_id=? ORDER BY cii_id DESC",[userId]
   );
   return rows;
 }

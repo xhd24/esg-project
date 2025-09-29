@@ -14,8 +14,10 @@ export default function C1Result() {
   const [dateTrend, setDateTrend] = useState([]);
   const [activeTab, setActiveTab] = useState("ship"); // 탭 상태
 
+  const userId = sessionStorage.getItem('userKey');
+
   useEffect(() => {
-    getCarbon().then((res) => {
+    getCarbon(userId).then((res) => {
       const posts = res.posts || [];
 
       // ==============================

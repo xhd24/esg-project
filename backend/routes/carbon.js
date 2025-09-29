@@ -44,9 +44,10 @@ router.post('/c2', async (req, res) => {
     res.json({ success: true });
 });
 
-router.get('/c3', async (req, res) => {
-    const posts = await getCarbonQuery() || '';
-    const posts2 = await getCarbonQuery2()  || '';
+router.post('/c3', async (req, res) => {
+    const userId = req.body.userKey;
+    const posts = await getCarbonQuery(userId) || '';
+    const posts2 = await getCarbonQuery2(userId)  || '';
     res.json({posts:posts, posts2:posts2});
 });
 
