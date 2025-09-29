@@ -63,7 +63,11 @@ export async function carb1_1InputQuery(inn) {
 }
 
 //c3
-export async function getCarbon() {
-  const res = await fetch(`${BASE}/carbon/c3`);
+export async function getCarbon(userKey) {
+  const res = await fetch(`${BASE}/carbon/c3`,{
+    method:'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body:JSON.stringify({userKey})
+  });
   return res.json();
 }

@@ -15,8 +15,10 @@ export default function C2Result() {
   const [shipData, setShipData] = useState([]);
   const [trendData, setTrendData] = useState([]);
 
+  const userId = sessionStorage.getItem('userKey');
+
   useEffect(() => {
-    getCarbon().then((res) => {
+    getCarbon(userId).then((res) => {
       const posts2 = res.posts2 || [];
 
       // 문자열 → 숫자 변환

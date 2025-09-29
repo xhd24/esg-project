@@ -5,9 +5,10 @@ import styles from './css/carb3.module.css';
 function Carb3() {
   const [table1, setTable1] = useState([]);
   const [table2, setTable2] = useState([]);
+  const user = sessionStorage.getItem('userKey');
 
   useEffect(() => {
-    getCarbon().then((res)=>{
+    getCarbon(user).then((res)=>{
       setTable1(res.posts || []);
       setTable2(res.posts2 || []);
     });
