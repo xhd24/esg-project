@@ -1,4 +1,6 @@
+// src/pages/Assessment.jsx
 import React, { useState, useRef, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import questions from "../../../backend/questions";
 import { calculateScore } from "../../../backend/scoreQuestions.js";
 import "./css/questions.css";
@@ -7,6 +9,7 @@ const REPORT_KEY = "ESG_REPORT_V1";
 const SCROLLER_SELECTOR = ".assessment-content";
 
 function Assessment() {
+  const navigate = useNavigate();
   const categories = ["Environment", "Social", "Governance"];
   const [selectedCategory, setSelectedCategory] = useState("Environment");
 
@@ -30,7 +33,39 @@ function Assessment() {
   };
   const weights = { Environment: 35, Social: 35, Governance: 30 };
 
+  // ---------- 로그인 확인 공통 가드 ----------
+  const ensureLogin = () => {
+    const loggedIn = sessionStorage.getItem("isLogin") === "true";
+    if (loggedIn) return true;
+
+    // 로그인 후 돌아올 목적지 저장
+    sessionStorage.setItem("postLoginRedirect", "/assessment");
+
+    setModal({
+      title: "로그인이 필요합니다",
+      message: "설문 기능을 이용하려면 로그인해 주세요.",
+      actions: [
+        {
+          label: "이동",
+          variant: "primary",
+          onClick: () => {
+            setModal(null);
+            navigate("/login", { state: { from: "/assessment" }, replace: true });
+          },
+        },
+      ],
+    });
+    return false;
+  };
+
+  // 페이지 진입 시 1회 체크
+  useEffect(() => {
+    ensureLogin();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const handleAnswer = (category, qIndex, value) => {
+    if (!ensureLogin()) return; // 로그인 전 응답 방지
     setAnswers((prev) => {
       const updated = { ...prev };
       const next = [...(updated[category] || [])];
@@ -77,11 +112,14 @@ function Assessment() {
   };
 
   const goPrev = () => {
+    if (!ensureLogin()) return;
     const idx = categories.indexOf(selectedCategory);
     if (idx > 0) setSelectedCategory(categories[idx - 1]);
   };
 
   const goNext = () => {
+    if (!ensureLogin()) return;
+
     const current = selectedCategory;
     const idx = categories.indexOf(current);
     if (idx === categories.length - 1) return;
@@ -127,6 +165,8 @@ function Assessment() {
   };
 
   const submitAll = () => {
+    if (!ensureLogin()) return;
+
     for (const cat of categories) {
       const missing = findUnansweredIndices(cat);
       if (missing.length > 0) {
@@ -186,7 +226,7 @@ function Assessment() {
   // ============================
   // 플로팅 스크롤 버튼
   // ============================
-  const [isBelowHalf, setIsBelowHalf] = useState(false); // true면 ↑
+  const [isBelowHalf, setIsBelowHalf] = useState(false);
   const [showFab, setShowFab] = useState(false);
 
   useEffect(() => {
@@ -270,7 +310,10 @@ function Assessment() {
             <li
               key={cat}
               className={selectedCategory === cat ? "active" : ""}
-              onClick={() => setSelectedCategory(cat)}
+              onClick={() => {
+                if (!ensureLogin()) return;
+                setSelectedCategory(cat);
+              }}
             >
               {cat}
             </li>
@@ -327,9 +370,14 @@ function Assessment() {
                   name={`q-${selectedCategory}-${idx}`}
                   value="예"
                   checked={selected === 1}
-                  onChange={(e) => handleAnswer(selectedCategory, idx, e.target.value)}
+                  onChange={(e) =>
+                    handleAnswer(selectedCategory, idx, e.target.value)
+                  }
                 />
-                <label className="pill-label" htmlFor={`q-${selectedCategory}-${idx}-yes`}>
+                <label
+                  className="pill-label"
+                  htmlFor={`q-${selectedCategory}-${idx}-yes`}
+                >
                   <span className="pill-dot" aria-hidden="true"></span>
                   예
                 </label>
@@ -341,9 +389,14 @@ function Assessment() {
                   name={`q-${selectedCategory}-${idx}`}
                   value="아니오"
                   checked={selected === 0}
-                  onChange={(e) => handleAnswer(selectedCategory, idx, e.target.value)}
+                  onChange={(e) =>
+                    handleAnswer(selectedCategory, idx, e.target.value)
+                  }
                 />
-                <label className="pill-label" htmlFor={`q-${selectedCategory}-${idx}-no`}>
+                <label
+                  className="pill-label"
+                  htmlFor={`q-${selectedCategory}-${idx}-no`}
+                >
                   <span className="pill-dot" aria-hidden="true"></span>
                   아니오
                 </label>
@@ -359,7 +412,7 @@ function Assessment() {
             </button>
           )}
 
-        {selectedCategory === "Social" && (
+          {selectedCategory === "Social" && (
             <>
               <button className="btn btn--ghost" onClick={goPrev}>
                 뒤로가기
@@ -393,7 +446,9 @@ function Assessment() {
                 <button
                   key={idx}
                   className={`alert-btn ${
-                    a.variant === "primary" ? "alert-btn--primary" : "alert-btn--ghost"
+                    a.variant === "primary"
+                      ? "alert-btn--primary"
+                      : "alert-btn--ghost"
                   }`}
                   onClick={a.onClick}
                 >
@@ -405,27 +460,21 @@ function Assessment() {
         </div>
       )}
 
-   {/* 플로팅 스크롤 버튼 — 홈과 동일한 chevron 아이콘 */}
-<button
-  type="button"
-  className={`scroll-fab ${showFab ? "" : "scroll-fab--hidden"} ${
-    isBelowHalf ? "scroll-fab--up" : "scroll-fab--down"
-  }`}
-  onClick={handleFabClick}
-  aria-label={isBelowHalf ? "맨 위로" : "맨 아래로"}
-  title={isBelowHalf ? "맨 위로" : "맨 아래로"}
->
-  <svg
-    className="scroll-fab__icon"
-    viewBox="0 0 24 24"
-    aria-hidden="true"
-    fill="currentColor"
-  >
-    {/* Material Icons: expand_more (줄기 없는 V) */}
-    <path d="M16.59 8.59 12 13.17 7.41 8.59 6 10l6 6 6-6z" />
-  </svg>
-</button>
-
+      {/* 플로팅 스크롤 버튼 — 홈과 동일한 chevron 아이콘 */}
+      <button
+        type="button"
+        className={`scroll-fab ${showFab ? "" : "scroll-fab--hidden"} ${
+          isBelowHalf ? "scroll-fab--up" : "scroll-fab--down"
+        }`}
+        onClick={handleFabClick}
+        aria-label={isBelowHalf ? "맨 위로" : "맨 아래로"}
+        title={isBelowHalf ? "맨 위로" : "맨 아래로"}
+      >
+        <svg className="scroll-fab__icon" viewBox="0 0 24 24" aria-hidden="true" fill="currentColor">
+          {/* Material Icons: expand_more (줄기 없는 V) */}
+          <path d="M16.59 8.59 12 13.17 7.41 8.59 6 10l6 6 6-6z" />
+        </svg>
+      </button>
     </div>
   );
 }

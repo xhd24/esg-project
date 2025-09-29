@@ -1,7 +1,7 @@
+// src/pages/Signup.jsx
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import axios from "axios";
-import { Modal, Button } from "react-bootstrap";
 import "./css/Signup.css";
 
 function Signup() {
@@ -15,130 +15,204 @@ function Signup() {
     gender: "",
     position: "",
     department: "",
-    role: "USER", // 기본 권한
+    role: "USER",
   });
 
-  const [show, setShow] = useState(false);       // ✅ 모달 표시 여부
-  const [message, setMessage] = useState("");    // ✅ 메시지
-  const [isError, setIsError] = useState(false); // ✅ 에러 여부
+  // 필드별 에러 메시지
+  const [errors, setErrors] = useState({});
+  // 커스텀 알림창
+  const [modal, setModal] = useState({ open: false, message: "", isError: false });
 
-  const navigate = useNavigate(); // ✅ 페이지 이동 훅
+  const navigate = useNavigate();
+  const location = useLocation();
+  // ★ 로그인에서 넘겨준 최종 목적지(없으면 홈)
+  const from = location.state?.from || "/";
+
+  // 단일 필드 검증
+  const validateField = (name, value, all = formData) => {
+    switch (name) {
+      case "name":
+        if (!value) return "성명을 입력해주세요.";
+        break;
+      case "login_id":
+        if (!value) return "아이디를 입력해주세요.";
+        break;
+      case "email": {
+        if (!value) return "이메일을 입력해주세요.";
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(value)) return "유효한 이메일 주소를 입력해주세요.";
+        break;
+      }
+      case "password":
+        if (!value) return "비밀번호를 입력해주세요.";
+        if (value.length < 8) return "비밀번호는 8자 이상이어야 합니다.";
+        break;
+      case "confirmPassword":
+        if (!value) return "비밀번호 확인을 입력해주세요.";
+        if (value !== all.password) return "비밀번호가 일치하지 않습니다.";
+        break;
+      case "company":
+        if (!value) return "회사를 선택해주세요.";
+        break;
+      case "position":
+        if (!value) return "직급을 선택해주세요.";
+        break;
+      case "department":
+        if (!value) return "부서를 선택해주세요.";
+        break;
+      case "gender":
+        if (!value) return "성별을 선택해주세요.";
+        break;
+      default:
+        break;
+    }
+    return "";
+  };
+
+  // 전체 검증
+  const validateAll = (data) => {
+    const nextErrors = {};
+    Object.keys(data).forEach((key) => {
+      const msg = validateField(key, data[key], data);
+      if (msg) nextErrors[key] = msg;
+    });
+    return nextErrors;
+  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    const next = { ...formData, [name]: value };
+    setFormData(next);
+
+    // 입력 즉시 해당 필드만 재검증
+    const msg = validateField(name, value, next);
+    setErrors((prev) => ({ ...prev, [name]: msg }));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // ✅ 입력값 검증
-    if (!formData.name) return showModal("성명을 입력해주세요.", true);
-    if (!formData.login_id) return showModal("아이디를 입력해주세요.", true);
-    if (!formData.email) return showModal("이메일을 입력해주세요.", true);
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(formData.email))
-      return showModal("유효한 이메일 주소를 입력해주세요.", true);
-    if (!formData.password) return showModal("비밀번호를 입력해주세요.", true);
-    if (formData.password.length < 8)
-      return showModal("비밀번호는 8자 이상이어야 합니다.", true);
-    if (!formData.confirmPassword)
-      return showModal("비밀번호 확인을 입력해주세요.", true);
-    if (formData.password !== formData.confirmPassword)
-      return showModal("비밀번호가 일치하지 않습니다.", true);
-    if (!formData.company) return showModal("회사를 선택해주세요.", true);
-    if (!formData.position) return showModal("직급을 선택해주세요.", true);
-    if (!formData.department) return showModal("부서를 선택해주세요.", true);
-    if (!formData.gender) return showModal("성별을 선택해주세요.", true);
+    // 전필드 검증
+    const nextErrors = validateAll(formData);
+    setErrors(nextErrors);
+
+    const hasError = Object.values(nextErrors).some(Boolean);
+    if (hasError) {
+      const firstErr = Object.values(nextErrors).find(Boolean);
+      setModal({ open: true, message: firstErr || "입력값을 확인해주세요.", isError: true });
+      return;
+    }
+
+    // 전송 전 간단한 정리(공백 제거)
+    const payload = {
+      ...formData,
+      login_id: formData.login_id.trim(),
+      name: formData.name.trim(),
+      email: formData.email.trim(),
+    };
 
     try {
-      await axios.post("http://localhost:3000/signup", {
-        ...formData,
+      await axios.post("http://localhost:3000/signup", payload, {
+        headers: { "Content-Type": "application/json" },
       });
-      showModal("회원가입 완료! 로그인 페이지로 이동합니다.", false);
 
-      // ✅ 1.5초 후 로그인 페이지로 이동
-      setTimeout(() => navigate("/login"), 1500);
+      // 성공 모달 → 로그인 페이지로 이동 (원래 가려던 경로 함께 전달)
+      setModal({ open: true, message: "회원가입 완료! 로그인 페이지로 이동합니다.", isError: false });
+      setTimeout(() => navigate("/login", { replace: true, state: { from } }), 1200);
     } catch (err) {
-      showModal("회원가입 실패. 다시 시도해주세요.", true);
+      // 서버 에러 메시지가 있으면 노출
+      const msg =
+        err?.response?.data?.message ||
+        err?.message ||
+        "회원가입 실패. 다시 시도해주세요.";
+      setModal({ open: true, message: msg, isError: true });
     }
-  };
-
-  // ✅ 모달 메시지 표시 함수
-  const showModal = (msg, error = false) => {
-    setMessage(msg);
-    setIsError(error);
-    setShow(true);
   };
 
   return (
     <div className="signup-wrapper">
       <div className="signup-container">
         <h2>회원가입</h2>
-        <form className="signup-form" onSubmit={handleSubmit}>
+
+        <form className="signup-form" onSubmit={handleSubmit} noValidate>
           {/* 성명 */}
-          <div>
+          <div className="field">
             <label>성명</label>
             <input
               type="text"
               name="name"
+              className={`input ${errors.name ? "input-error" : ""}`}
               value={formData.name}
               onChange={handleChange}
+              placeholder="성명 입력"
             />
+            {errors.name && <p className="field-error">{errors.name}</p>}
           </div>
 
           {/* 아이디 */}
-          <div>
+          <div className="field">
             <label>아이디</label>
             <input
               type="text"
               name="login_id"
+              className={`input ${errors.login_id ? "input-error" : ""}`}
               value={formData.login_id}
               onChange={handleChange}
+              placeholder="아이디 입력"
             />
+            {errors.login_id && <p className="field-error">{errors.login_id}</p>}
           </div>
 
           {/* 이메일 */}
-          <div>
+          <div className="field">
             <label>이메일</label>
             <input
               type="email"
               name="email"
+              className={`input ${errors.email ? "input-error" : ""}`}
               value={formData.email}
               onChange={handleChange}
               placeholder="example@example.com"
             />
+            {errors.email && <p className="field-error">{errors.email}</p>}
           </div>
 
           {/* 비밀번호 */}
-          <div>
+          <div className="field">
             <label>비밀번호 (8자 이상)</label>
             <input
               type="password"
               name="password"
+              className={`input ${errors.password ? "input-error" : ""}`}
               value={formData.password}
               onChange={handleChange}
+              placeholder="비밀번호 입력"
               minLength={8}
             />
+            {errors.password && <p className="field-error">{errors.password}</p>}
           </div>
 
           {/* 비밀번호 확인 */}
-          <div>
+          <div className="field">
             <label>비밀번호 확인</label>
             <input
               type="password"
               name="confirmPassword"
+              className={`input ${errors.confirmPassword ? "input-error" : ""}`}
               value={formData.confirmPassword}
               onChange={handleChange}
+              placeholder="비밀번호 재입력"
               minLength={8}
             />
+            {errors.confirmPassword && <p className="field-error">{errors.confirmPassword}</p>}
           </div>
 
           {/* 회사 */}
-          <div>
+          <div className="field">
             <label>회사명</label>
             <select
               name="company"
+              className={`input ${errors.company ? "input-error" : ""}`}
               value={formData.company}
               onChange={handleChange}
             >
@@ -147,13 +221,15 @@ function Signup() {
               <option value="한화오션">한화오션</option>
               <option value="현대중공업">현대중공업</option>
             </select>
+            {errors.company && <p className="field-error">{errors.company}</p>}
           </div>
 
           {/* 직급 */}
-          <div>
+          <div className="field">
             <label>직급</label>
             <select
               name="position"
+              className={`input ${errors.position ? "input-error" : ""}`}
               value={formData.position}
               onChange={handleChange}
             >
@@ -162,13 +238,15 @@ function Signup() {
               <option value="대리">대리</option>
               <option value="과장">과장</option>
             </select>
+            {errors.position && <p className="field-error">{errors.position}</p>}
           </div>
 
           {/* 부서 */}
-          <div>
+          <div className="field">
             <label>부서</label>
             <select
               name="department"
+              className={`input ${errors.department ? "input-error" : ""}`}
               value={formData.department}
               onChange={handleChange}
             >
@@ -177,12 +255,13 @@ function Signup() {
               <option value="환경/에너지팀">환경/에너지팀</option>
               <option value="IR/공시팀">IR/공시팀</option>
             </select>
+            {errors.department && <p className="field-error">{errors.department}</p>}
           </div>
 
           {/* 성별 */}
-          <div>
+          <div className="field">
             <label>성별</label>
-            <div className="radio-group">
+            <div className={`radio-group ${errors.gender ? "radio-error" : ""}`}>
               <label>
                 <input
                   type="radio"
@@ -193,7 +272,7 @@ function Signup() {
                 />{" "}
                 남
               </label>
-              <label>
+              <label style={{ marginLeft: 12 }}>
                 <input
                   type="radio"
                   name="gender"
@@ -204,29 +283,40 @@ function Signup() {
                 여
               </label>
             </div>
+            {errors.gender && <p className="field-error">{errors.gender}</p>}
           </div>
 
           {/* 기본 권한 */}
           <input type="hidden" name="role" value={formData.role} />
 
-          <button type="submit">회원가입</button>
+          <button type="submit" className="btn-primary" style={{ marginTop: 8 }}>
+            회원가입
+          </button>
         </form>
       </div>
 
-      {/* ✅ Modal */}
-      <Modal show={show} onHide={() => setShow(false)}>
-        <Modal.Header closeButton>
-          <Modal.Title>알림</Modal.Title>
-        </Modal.Header>
-        <Modal.Body style={{ color: isError ? "red" : "green" }}>
-          {message}
-        </Modal.Body>
-        <Modal.Footer>
-          <Button variant="secondary" onClick={() => setShow(false)}>
-            닫기
-          </Button>
-        </Modal.Footer>
-      </Modal>
+      {/* 공통 커스텀 알림창 */}
+      {modal.open && (
+        <div className="modal-overlay" role="dialog" aria-modal="true">
+          <div className="modal-card">
+            <h3 className="modal-title">알림</h3>
+            <p
+              className="modal-message"
+              style={{ color: modal.isError ? "#d93025" : "#188038", fontWeight: 600 }}
+            >
+              {modal.message}
+            </p>
+            <div className="modal-actions">
+              <button
+                className="alert-btn alert-btn--primary"
+                onClick={() => setModal((m) => ({ ...m, open: false }))}
+              >
+                확인
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
