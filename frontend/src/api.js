@@ -42,7 +42,7 @@ export async function login(id, pw) {
   return res.json();
 }
 
-//c1 - 1 저장
+//조선소 외부 저장
 export async function carb1InputQuery(ext) {
   const res = await fetch(`${BASE}/carbon/c1`, {
     method: 'POST',
@@ -52,7 +52,7 @@ export async function carb1InputQuery(ext) {
   return res.json();
 }
 
-//c1 - 2 저장
+//조선소내부 저장
 export async function carb1_1InputQuery(inn) {
   const res = await fetch(`${BASE}/carbon/c2`, {
     method: 'POST',
@@ -62,12 +62,22 @@ export async function carb1_1InputQuery(inn) {
   return res.json();
 }
 
-//c3
+//각 테이블 값
 export async function getCarbon(userKey) {
   const res = await fetch(`${BASE}/carbon/c3`,{
     method:'POST',
     headers: { 'Content-Type': 'application/json' },
     body:JSON.stringify({userKey})
+  });
+  return res.json();
+}
+
+//운항배출량 저장
+export async function carb2InputQuery(form) {
+  const res = await fetch(`${BASE}/carbon/c4`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ form })
   });
   return res.json();
 }

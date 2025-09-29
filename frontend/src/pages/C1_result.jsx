@@ -120,7 +120,6 @@ export default function C1Result() {
               {innData ? (
                 <div style={{ width: "100%", height: 350, fontSize:'13px'}}>
                   <Visualization lastSavedInn={innData} />
-                  {console.log(innData)}
                 </div>
               ) : (
                 <p>내부 데이터가 없습니다.</p>

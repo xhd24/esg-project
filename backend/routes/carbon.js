@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { inputC1Query, inputC1_1Query,getCarbonQuery, getCarbonQuery2 } from '../db.js';
+import {inputC2Query} from '../db.js';
 
 const router = Router();
 
@@ -25,7 +26,6 @@ router.post('/c1', async (req, res) => {
 router.post('/c2', async (req, res) => {
     const { inn } = req.body;
 
-    console.log(inn)
     const shipKey = inn.shipKey;
     const startDate = inn.startDate;
     const endDate = inn.endDate;
@@ -50,5 +50,35 @@ router.post('/c3', async (req, res) => {
     const posts2 = await getCarbonQuery2(userId)  || '';
     res.json({posts:posts, posts2:posts2});
 });
+
+router.post('/c4', async (req, res) => {
+    const { form } = req.body;
+    const shipKey = form.shipKey;
+    const startDate = form.startDate;
+    const endDate = form.endDate;
+    const fuelType = form.energyType;
+    const userKey = form.userKey;
+    const amount = form.amount;
+    const distanceNm = form.distanceNm;
+    const capacityTon = form.capacityTon;
+
+    let tco2 = 0;
+    let c2 = 0;
+
+    if(fuelType === 'MGO'){
+        tco2 = amount*3.206;
+    }else if(fuelType === 'HFO'){
+        tco2 = amount*3.114;
+    } else {
+        tco2 = amount*2.750;
+    }
+
+    c2 = (tco2 * 1e6) / (Number(distanceNm) * Number(capacityTon));
+
+    console.log(c2, tco2);
+    await inputC2Query(shipKey, startDate, endDate, fuelType, amount, distanceNm, capacityTon, tco2, c2, userKey);
+    res.json({ success: true });
+});
+
 
 export default router;
