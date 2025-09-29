@@ -2,7 +2,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between; /* 로고 왼쪽, 메뉴 오른쪽 */
-  padding: 10px 20px;
+  padding: 10px 40px;
   background: #fff;
   border-bottom: 1px solid #ddd; /* 구분선 */
 }
@@ -45,7 +45,7 @@
   width: 190px;                 /* ✅ 크기만 조절 */
   height: auto;
   margin-right: 40px;
-  margin-left: 10px;            /* ← 로고를 왼쪽에서 10px 밀어줌 */
+  margin-left: 40px;      
 }
 
 .user-info {

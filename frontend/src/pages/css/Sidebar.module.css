@@ -68,4 +68,10 @@
 
 .white {
   color: white;
+  font-size: 23px;
+}
+
+.divider {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.3); /* 흰색 반투명 구분선 */
+  margin: 10px 0;
 }

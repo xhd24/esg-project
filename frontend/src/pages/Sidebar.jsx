@@ -81,9 +81,11 @@ const Sidebar = ({ width = 280, isOpen, setOpen }) => {
           <li className="nav-item">
             <Link to="/report" className="nav-link"><span className={styles.white}>Reports</span></Link>
           </li>
+          <div className={styles.divider}></div> {/* 구분선 */}
           <li className="nav-item">
             <Link to="/ESG_reports" className="nav-link"><span className={styles.white}>ESG_Reports</span></Link>
           </li>
+          <div className={styles.divider}></div> {/* 구분선 */}
           {userId==='admin' ?
             <li className="nav-item">
               <Link to="/faq_res" className="nav-link"><span className={styles.white}>문의 사항 관리</span></Link>
