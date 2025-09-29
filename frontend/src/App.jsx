@@ -39,13 +39,29 @@ function App() {
   const [isSidebarOpen, setSidebarOpen] = useState(false);
   const [isLogin, setIsLogin] = useState(false);
   const [userId, setUserId] = useState("");
+  const [showLogoutAlert, setShowLogoutAlert] = useState(false); // ✅ 로그아웃 알림창
   const sidebarWidth = 280;
 
-  const logout = () => {
+  // 실제 로그아웃 실행 + 홈으로 이동
+  const doLogout = () => {
     sessionStorage.clear();
     setIsLogin(false);
     setUserId("");
+    window.dispatchEvent(new Event("storage")); // 다른 탭 동기화
+    setShowLogoutAlert(false);
+    // 홈으로 이동 (뒤로가기 방지)
+    if (window.location.pathname !== "/") {
+      window.location.replace("/");
+    }
   };
+
+  // 버튼 클릭 시: 로그아웃 알림 먼저 표출
+  const onClickLogout = () => {
+    setShowLogoutAlert(true);
+  };
+
+  // 모달만 닫기 (로그아웃 취소)
+  const closeLogoutAlert = () => setShowLogoutAlert(false);
 
   useEffect(() => {
     const storedLogin = sessionStorage.getItem("isLogin") === "true";
@@ -107,7 +123,7 @@ function App() {
               {isLogin ? (
                 <li className="nav-item user-info">
                   <span>{userId}님 안녕하세요!</span>
-                  <button className="logout-btn" onClick={logout}>
+                  <button className="logout-btn" onClick={onClickLogout}>
                     로그아웃
                   </button>
                 </li>
@@ -147,7 +163,6 @@ function App() {
               </Route>
 
               {/* Report */}
-              {/* /report : 랜딩(이미지 카드) */}
               <Route path="/report" element={<ReportBack />} />
 
               {/* 연도별 → 결과 화면 매핑 */}
@@ -156,7 +171,7 @@ function App() {
               {/* 그 외 연도는 공통 페이지에서 처리 (옵션) */}
               <Route path="/report/:year" element={<ReportYear />} />
 
-              {/* 기존 리포트 목록/상세 (필요시 유지) */}
+              {/* 기존 리포트 목록/상세 */}
               <Route path="/ESG_reports" element={<ESG_Reports />} />
               <Route path="/ESG_report_2025" element={<ESG_Report_2025 />} />
               <Route path="/ESG_report_2024" element={<ESG_Report_2024 />} />
@@ -171,6 +186,32 @@ function App() {
           <Footer />
         </div>
       </div>
+
+      {/* ✅ 로그아웃 알림 모달 (취소 / 확인) — 기존 공통 모달 CSS 재사용 */}
+      {showLogoutAlert && (
+        <div className="modal-overlay" role="dialog" aria-modal="true">
+          <div className="modal-card">
+            <h3 className="modal-title">알림</h3>
+            <p className="modal-message">
+              로그아웃하시겠습니까? 확인을 누르면 홈으로 이동합니다.
+            </p>
+            <div className="modal-actions">
+              <button
+                className="alert-btn alert-btn--ghost"
+                onClick={closeLogoutAlert}
+              >
+                취소
+              </button>
+              <button
+                className="alert-btn alert-btn--primary"
+                onClick={doLogout}
+              >
+                확인
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </BrowserRouter>
   );
 }
