@@ -1,76 +1,262 @@
+/* ---------------- NAV 버튼 리디자인 ---------------- */
+
+/* 공통 색 변수(원하면 조정) */
+:root{
+  --g-700:#166534;   /* 진초록 텍스트 */
+  --g-600:#198754;   /* 기본 초록(로그인 버튼) */
+  --g-500:#22a06b;   /* 살짝 밝은 초록 */
+  --g-50:#eef9f4;    /* 연초록 배경 */
+  --line:#e5e7eb;    /* 구분선 */
+}
+
+/* 네비게이션 래퍼(구분선은 위에서 만든 ::after 유지 가능) */
+.main_nav{
+  background:#fff;
+}
+
+/* 메뉴 리스트 */
+.main_nav .nav{
+  display:flex;
+  gap:28px;
+  list-style:none;
+  margin:0;
+  padding:0;
+}
+
+/* 고스트-pill 메뉴 버튼 */
+.main_nav .nav-link{
+  position:relative;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  padding:10px 14px;
+  border-radius:9999px;
+  font-size:17px;
+  font-weight:600;
+  color:var(--g-700) !important;
+  text-decoration:none;
+  transition:
+    background .2s ease,
+    color .2s ease,
+    transform .14s ease;
+}
+
+/* 호버: 연초록 배경 + 살짝 떠오름 */
+.main_nav .nav-link:hover{
+  background:var(--g-50);
+  transform:translateY(-1px);
+}
+
+/* 밑줄 애니(호버 시만 나타나는 얇은 바) */
+.main_nav .nav-link::after{
+  content:"";
+  position:absolute;
+  left:14px; right:14px; bottom:6px;
+  height:2px;
+  background:linear-gradient(90deg, var(--g-500), var(--g-600));
+  border-radius:2px;
+  opacity:0;
+  transform:scaleX(.6);
+  transition:opacity .18s ease, transform .18s ease;
+}
+.main_nav .nav-link:hover::after{
+  opacity:1;
+  transform:scaleX(1);
+}
+
+/* 로그인: 솔리드-pill 버튼 */
+.login-btn,
+.login{ /* 혹시 예전 클래스(.login)도 함께 지원 */
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  padding:10px 18px;
+  border-radius:9999px;
+  background:linear-gradient(180deg, #1ea868, var(--g-600));
+  color:#fff !important;
+  font-weight:700;
+  font-size:16px;
+  text-decoration:none;
+  box-shadow:0 6px 14px rgba(25,135,84,.18);
+  border:1px solid rgba(25,135,84,.3);
+  transition:transform .14s ease, box-shadow .2s ease, filter .2s ease;
+}
+.login-btn:hover,
+.login:hover{
+  transform:translateY(-2px);
+  box-shadow:0 10px 20px rgba(25,135,84,.22);
+  filter:saturate(1.05);
+}
+
+/* 로그인 옆 인사말+로그아웃 영역 */
+.user-info{
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+.user-info .hi{
+  color:#6b7280; /* slate-500 */
+  font-weight:600;
+}
+
+/* 로그아웃: 아웃라인-pill */
+.logout-btn{
+  background:#fff;
+  color:var(--g-600);
+  border:1.5px solid var(--g-600);
+  border-radius:9999px;
+  padding:8px 14px;
+  font-size:14px;
+  font-weight:700;
+  cursor:pointer;
+  transition:background .2s ease, color .2s ease, transform .14s ease, box-shadow .2s ease;
+}
+.logout-btn:hover{
+  background:var(--g-50);
+  transform:translateY(-1px);
+  box-shadow:0 6px 14px rgba(0,0,0,.06);
+}
+
+/* 로고 영역 살짝 정리(선택) */
+.logo{
+  width:180px;
+  height:auto;
+  margin-right:32px;
+  margin-left:30px;
+
+}
+
+/* 반응형: 좁을 때 간격 축소 */
+@media (max-width: 900px){
+  .main_nav .nav{ gap:18px; }
+  .main_nav .nav-link{ font-size:16px; padding:9px 12px; }
+  .login-btn{ padding:9px 16px; font-size:15px; }
+}
+@media (max-width: 640px){
+  .main_nav .nav{ gap:12px; }
+  .logo{ width:150px; }
+}
+
+/* ====== NAV 위치를 원래처럼: 좌/중앙/우 레이아웃 ====== */
 .main_nav {
-  display: flex;
-  align-items: center;
-  justify-content: space-between; /* 로고 왼쪽, 메뉴 오른쪽 */
-  padding: 10px 20px;
   background: #fff;
-  border-bottom: 1px solid #ddd; /* 구분선 */
+  border-bottom: 1px solid #ddd;
 }
 
-.main_nav .nav {
-  display: flex;
-  gap: 30px;  /* 메뉴 간격 */
-  list-style: none;
-  margin: 0;
-  padding: 0;
-}
-
-.main_nav .nav-link {
-  font-weight: 500;
-  font-size: 18px;
-  transition: color 0.3s ease, transform 0.2s ease;
-  padding: 8px 15px;
-  text-decoration: none;
-  color: green !important;
-}
-
-.main_nav .nav-link:hover {
-  color: var(--light-green) !important;
-  transform: translateY(-2px);
-}
-
-.green {
-  color: white;
-}
-
-.login {
- background-color: green !important;
-  color: white !important;
-  border-radius: 4px;
-  padding: 8px 20px;
-}
-
-
-.logo {
-  width: 190px;                 /* ✅ 크기만 조절 */
-  height: auto;
-  margin-right: 40px;
-  margin-left: 10px;            /* ← 로고를 왼쪽에서 10px 밀어줌 */
-}
-
-.user-info {
-  display: flex;
+/* 내부 래퍼를 3열 그리드로: [로고] [메뉴(가운데)] [로그인/로그아웃] */
+.main_nav .nav-inner{
+  display: grid;
+  grid-template-columns: auto 1fr auto; /* 좌:로고  중:메뉴  우:버튼 */
   align-items: center;
-  gap: 10px; /* 텍스트와 버튼 간격 */
-  font-size: 16px;
-  font-weight: 500;
-  color: gray; /* 기본 텍스트 색 */
+  gap: 16px;
+  max-width: 1200px;   /* 필요 없으면 지워도 됩니다 */
+  margin: 0 auto;      /* 가운데 고정 */
+  padding: 10px 20px;
 }
 
-/* 로그아웃 버튼 */
-.logout-btn {
-  background-color: #198754;  /* Bootstrap green */
-  color: white;
-  border: none;
-  border-radius: 4px;
-  padding: 6px 14px;
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: background-color 0.3s ease, transform 0.2s ease;
+/* 로고 영역(링크) */
+.main_nav .brand{
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
 }
 
-.logout-btn:hover {
-  background-color: #157347; /* hover 시 진한 초록 */
-  transform: translateY(-2px);
+/* 메뉴는 가운데 정렬 */
+.main_nav .nav{
+  justify-content: right;
+  margin-right: 30px;
+  margin-top: -85px;
 }
+
+/* 우측 로그인/유저 영역은 자동으로 오른쪽 끝 */
+.main_nav .user-info,
+.main_nav .login-btn,
+.main_nav .login{
+  justify-self: end;
+}
+
+/* 반응형: 좁아지면 간격만 살짝 줄이기 */
+@media (max-width: 900px){
+  .main_nav .nav-inner{ gap: 12px; }
+}
+@media (max-width: 640px){
+  .main_nav .nav{ gap: 12px; }
+}
+
+
+
+/* === NAV 메뉴/버튼 살짝 위로 올리기 (줄 전체) === */
+.main_nav .nav-inner{
+  padding: 6px 20px;            /* 줄 간격을 조금 줄여서 자연스럽게 상승 */
+}
+.main_nav .nav{
+  justify-content: right;      /* 가운데 정렬 */
+  margin: 0;                    /* 기존 margin hack 제거 */
+  position: relative;
+  top: -90px;                    /* ← 줄 전체를 "살짝 위로" */
+  gap: 32px;  
+  margin-right: 30px;                  /* 버튼 사이 조금 여유 */
+}
+
+/* === 메뉴 버튼(고스트-pill) 크게 === */
+.main_nav .nav-link{
+  padding: 12px 13px;           /* ↑ 높이/폭 업 */
+  font-size: 15px;            /* ↑ 글씨 살짝 키움 */
+  border-radius: 9999px;
+}
+.main_nav .nav-link::after{
+  left: 18px; right: 18px;      /* 밑줄도 버튼 폭 증가에 맞춰 조정 */
+  bottom: 8px;
+}
+
+/* === 로그인 버튼(솔리드-pill) 크게 + 살짝 위로 === */
+.login-btn,
+.login{
+  padding: 12px 22px;           /* ↑ 높이/폭 업 */
+  font-size: 15px;              /* ↑ 글씨 키움 */
+  position: relative;
+  top: -6px;                    /* 메뉴 줄과 같은 높이로 */
+}
+
+/* === 유저 영역(인사말 + 로그아웃)도 같은 높이 보정 === */
+.user-info{
+  position: relative;
+  top: -6px;
+  gap: 12px;
+}
+.user-info .hi{
+  font-size: 15.5px;
+}
+
+/* === 로그아웃 버튼도 살짝 키우기 === */
+.logout-btn{
+  padding: 10px 16px;           /* ↑ 높이/폭 업 */
+  font-size: 13px;              /* ↑ 글씨 키움 */
+  border-radius: 9999px;
+}
+
+/* === 로고는 그대로 두되, 필요시 살짝만 다운조정해서 균형 맞추기(옵션) === */
+.logo{
+  width: 180px;
+  height: auto;
+}
+
+/* 반응형: 좁아지면 과도한 확대 완화 */
+@media (max-width: 900px){
+  .main_nav .nav{ gap: 20px; top: -4px; }
+  .main_nav .nav-link{ padding: 10px 14px; font-size: 17px; }
+  .login-btn, .login{ padding: 10px 18px; font-size: 16px; top: -4px; }
+  .logout-btn{ padding: 9px 14px; font-size: 14px; }
+  .user-info{ top: -4px; }
+}
+@media (max-width: 640px){
+  .main_nav .nav{ gap: 14px; top: -3px; }
+  .main_nav .nav-link{ padding: 9px 12px; font-size: 16px; }
+  .login-btn, .login{ padding: 9px 16px; font-size: 15px; top: -3px; }
+}
+
+
+
+
+

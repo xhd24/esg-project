@@ -258,33 +258,58 @@ function Signup() {
             {errors.department && <p className="field-error">{errors.department}</p>}
           </div>
 
-          {/* 성별 */}
-          <div className="field">
-            <label>성별</label>
-            <div className={`radio-group ${errors.gender ? "radio-error" : ""}`}>
-              <label>
-                <input
-                  type="radio"
-                  name="gender"
-                  value="MALE"
-                  checked={formData.gender === "MALE"}
-                  onChange={handleChange}
-                />{" "}
-                남
-              </label>
-              <label style={{ marginLeft: 12 }}>
-                <input
-                  type="radio"
-                  name="gender"
-                  value="FEMALE"
-                  checked={formData.gender === "FEMALE"}
-                  onChange={handleChange}
-                />{" "}
-                여
-              </label>
-            </div>
-            {errors.gender && <p className="field-error">{errors.gender}</p>}
-          </div>
+        {/* 성별 */}
+<div className="field">
+  <label>성별</label>
+
+  {/* 세그먼트 토글 */}
+  <div className={`segmented ${errors.gender ? "segmented-error" : ""}`}>
+    {/* 남성 */}
+    <input
+      id="gender-m"
+      className="segmented-input"
+      type="radio"
+      name="gender"
+      value="MALE"
+      checked={formData.gender === "MALE"}
+      onChange={handleChange}
+    />
+    <label
+      htmlFor="gender-m"
+      className={`segmented-label ${formData.gender === "MALE" ? "active" : ""}`}
+    >
+      남
+    </label>
+
+    {/* 여성 */}
+    <input
+      id="gender-f"
+      className="segmented-input"
+      type="radio"
+      name="gender"
+      value="FEMALE"
+      checked={formData.gender === "FEMALE"}
+      onChange={handleChange}
+    />
+    <label
+      htmlFor="gender-f"
+      className={`segmented-label ${formData.gender === "FEMALE" ? "active" : ""}`}
+    >
+      여
+    </label>
+
+    {/* 움직이는 배경(엄지) */}
+    <span
+      className={`segmented-thumb ${
+        formData.gender === "FEMALE" ? "right" : ""
+      }`}
+      aria-hidden="true"
+    />
+  </div>
+
+  {errors.gender && <p className="field-error">{errors.gender}</p>}
+</div>
+
 
           {/* 기본 권한 */}
           <input type="hidden" name="role" value={formData.role} />

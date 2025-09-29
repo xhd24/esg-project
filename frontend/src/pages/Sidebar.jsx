@@ -1,25 +1,16 @@
-// Sidebar.jsx
-import React, { useEffect, useRef, useState } from "react";
+// src/pages/Sidebar.jsx
+import React, { useEffect, useState } from "react";
 import styles from "./css/sidebar.module.css";
-import menu from '../assets/images/menu_icon.svg';
-import 'bootstrap/dist/css/bootstrap.min.css';
+import menu from "../assets/images/menu_icon.svg";
 import { Link } from "react-router-dom";
 
 const Sidebar = ({ width = 280, isOpen, setOpen }) => {
-  const side = useRef();
-  const [userId, setUserId] = useState('');
+  const [userId, setUserId] = useState("");
 
-  const toggleMenu = () => {
+  const toggleMenu = (e) => {
+    e?.stopPropagation();
     setOpen(!isOpen);
   };
-
-  // 사이드바 외부 클릭시 닫기
-  const handleClose = e => {
-    if (isOpen && side.current && !side.current.contains(e.target)) {
-      setOpen(false);
-    }
-  };
-
 
   useEffect(() => {
     const storedUserId = sessionStorage.getItem("userId");
@@ -30,69 +21,90 @@ const Sidebar = ({ width = 280, isOpen, setOpen }) => {
     const syncLoginState = () => {
       setUserId(sessionStorage.getItem("userId") || "");
     };
-
     window.addEventListener("storage", syncLoginState);
     return () => window.removeEventListener("storage", syncLoginState);
   }, []);
 
-  useEffect(() => {
-    window.addEventListener('click', handleClose);
-    return () => {
-      window.removeEventListener('click', handleClose);
-    };
-  });
-
   return (
-    <div
-      ref={side}
-      className={styles.sidebar}
-      style={{
-        width: `${width}px`,
-        height: '100%',
-        position: 'fixed',
-        top: 0,
-        left: isOpen ? 0 : `-${width}px`,
-        transition: "left 0.3s ease",
-        background: "#fff",
-        boxShadow: "2px 0 5px rgba(0,0,0,0.1)",
-        zIndex: 1000
-      }}
-    >
+    <>
+      {/* 오버레이(열렸을 때만) */}
+      {isOpen && (
+        <div
+          className={styles.backdrop}
+          onClick={() => setOpen(false)}
+          aria-hidden="true"
+        />
+      )}
+
+      {/* 토글 버튼 */}
       <button
-        onClick={(e) => {
-          e.stopPropagation();   // 외부 클릭 이벤트로 안 가게 막음
-          toggleMenu();
-        }}
-        className={styles.button}
+        onClick={toggleMenu}
+        className={`${styles.button} ${isOpen ? styles.buttonOpen : ""}`}
+        aria-label={isOpen ? "사이드바 닫기" : "사이드바 열기"}
+        aria-expanded={isOpen}
       >
         {isOpen ? (
-          <span className={styles.close}>X</span>
+          <span className={styles.closeX} aria-hidden="true">✕</span>
         ) : (
-          <img
-            src={menu}
-            alt="menu open"
-            className={styles.openBtn}
-          />
+          <img src={menu} alt="" className={styles.openBtn} />
         )}
       </button>
-      <br />
-      <div className={styles.content}>
-        <ul className="nav flex-column">
-          <li className="nav-item">
-            <Link to="/report" className="nav-link"><span className={styles.white}>Reports</span></Link>
-          </li>
-          <li className="nav-item">
-            <Link to="/ESG_reports" className="nav-link"><span className={styles.white}>ESG_Reports</span></Link>
-          </li>
-          {userId==='admin' ?
-            <li className="nav-item">
-              <Link to="/faq_res" className="nav-link"><span className={styles.white}>문의 사항 관리</span></Link>
-            </li> :
-            ''
-          }
-        </ul>
-      </div>
-    </div>
+      
+
+      {/* 사이드바 */}
+      <aside
+        className={`${styles.sidebar} ${isOpen ? styles.open : ""}`}
+        style={{ "--sidebar-w": `${width}px` }}
+        role="navigation"
+        aria-label="보조 메뉴"
+      >
+       {/* 하단 유저 정보(선택) */}
+        {userId && (
+          <div className={styles.footer}>
+            <span className={styles.userHi}>
+              <span className={styles.userDot} /> {userId}
+            </span>
+          </div>
+        )}
+
+        {/* 메뉴 */}
+        <nav className={styles.menu}>
+          <Link to="/report" className={styles.item} onClick={() => setOpen(false)}>
+            <span className={styles.ico} aria-hidden="true">
+              {/* report icon */}
+              <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 
+              2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6Zm0 2.5L19.5 
+              10H14V4.5ZM8 13h8v2H8v-2Zm0 4h8v2H8v-2Zm0-8h4v2H8V9Z"/></svg>
+            </span>
+            <span className={styles.txt}>Reports</span>
+          </Link>
+
+          <Link to="/ESG_reports" className={styles.item} onClick={() => setOpen(false)}>
+            <span className={styles.ico} aria-hidden="true">
+              {/* chart icon */}
+              <svg viewBox="0 0 24 24"><path d="M3 3h2v18H3V3Zm16 8h2v10h-2V11Zm-8 
+              4h2v6h-2v-6Zm-4-8h2v14H7V7Zm8-4h2v18h-2V3Z"/></svg>
+            </span>
+            <span className={styles.txt}>ESG Reports</span>
+          </Link>
+
+          {userId === "admin" && (
+            <Link to="/faq_res" className={styles.item} onClick={() => setOpen(false)}>
+              <span className={styles.ico} aria-hidden="true">
+                {/* shield icon */}
+                <svg viewBox="0 0 24 24"><path d="M12 2 4 5v6c0 
+                5 3.4 9.7 8 11 4.6-1.3 8-6 8-11V5l-8-3Zm0 
+                2.2 6 2.2v4.6c0 4.1-2.7 8-6 9.2-3.3-1.2-6-5.1-6-9.2V6.4l6-2.2ZM11 
+                7h2v5h-2V7Zm0 6h2v2h-2v-2Z"/></svg>
+              </span>
+              <span className={styles.txt}>문의 사항 관리</span>
+            </Link>
+          )}
+        </nav>
+
+        
+      </aside>
+    </>
   );
 };
 

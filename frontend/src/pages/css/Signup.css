@@ -146,3 +146,140 @@
 .signup-form button:active {
   transform: translateY(0);
 }
+
+
+/* --- 성별 세그먼트 토글 --- */
+.segmented {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr 1fr; /* 남/여 2개 */
+  gap: 0;
+  width: 100%;
+  height: 44px;
+  padding: 4px;
+  background: #f3f6f8;
+  border: 1.5px solid #e5e7eb;
+  border-radius: 9999px;
+  box-shadow: inset 0 1px 0 rgba(0,0,0,0.03);
+}
+
+.segmented-error {
+  border-color: #ef4444;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+}
+
+.segmented-input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.segmented-label {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  font-weight: 600;
+  color: #334155;          /* 기본 글자색 */
+  user-select: none;
+  cursor: pointer;
+  border-radius: 9999px;
+  transition: color .18s ease;
+}
+
+.segmented-label.active {
+  color: #0f5132;          /* 선택 시 글자색(딥그린) */
+}
+
+/* --- 성별 세그먼트 토글 (리디자인) --- */
+.segmented {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr 1fr;      /* 남/여 2칸 */
+  align-items: center;
+  width: 100%;
+  height: 48px;
+  padding: 6px;
+  background: #f6f8fb;
+  border: 1.5px solid #e5e7eb;
+  border-radius: 9999px;
+  box-shadow: inset 0 1px 0 rgba(0,0,0,0.03);
+  transition: box-shadow .2s ease, border-color .2s ease, background .2s ease;
+}
+
+.segmented:focus-within {
+  border-color: #198754;
+  box-shadow: 0 0 0 3px rgba(25, 135, 84, 0.18);
+}
+
+.segmented-error {
+  border-color: #ef4444;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+}
+
+/* 라디오 자체는 숨김 */
+.segmented-input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* 버튼처럼 보이는 라벨 */
+.segmented-label {
+  display: flex;
+  align-items: center;       /* 세로 중앙 */
+  justify-content: center;   /* 가로 중앙 */
+  width: 100%;
+  height: 36px;
+  padding: 0;
+  border-radius: 9999px;
+  font-weight: 600;
+  font-size: 15px;
+  color: #475569;
+  user-select: none;
+  cursor: pointer;
+  text-align: center;
+
+  position: relative;  /* ← 추가 */
+  top: 4px;            /* ← 정확히 1px 아래로 */
+}
+
+.segmented-label:active {
+  transform: scale(0.98);           /* 눌리는 느낌 */
+}
+
+.segmented-label.active {
+  color: #0e5f44;                   /* 선택된 탭 글자색 */
+}
+
+
+
+/* 선택 이동하는 슬라이더(엄지) */
+.segmented-thumb {
+  position: absolute;
+  z-index: 1;
+  top: 6px;
+  left: 6px;
+  width: calc(50% - 12px);          /* 좌우 여백 6px씩 */
+  height: calc(100% - 12px);
+  border-radius: 9999px;
+  background: linear-gradient(180deg, #ffffff, #f7f9fb);
+  border: 1px solid #e6eaf0;
+  box-shadow:
+    0 8px 22px rgba(16, 185, 129, 0.16),
+    0 2px 6px rgba(0,0,0,0.06);
+  transition:
+    transform .28s cubic-bezier(.22,.61,.36,1),
+    box-shadow .2s ease, background .2s ease, border-color .2s ease;
+}
+
+.segmented-thumb.right {
+  transform: translateX(100%);
+}
+
+/* 키보드 포커스가 thumb 위에 있을 때 약간 강조 (접근성) */
+.segmented:focus-within .segmented-thumb {
+  box-shadow:
+    0 10px 26px rgba(25, 135, 84, 0.18),
+    0 3px 8px rgba(0,0,0,0.06);
+}

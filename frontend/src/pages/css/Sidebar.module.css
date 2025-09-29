@@ -1,71 +1,163 @@
-:root {
-  --main-green: #2e7d32;
-  /* 진한 초록 */
-  --light-green: #81c784;
-  /* 연두 */
-  --hover-green: #66bb6a;
-  /* 버튼 hover 색 */
-  --deep-green: #D8F3DC;
-  --lime-green: #B7E4C7;
-  --yellow-green: #FFCC00;
+:root{
+  --g-600:#198754;        /* 포인트 그린 */
+  --g-500:#22a06b;
+  --line:#e5e7eb;
+  --sidebar-w:280px;      /* JS에서 style로 덮어씀 */
 }
 
-.container {
-  background-color: #E3ECF1;
-}
-
-.sidebar {
-  background-color: green !important;
+/* ───────── Backdrop ───────── */
+.backdrop{
   position: fixed;
-  top: 0;
-  bottom: 0;
-  left: 0;
-  transition: 0.4s ease;
-  height: 100%;
-  z-index: 99;
-  font-size: 20px;
+  inset: 0;
+  background: rgba(15,23,42,.32);        /* slate-900/32% */
+  backdrop-filter: blur(2px);
+  z-index: 999;                           /* 사이드바 뒤, 버튼 앞 */
+  animation: fadeIn .18s ease forwards;
 }
+@keyframes fadeIn { from{ opacity: 0 } to{ opacity: 1 } }
 
-.button {
+/* ───────── Toggle Button (repositioned) ───────── */
+.button{
   position: fixed;
-  /* 화면 왼쪽 상단 고정 */
-  top: 15px;
-  left: 15px;
-  width: auto;
-  /* 아이콘 크기에 맞춤 */
-  height: auto;
-  z-index: 2000;
-  /* 사이드바 위에 뜨도록 */
-  border: none;
-  background: none;
-  /* 배경 제거 */
-  padding: 0;
-  /* 불필요 여백 제거 */
+  top: 14px;
+  left: 14px;                 /* 기본: 닫혀 있을 때(햄버거) 화면 좌측 상단 */
+  z-index: 1001;
+  width: 42px;
+  height: 42px;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(0,0,0,.06);
+  background: #ffffff;
+  color: #146c43;
+  border-radius: 14px;         /* 부드러운 둥근 사각형 */
   cursor: pointer;
-  /* 마우스 올리면 손가락 모양 */
+  box-shadow: 0 8px 20px rgba(0,0,0,.12);
+  transition:
+    transform .12s ease,
+    box-shadow .2s ease,
+    background .2s ease,
+    color .2s ease,
+    left .32s cubic-bezier(.22,.61,.36,1);
 }
 
-.openBtn {
-  width: 35px;
-  /* 원하는 크기로 조절 */
-  height: 35px;
+/* 열렸을 때: 버튼을 '사이드바 오른쪽 상단'으로 이동 */
+.buttonOpen{
+  /* 사이드바 너비 변수 기준으로 오른쪽 끝에 붙임 */
+  left: calc(var(--sidebar-w) + 12px);
+  color:#0f5132;
 }
 
-.content {
-  padding: 40px 40px 0 20px;
-  position: relative;
-  width: 100%;
+/* 작은 화면에서 사이드바 폭이 줄어드는 경우의 보정 */
+@media (max-width: 640px){
+  .buttonOpen{
+    /* sidebar 폭을 40px 줄였으니 동일한 여백으로 보정 */
+    left: calc((var(--sidebar-w) - 40px) + 12px);
+  }
 }
 
-.icon {
-  margin: 0;
+.openBtn{ width: 26px; height: 26px; display: block; }
+.closeX{ font-size: 18px; font-weight: 800; line-height: 1; }
+
+
+/* ───────── Sidebar Panel ───────── */
+.sidebar{
+  position: fixed;
+  top: 0; left: 0;
+  height: 100dvh;
+  width: var(--sidebar-w);
+  z-index: 1000;
+  color: #fff;
+
+  /* 디자인 */
+  background:
+    radial-gradient(120% 60% at 0% 0%, rgba(46,233,181,.16) 0%, rgba(46,233,181,0) 60%),
+    linear-gradient(180deg, #1b8f57 0%, #106b3f 100%);
+  border-right: 1px solid rgba(255,255,255,.06);
+  box-shadow: 10px 0 26px rgba(0,0,0,.18);
+
+  /* 모션 */
+  transform: translateX(calc(-1 * var(--sidebar-w)));
+  transition: transform .32s cubic-bezier(.22,.61,.36,1);
+  will-change: transform;
+}
+.open{
+  transform: translateX(0);
 }
 
-.white:hover {
-  color: var(--light-green) !important;
-  transform: translateY(-2px);
+/* ───────── Header / Brand ───────── */
+.header{
+  padding: 18px 16px 12px 16px;
+  border-bottom: 1px solid rgba(255,255,255,.06);
+}
+.brandRow{
+  display: flex; align-items: center; gap: 10px;
+}
+.brandDot{
+  width: 12px; height: 12px; border-radius: 50%;
+  background: linear-gradient(180deg, #34d399, #10b981);
+  box-shadow: 0 0 0 4px rgba(16,185,129,.16);
+}
+.brandMeta{
+  display: flex; flex-direction: column;
+}
+.brandTitle{
+  font-size: 15px; font-weight: 800; letter-spacing: .2px;
+}
+.brandTagline{
+  font-size: 12px; opacity: .8;
 }
 
-.white {
-  color: white;
+/* ───────── Menu ───────── */
+.menu{
+  display: flex; flex-direction: column;
+  gap: 6px;
+  padding: 14px;
+}
+.item{
+  display: flex; align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  color: #e9ffef;
+  text-decoration: none;
+  font-weight: 700;
+  letter-spacing: .1px;
+
+  transition: background .18s ease, color .18s ease, transform .12s ease, box-shadow .18s ease;
+}
+.item:hover{
+  background: rgba(255,255,255,.12);
+  color: #ffffff;
+  transform: translateX(2px);
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.08);
+}
+.item:active{ transform: translateX(1px); }
+
+.ico{
+  display: inline-flex;
+  width: 18px; height: 18px;
+}
+.ico svg{ width: 18px; height: 18px; fill: currentColor; }
+
+.txt{ white-space: nowrap; }
+
+/* ───────── Footer (User) ───────── */
+.footer{
+  margin-top: auto;
+  padding: 14px 16px 18px;
+  border-top: 1px solid rgba(255,255,255,.06);
+  display: flex; align-items: center; justify-content: space-between;
+}
+.userHi{
+  font-size: 13px; color: #ddfff1; font-weight: 700;
+  display: inline-flex; align-items: center; gap: 8px;
+}
+.userDot{
+  width: 8px; height: 8px; border-radius: 50%;
+  background: #22c55e; box-shadow: 0 0 0 3px rgba(34,197,94,.18);
+}
+
+/* ───────── Responsive ───────── */
+@media (max-width: 640px){
+  .sidebar{ width: calc(var(--sidebar-w) - 40px); }
 }
