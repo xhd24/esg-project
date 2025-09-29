@@ -37,7 +37,7 @@ async function requireAuth(req, res, next) {
   }
 }
 
-/* ============ 질문 목록 (정적) ============ */
+/* ============ 질문 목록 (정적 questionsSource 사용) ============ */
 router.get('/questions', requireAuth, async (req, res) => {
   const { category } = req.query;
 
@@ -45,6 +45,7 @@ router.get('/questions', requireAuth, async (req, res) => {
     (questionsSource[cat] || []).map((q) => ({
       id: q.id,
       category: q.category,
+      subCategory: q.subCategory || null,   // ✅ subCategory 포함
       text: q.text,
       description: q.description || '',
       options: q.options || ['예', '아니오'],
@@ -57,12 +58,11 @@ router.get('/questions', requireAuth, async (req, res) => {
   return res.json({ questions: pick(category) });
 });
 
-/* ============ 내 응답 조회 (최신 1건) ============ */
+/* ============ 내 응답 조회 (최신 1건을 map으로 반환) ============ */
 router.get('/answers/me', requireAuth, async (req, res) => {
   const userId = req.user.id;
   const { category } = req.query;
 
-  // 최신 제출 1건
   const [rows] = await pool.query(
     `SELECT answerjson
      FROM esg_user_answer
@@ -76,13 +76,19 @@ router.get('/answers/me', requireAuth, async (req, res) => {
   if (!rows.length) return res.json({ answers: map });
 
   try {
-    const payload = JSON.parse(rows[0].answerjson); // { submitted_at, answers: [...] }
-    const items = Array.isArray(payload.answers) ? payload.answers : [];
+    // 저장 형식: { submitted_at, answers: [...] }
+    const payload = typeof rows[0].answerjson === 'string'
+      ? JSON.parse(rows[0].answerjson)
+      : rows[0].answerjson;
+
+    const items = Array.isArray(payload?.answers) ? payload.answers : [];
     for (const item of items) {
       if (category && item.category !== category) continue;
-      map[Number(item.questionid)] = String(item.answer || '');
+      map[Number(item.questionid)] = String(item.answer ?? '');
     }
-  } catch (_) {}
+  } catch (e) {
+    console.warn('[answers/me] parse error:', e);
+  }
   return res.json({ answers: map });
 });
 
@@ -90,7 +96,7 @@ router.get('/answers/me', requireAuth, async (req, res) => {
 /*
  body: {
    answers: [
-     { category, questionid, question, answer },
+     { category, subCategory?, questionid, question, answer },
      ...
    ]
  }
@@ -104,21 +110,21 @@ router.post('/answers/bulk', requireAuth, async (req, res) => {
       return res.status(400).json({ error: 'answers empty' });
     }
 
-    // 정리/검증
+    // 정리/검증 (+ subCategory 반영)
     const cleaned = answers
       .map((a) => ({
         category: a.category,
+        subCategory: a.subCategory ?? null,           // ✅ 함께 저장
         questionid: Number(a.questionid),
         question: String(a.question || ''),
         answer: String(a.answer || ''),
       }))
-      .filter((a) => a.category && a.questionid);
+      .filter((a) => a.category && Number.isFinite(a.questionid));
 
     if (cleaned.length === 0) {
       return res.status(400).json({ error: 'no valid answers' });
     }
 
-    // 저장할 JSON (원하면 여기에 meta 더 넣어도 됨)
     const answerjson = {
       submitted_at: new Date().toISOString(),
       answers: cleaned,
@@ -131,7 +137,7 @@ router.post('/answers/bulk', requireAuth, async (req, res) => {
       [userId, JSON.stringify(answerjson)]
     );
 
-    // === (옵션) 1인 1레코드만 유지하고 싶다면 위 INSERT 대신 아래 두 줄 사용 ===
+    // === (옵션) 1인 1레코드만 유지하고 싶으면 아래 2줄 사용 ===
     // await pool.query(`DELETE FROM esg_user_answer WHERE user_id = ?`, [userId]);
     // await pool.query(`INSERT INTO esg_user_answer (user_id, answerjson, inputdate) VALUES (?, ?, NOW())`, [userId, JSON.stringify(answerjson)]);
 
@@ -142,18 +148,58 @@ router.post('/answers/bulk', requireAuth, async (req, res) => {
   }
 });
 
-/* ============ 카테고리별 집계 (최신 1건) ============ */
-router.get('/report/me', requireAuth, async (req, res) => {
+/* ============ 제출 이력(연도 목록 + 제출 id) ============ */
+router.get('/submissions/me', requireAuth, async (req, res) => {
   const userId = req.user.id;
-
   const [rows] = await pool.query(
-    `SELECT answerjson
+    `SELECT id, inputdate, YEAR(inputdate) AS year
      FROM esg_user_answer
      WHERE user_id = ?
-     ORDER BY inputdate DESC
-     LIMIT 1`,
+     ORDER BY inputdate DESC`,
     [userId]
   );
+  res.json({ submissions: rows });
+});
+
+/* ============ 카테고리별 집계 ============ */
+/*  GET /esg/report/me
+    - 최신 1건: (기본)                       /esg/report/me
+    - 특정 연도 최신 1건:                    /esg/report/me?year=2024
+    - 특정 제출 id(가장 우선):               /esg/report/me?id=123
+*/
+router.get('/report/me', requireAuth, async (req, res) => {
+  const userId = req.user.id;
+  const id = req.query.id ? Number(req.query.id) : null;
+  const year = req.query.year ? Number(req.query.year) : null;
+
+  let rows;
+  if (id) {
+    [rows] = await pool.query(
+      `SELECT id, answerjson, inputdate
+       FROM esg_user_answer
+       WHERE user_id = ? AND id = ?
+       LIMIT 1`,
+      [userId, id]
+    );
+  } else if (year) {
+    [rows] = await pool.query(
+      `SELECT id, answerjson, inputdate
+       FROM esg_user_answer
+       WHERE user_id = ? AND YEAR(inputdate) = ?
+       ORDER BY inputdate DESC
+       LIMIT 1`,
+      [userId, year]
+    );
+  } else {
+    [rows] = await pool.query(
+      `SELECT id, answerjson, inputdate
+       FROM esg_user_answer
+       WHERE user_id = ?
+       ORDER BY inputdate DESC
+       LIMIT 1`,
+      [userId]
+    );
+  }
 
   const counters = {
     Environment: { yes: 0, no: 0, total: 0 },
@@ -161,17 +207,25 @@ router.get('/report/me', requireAuth, async (req, res) => {
     Governance: { yes: 0, no: 0, total: 0 },
   };
 
+  let savedAt = null;
+
   if (rows.length) {
     try {
-      const payload = JSON.parse(rows[0].answerjson);
-      const items = Array.isArray(payload.answers) ? payload.answers : [];
+      const payload = typeof rows[0].answerjson === 'string'
+        ? JSON.parse(rows[0].answerjson)
+        : rows[0].answerjson;
+
+      const items = Array.isArray(payload?.answers) ? payload.answers : [];
       for (const item of items) {
         if (!counters[item.category]) continue;
         counters[item.category].total += 1;
         if (item.answer === '예') counters[item.category].yes += 1;
         else if (item.answer === '아니오') counters[item.category].no += 1;
       }
-    } catch (_) {}
+      savedAt = rows[0].inputdate;
+    } catch (e) {
+      console.warn('[report/me] parse error:', e);
+    }
   }
 
   const report = ['Environment', 'Social', 'Governance'].map((cat) => ({
@@ -181,7 +235,7 @@ router.get('/report/me', requireAuth, async (req, res) => {
     total: counters[cat].total,
   }));
 
-  res.json({ report });
+  res.json({ report, savedAt });
 });
 
 export default router;

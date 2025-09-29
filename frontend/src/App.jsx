@@ -12,9 +12,7 @@ import "bootstrap/dist/css/bootstrap.min.css";
 import Sidebar from "./pages/Sidebar.jsx";
 import Report from "./pages/Report.jsx";
 import ESG_Reports from "./pages/ESG_Reports.jsx";
-import ESG_Report_2025 from "./pages/ESG_Report_2025.jsx";
-import ESG_Report_2024 from "./pages/ESG_Report_2024.jsx";
-import ESG_Report_2023 from "./pages/ESG_Report_2023.jsx";
+import ESG_Report from "./pages/ESG_Report.jsx";
 import logo from './assets/images/logo.png';
 import { useEffect, useState } from "react";
 import { FAQWrite, FAQHistory } from "./pages/Query.jsx";
@@ -62,7 +60,7 @@ function App() {
     window.addEventListener("storage", syncLoginState);
     return () => window.removeEventListener("storage", syncLoginState);
   }, []);
-  
+
   return (
     <BrowserRouter>
       <div style={{ display: "flex" }}>
@@ -77,7 +75,7 @@ function App() {
         >
           <nav className="main_nav">
             <a href='/'>
-            <img src={logo} className="logo" alt="logo"/>
+              <img src={logo} className="logo" alt="logo" />
             </a>
             <ul className="nav">
               <li className="nav-item"><Link to='/' className="nav-link">Home</Link></li>
@@ -108,10 +106,7 @@ function App() {
               <Route path="/find-password" element={<FindPassword />} />
 
               {/* ★ 탄소배출 섹션 */}
-              {/* 1) /carbon → 안내 페이지(ESGBack) */}
               <Route path="/carbon" element={<ESGBack />} />
-
-              {/* 2) /carbon/forms → 기존 C1/C2/C3 탭 레이아웃 */}
               <Route path="/carbon/forms" element={<Carbon />}>
                 <Route index element={<Carb1 />} />
                 <Route path="c2" element={<Carb2 />} />
@@ -133,16 +128,14 @@ function App() {
                 <Route path="c2.result" element={<C2Result />} />
                 <Route path="c3.result" element={<C3Result />} />
               </Route>
+
               <Route path='/report' element={<Report />} />
               <Route path='/ESG_reports' element={<ESG_Reports />} />  {/* 리스트 */}
-              <Route path='/ESG_report_2025' element={<ESG_Report_2025 />} />   {/* 상세 */}
-              <Route path='/ESG_report_2024' element={<ESG_Report_2024 />} />   {/* 상세 */}
-              <Route path='/ESG_report_2023' element={<ESG_Report_2023 />} />   {/* 상세 */}
+              <Route path='/ESG_report/:year' element={<ESG_Report />} /> {/* 상세 + 제출 이력/결과 */}
               <Route path='/faq_res' element={<FAQRes />} />
               <Route path='/faq_res/:id' element={<FAQDetail />} />
             </Routes>
           </main>
-          {/* ✅ Footer 추가 */}
           <Footer />
         </div>
       </div>

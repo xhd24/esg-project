@@ -215,6 +215,7 @@ function Assessment() {
         if (!opt) continue;
         toSave.push({
           category: q.category,
+          subCategory: q.subCategory || null,
           questionid: Number(q.id),
           question: q.text,
           answer: opt,
@@ -426,9 +427,8 @@ function Assessment() {
               {modal.actions?.map((a, idx) => (
                 <button
                   key={idx}
-                  className={`alert-btn ${
-                    a.variant === "primary" ? "alert-btn--primary" : "alert-btn--ghost"
-                  }`}
+                  className={`alert-btn ${a.variant === "primary" ? "alert-btn--primary" : "alert-btn--ghost"
+                    }`}
                   onClick={a.onClick}
                 >
                   {a.label}

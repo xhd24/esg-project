@@ -97,3 +97,16 @@ export async function getMyEsgReport() {
   const data = await apiFetch(`${ESG_PREFIX}/report/me`);
   return data.report || [];
 }
+
+// 제출 목록(연도/제출일)
+export async function getMySubmissions() {
+  const data = await apiFetch(`/esg/submissions/me`);
+  return data.submissions || [];
+}
+
+// 특정 연도 보고서
+export async function getMyEsgReportByYear(year) {
+  const q = year ? `?year=${encodeURIComponent(year)}` : "";
+  const data = await apiFetch(`/esg/report/me${q}`);
+  return data; // {year, submission_exists, report:[{category,yes,no,total}]}
+}
