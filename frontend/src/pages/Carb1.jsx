@@ -184,8 +184,11 @@ export default function Carb1() {
     };
 
     const res = await carb1InputQuery(payload);
-    if (res.success) {
-      alert('추가 성공');
+    if (res?.success) {
+
+      window.dispatchEvent(
+        new CustomEvent("openGlobalModal", { detail: { message: "추가 성공" } })
+      );
       setExt((prev) => ({
         shipKey: "",
         startDate: "",
@@ -193,12 +196,13 @@ export default function Carb1() {
         items: ["", "", "", "", ""],
         userId: prev.userId   // userId는 유지해야 하니까 prev.userId 넣어줌
       }));
-
-      // 에러 메시지/상태도 초기화
       setExtErrs(["", "", "", "", ""]);
       setExtErrLeaving([false, false, false, false, false]);
+    } else {
+      window.dispatchEvent(
+        new CustomEvent("openGlobalModal", { detail: { message: "저장 실패" } })
+      );
     }
-
   };
 
   // 내부 저장(표에 즉시 반영)
@@ -220,7 +224,9 @@ export default function Carb1() {
     };
     const res = await carb1_1InputQuery(payload);
     if (res.success) {
-      alert('추가 성공');
+      window.dispatchEvent(
+        new CustomEvent("openGlobalModal", { detail: { message: "추가 성공" } })
+      );
       setInn((prev) => ({
         shipKey: "",
         startDate: "",
@@ -232,6 +238,11 @@ export default function Carb1() {
       // 에러 메시지/상태도 초기화
       setExtErrs(["", "", "", "", "", "", "", ""]);
       setExtErrLeaving([false, false, false, false, false, false, false, false]);
+    }
+    else {
+      window.dispatchEvent(
+        new CustomEvent("openGlobalModal", { detail: { message: "저장 실패" } })
+      );
     }
   };
 
@@ -432,7 +443,7 @@ export default function Carb1() {
       >
         <svg className="scroll-fab__icon" viewBox="0 0 24 24" aria-hidden="true">
           {/* 기본은 ↓, isBelowHalf 이면 CSS로 180도 회전 */}
-          <path d="M12 4c.55 0 1 .45 1 1v12.17l4.59-4.58c.39-.39 1.03-.39 1.41 0 .39.39.39 1.02 0 1.41l-6.3 6.3c-.39.39-1.02.39-1.41 0l-6.3-6.3a1.003 1.003 0 0 1 1.41-1.41L11 17.17V5c0-.55.45-1 1-1z"/>
+          <path d="M12 4c.55 0 1 .45 1 1v12.17l4.59-4.58c.39-.39 1.03-.39 1.41 0 .39.39.39 1.02 0 1.41l-6.3 6.3c-.39.39-1.02.39-1.41 0l-6.3-6.3a1.003 1.003 0 0 1 1.41-1.41L11 17.17V5c0-.55.45-1 1-1z" />
         </svg>
       </button>
     </div>

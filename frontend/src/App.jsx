@@ -39,8 +39,18 @@ function App() {
   const [isSidebarOpen, setSidebarOpen] = useState(false);
   const [isLogin, setIsLogin] = useState(false);
   const [userId, setUserId] = useState("");
-  const [showLogoutAlert, setShowLogoutAlert] = useState(false); // ✅ 로그아웃 알림창
+  const [showLogoutAlert, setShowLogoutAlert] = useState(false); // 로그아웃 모달
   const sidebarWidth = 280;
+
+  // ✅ 공통 모달 (Carb2 등에서 호출 가능)
+  const [globalModal, setGlobalModal] = useState({
+    show: false,
+    message: "",
+    onConfirm: null,
+  });
+
+  const closeModal = () =>
+    setGlobalModal({ show: false, message: "", onConfirm: null });
 
   // 실제 로그아웃 실행 + 홈으로 이동
   const doLogout = () => {
@@ -49,20 +59,27 @@ function App() {
     setUserId("");
     window.dispatchEvent(new Event("storage")); // 다른 탭 동기화
     setShowLogoutAlert(false);
-    // 홈으로 이동 (뒤로가기 방지)
     if (window.location.pathname !== "/") {
       window.location.replace("/");
     }
   };
 
-  // 버튼 클릭 시: 로그아웃 알림 먼저 표출
-  const onClickLogout = () => {
-    setShowLogoutAlert(true);
-  };
-
-  // 모달만 닫기 (로그아웃 취소)
+  // 로그아웃 버튼 클릭 → 로그아웃 모달 표시
+  const onClickLogout = () => setShowLogoutAlert(true);
   const closeLogoutAlert = () => setShowLogoutAlert(false);
 
+  // ✅ 공통 모달 이벤트 수신 (Carb2 등에서 사용)
+  useEffect(() => {
+    const handleOpenModal = (e) => {
+      const { message } = e.detail;
+      setGlobalModal({ show: true, message });
+    };
+    window.addEventListener("openGlobalModal", handleOpenModal);
+    return () =>
+      window.removeEventListener("openGlobalModal", handleOpenModal);
+  }, []);
+
+  // 로그인 상태 초기화
   useEffect(() => {
     const storedLogin = sessionStorage.getItem("isLogin") === "true";
     const storedUserId = sessionStorage.getItem("userId");
@@ -70,6 +87,7 @@ function App() {
     setUserId(storedUserId || "");
   }, []);
 
+  // 다른 탭과 로그인 상태 동기화
   useEffect(() => {
     const syncLoginState = () => {
       setIsLogin(sessionStorage.getItem("isLogin") === "true");
@@ -164,11 +182,7 @@ function App() {
 
               {/* Report */}
               <Route path="/report" element={<ReportBack />} />
-
-              {/* 연도별 → 결과 화면 매핑 */}
               <Route path="/report/:year" element={<CarbonReport />} />
-
-              {/* 그 외 연도는 공통 페이지에서 처리 (옵션) */}
               <Route path="/report/:year" element={<ReportYear />} />
 
               {/* 기존 리포트 목록/상세 */}
@@ -187,7 +201,7 @@ function App() {
         </div>
       </div>
 
-      {/* ✅ 로그아웃 알림 모달 (취소 / 확인) — 기존 공통 모달 CSS 재사용 */}
+      {/* ✅ 로그아웃 알림 모달 */}
       {showLogoutAlert && (
         <div className="modal-overlay" role="dialog" aria-modal="true">
           <div className="modal-card">
@@ -205,6 +219,27 @@ function App() {
               <button
                 className="alert-btn alert-btn--primary"
                 onClick={doLogout}
+              >
+                확인
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ✅ 공통 모달 (Carb2 등에서 사용) */}
+      {globalModal.show && (
+        <div className="modal-overlay" role="dialog" aria-modal="true">
+          <div className="modal-card">
+            <h3 className="modal-title">알림</h3>
+            <p className="modal-message">{globalModal.message}</p>
+            <div className="modal-actions">
+              <button
+                className="alert-btn alert-btn--primary"
+                onClick={() => {
+                  if (globalModal.onConfirm) globalModal.onConfirm();
+                  closeModal();
+                }}
               >
                 확인
               </button>
