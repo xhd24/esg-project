@@ -1,3 +1,4 @@
+// src/App.jsx
 import { BrowserRouter, Routes, Route, Link } from "react-router-dom";
 import Home from "./pages/Home.jsx";
 import Login from "./pages/Login.jsx";
@@ -13,7 +14,8 @@ import Sidebar from "./pages/Sidebar.jsx";
 import Report from "./pages/Report.jsx";
 import ESG_Reports from "./pages/ESG_Reports.jsx";
 import ESG_Report from "./pages/ESG_Report.jsx";
-import logo from './assets/images/logo.png';
+import ESG_ReportDetail from "./pages/ESG_ReportDetail.jsx"; // ✅ 상세 페이지
+import logo from "./assets/images/logo.png";
 import { useEffect, useState } from "react";
 import { FAQWrite, FAQHistory } from "./pages/Query.jsx";
 import Carb1 from "./pages/Carb1.jsx";
@@ -23,30 +25,29 @@ import FAQRes from "./pages/FAQRes.jsx";
 import FAQDetail from "./pages/FAQDetail.jsx";
 import Footer from "./pages/Footer.jsx";
 
-// Report 하위 페이지
+// Report 하위 페이지 (탄소)
 import C1Result from "./pages/C1.result.jsx";
 import C2Result from "./pages/C2.result.jsx";
 import C3Result from "./pages/C3.result.jsx";
 
-// ★ 추가: 탄소배출 안내 페이지
+// 탄소배출 안내 페이지
 import ESGBack from "./pages/esg_back.jsx";
 
 function App() {
   const [isSidebarOpen, setSidebarOpen] = useState(false);
   const [isLogin, setIsLogin] = useState(false);
-  const [userId, setUserId] = useState('');
+  const [userId, setUserId] = useState("");
   const sidebarWidth = 280;
 
   const logout = () => {
     sessionStorage.clear();
     setIsLogin(false);
-    setUserId('');
+    setUserId("");
   };
 
   useEffect(() => {
     const storedLogin = sessionStorage.getItem("isLogin") === "true";
     const storedUserId = sessionStorage.getItem("userId");
-
     setIsLogin(storedLogin);
     setUserId(storedUserId || "");
   }, []);
@@ -56,7 +57,6 @@ function App() {
       setIsLogin(sessionStorage.getItem("isLogin") === "true");
       setUserId(sessionStorage.getItem("userId") || "");
     };
-
     window.addEventListener("storage", syncLoginState);
     return () => window.removeEventListener("storage", syncLoginState);
   }, []);
@@ -64,7 +64,11 @@ function App() {
   return (
     <BrowserRouter>
       <div style={{ display: "flex" }}>
-        <Sidebar width={sidebarWidth} isOpen={isSidebarOpen} setOpen={setSidebarOpen} />
+        <Sidebar
+          width={sidebarWidth}
+          isOpen={isSidebarOpen}
+          setOpen={setSidebarOpen}
+        />
 
         <div
           style={{
@@ -74,22 +78,41 @@ function App() {
           }}
         >
           <nav className="main_nav">
-            <a href='/'>
+            {/* ✅ SPA 내비게이션으로 변경 */}
+            <Link to="/">
               <img src={logo} className="logo" alt="logo" />
-            </a>
+            </Link>
             <ul className="nav">
-              <li className="nav-item"><Link to='/' className="nav-link">Home</Link></li>
-              <li className="nav-item"><Link to='/carbon' className="nav-link">탄소배출량(거제)</Link></li>
-              <li className="nav-item"><Link to='/assessment' className="nav-link">ESG 평가 (거제)</Link></li>
-              <li className="nav-item"><Link to='/faq' className="nav-link">FAQ</Link></li>
+              <li className="nav-item">
+                <Link to="/" className="nav-link">
+                  Home
+                </Link>
+              </li>
+              <li className="nav-item">
+                <Link to="/carbon" className="nav-link">
+                  탄소배출량(거제)
+                </Link>
+              </li>
+              <li className="nav-item">
+                <Link to="/assessment" className="nav-link">
+                  ESG 평가 (거제)
+                </Link>
+              </li>
+              <li className="nav-item">
+                <Link to="/faq" className="nav-link">
+                  FAQ
+                </Link>
+              </li>
               {isLogin ? (
                 <li className="nav-item user-info">
                   <span>{userId}님 안녕하세요!</span>
-                  <button className="logout-btn" onClick={logout}>로그아웃</button>
+                  <button className="logout-btn" onClick={logout}>
+                    로그아웃
+                  </button>
                 </li>
               ) : (
                 <li className="nav-item">
-                  <Link to='/login' className="nav-link login">
+                  <Link to="/login" className="nav-link login">
                     <span className="green">로그인</span>
                   </Link>
                 </li>
@@ -105,7 +128,7 @@ function App() {
               <Route path="/find-id" element={<FindId />} />
               <Route path="/find-password" element={<FindPassword />} />
 
-              {/* ★ 탄소배출 섹션 */}
+              {/* 탄소배출 섹션 */}
               <Route path="/carbon" element={<ESGBack />} />
               <Route path="/carbon/forms" element={<Carbon />}>
                 <Route index element={<Carb1 />} />
@@ -121,7 +144,7 @@ function App() {
                 <Route path="write" element={<FAQWrite />} />
               </Route>
 
-              {/* Report 섹션 */}
+              {/* 기존 Report 섹션 (탄소) */}
               <Route path="/report" element={<Report />}>
                 <Route index element={<C1Result />} />
                 <Route path="c1.result" element={<C1Result />} />
@@ -129,13 +152,24 @@ function App() {
                 <Route path="c3.result" element={<C3Result />} />
               </Route>
 
-              <Route path='/report' element={<Report />} />
-              <Route path='/ESG_reports' element={<ESG_Reports />} />  {/* 리스트 */}
-              <Route path='/ESG_report/:year' element={<ESG_Report />} /> {/* 상세 + 제출 이력/결과 */}
-              <Route path='/faq_res' element={<FAQRes />} />
-              <Route path='/faq_res/:id' element={<FAQDetail />} />
+              {/* ESG Reports 리스트 */}
+              <Route path="/ESG_reports" element={<ESG_Reports />} />
+
+              {/* ESG Report (연도별 제출 이력) */}
+              <Route path="/ESG_report/:year" element={<ESG_Report />} />
+
+              {/* ✅ ESG Report 상세 (제출 선택 시 이동) */}
+              <Route
+                path="/ESG_report/:year/submission/:sid"
+                element={<ESG_ReportDetail />}
+              />
+
+              {/* 기타 */}
+              <Route path="/faq_res" element={<FAQRes />} />
+              <Route path="/faq_res/:id" element={<FAQDetail />} />
             </Routes>
           </main>
+
           <Footer />
         </div>
       </div>

@@ -45,7 +45,7 @@ router.get('/questions', requireAuth, async (req, res) => {
     (questionsSource[cat] || []).map((q) => ({
       id: q.id,
       category: q.category,
-      subCategory: q.subCategory || null,   // ✅ subCategory 포함
+      subCategory: q.subCategory || null,   // subCategory 포함
       text: q.text,
       description: q.description || '',
       options: q.options || ['예', '아니오'],
@@ -58,49 +58,45 @@ router.get('/questions', requireAuth, async (req, res) => {
   return res.json({ questions: pick(category) });
 });
 
-/* ============ 내 응답 조회 (최신 1건을 map으로 반환) ============ */
+/* ============ 내 응답 조회 (최신 1건 map) ============ */
 router.get('/answers/me', requireAuth, async (req, res) => {
-  const userId = req.user.id;
-  const { category } = req.query;
-
-  const [rows] = await pool.query(
-    `SELECT answerjson
-     FROM esg_user_answer
-     WHERE user_id = ?
-     ORDER BY inputdate DESC
-     LIMIT 1`,
-    [userId]
-  );
-
-  const map = {};
-  if (!rows.length) return res.json({ answers: map });
-
   try {
-    // 저장 형식: { submitted_at, answers: [...] }
-    const payload = typeof rows[0].answerjson === 'string'
-      ? JSON.parse(rows[0].answerjson)
-      : rows[0].answerjson;
+    const userId = req.user.id;
+    const { category } = req.query;
 
-    const items = Array.isArray(payload?.answers) ? payload.answers : [];
-    for (const item of items) {
-      if (category && item.category !== category) continue;
-      map[Number(item.questionid)] = String(item.answer ?? '');
+    const [rows] = await pool.query(
+      `SELECT answerjson
+       FROM esg_user_answer
+       WHERE user_id = ?
+       ORDER BY inputdate DESC
+       LIMIT 1`,
+      [userId]
+    );
+
+    const map = {};
+    if (!rows.length) return res.json({ answers: map });
+
+    try {
+      const payload = typeof rows[0].answerjson === 'string'
+        ? JSON.parse(rows[0].answerjson)
+        : rows[0].answerjson;
+
+      const items = Array.isArray(payload?.answers) ? payload.answers : [];
+      for (const item of items) {
+        if (category && item.category !== category) continue;
+        map[Number(item.questionid)] = String(item.answer ?? '');
+      }
+    } catch (e) {
+      console.warn('[answers/me] parse error:', e);
     }
+    return res.json({ answers: map });
   } catch (e) {
-    console.warn('[answers/me] parse error:', e);
+    console.error('[answers/me] error:', e);
+    return res.status(500).json({ error: 'Internal error' });
   }
-  return res.json({ answers: map });
 });
 
-/* ============ 일괄 저장 (전체를 한 JSON으로 1레코드 저장) ============ */
-/*
- body: {
-   answers: [
-     { category, subCategory?, questionid, question, answer },
-     ...
-   ]
- }
-*/
+/* ============ 일괄 저장 (한 JSON으로 1레코드) ============ */
 router.post('/answers/bulk', requireAuth, async (req, res) => {
   try {
     const userId = req.user.id;
@@ -110,11 +106,10 @@ router.post('/answers/bulk', requireAuth, async (req, res) => {
       return res.status(400).json({ error: 'answers empty' });
     }
 
-    // 정리/검증 (+ subCategory 반영)
     const cleaned = answers
       .map((a) => ({
         category: a.category,
-        subCategory: a.subCategory ?? null,           // ✅ 함께 저장
+        subCategory: a.subCategory ?? null,
         questionid: Number(a.questionid),
         question: String(a.question || ''),
         answer: String(a.answer || ''),
@@ -130,112 +125,171 @@ router.post('/answers/bulk', requireAuth, async (req, res) => {
       answers: cleaned,
     };
 
-    // === 히스토리 유지형(권장): 매 제출 INSERT로 쌓기 ===
-    await pool.query(
+    // INSERT (submission_id는 AUTO_INCREMENT 가정)
+    const [result] = await pool.query(
       `INSERT INTO esg_user_answer (user_id, answerjson, inputdate)
        VALUES (?, ?, NOW())`,
       [userId, JSON.stringify(answerjson)]
     );
 
-    // === (옵션) 1인 1레코드만 유지하고 싶으면 아래 2줄 사용 ===
-    // await pool.query(`DELETE FROM esg_user_answer WHERE user_id = ?`, [userId]);
-    // await pool.query(`INSERT INTO esg_user_answer (user_id, answerjson, inputdate) VALUES (?, ?, NOW())`, [userId, JSON.stringify(answerjson)]);
+    // mysql2: insertId 제공 (AUTO_INCREMENT PK일 때)
+    const submissionId = result?.insertId ?? null;
 
-    return res.json({ success: true, saved_count: cleaned.length });
+    return res.json({ success: true, saved_count: cleaned.length, submission_id: submissionId });
   } catch (err) {
     console.error('[answers/bulk] error:', err);
     res.status(500).json({ error: 'Internal error while saving answers' });
   }
 });
 
-/* ============ 제출 이력(연도 목록 + 제출 id) ============ */
-router.get('/submissions/me', requireAuth, async (req, res) => {
-  const userId = req.user.id;
-  const [rows] = await pool.query(
-    `SELECT id, inputdate, YEAR(inputdate) AS year
-     FROM esg_user_answer
-     WHERE user_id = ?
-     ORDER BY inputdate DESC`,
-    [userId]
-  );
-  res.json({ submissions: rows });
-});
-
-/* ============ 카테고리별 집계 ============ */
-/*  GET /esg/report/me
-    - 최신 1건: (기본)                       /esg/report/me
-    - 특정 연도 최신 1건:                    /esg/report/me?year=2024
-    - 특정 제출 id(가장 우선):               /esg/report/me?id=123
-*/
+/* ============ 카테고리별 집계 (최신 1건) ============ */
 router.get('/report/me', requireAuth, async (req, res) => {
-  const userId = req.user.id;
-  const id = req.query.id ? Number(req.query.id) : null;
-  const year = req.query.year ? Number(req.query.year) : null;
+  try {
+    const userId = req.user.id;
 
-  let rows;
-  if (id) {
-    [rows] = await pool.query(
-      `SELECT id, answerjson, inputdate
-       FROM esg_user_answer
-       WHERE user_id = ? AND id = ?
-       LIMIT 1`,
-      [userId, id]
-    );
-  } else if (year) {
-    [rows] = await pool.query(
-      `SELECT id, answerjson, inputdate
-       FROM esg_user_answer
-       WHERE user_id = ? AND YEAR(inputdate) = ?
-       ORDER BY inputdate DESC
-       LIMIT 1`,
-      [userId, year]
-    );
-  } else {
-    [rows] = await pool.query(
-      `SELECT id, answerjson, inputdate
+    const [rows] = await pool.query(
+      `SELECT answerjson
        FROM esg_user_answer
        WHERE user_id = ?
        ORDER BY inputdate DESC
        LIMIT 1`,
       [userId]
     );
+
+    const counters = {
+      Environment: { yes: 0, no: 0, total: 0 },
+      Social: { yes: 0, no: 0, total: 0 },
+      Governance: { yes: 0, no: 0, total: 0 },
+    };
+
+    if (rows.length) {
+      try {
+        const payload = typeof rows[0].answerjson === 'string'
+          ? JSON.parse(rows[0].answerjson)
+          : rows[0].answerjson;
+
+        const items = Array.isArray(payload?.answers) ? payload.answers : [];
+        for (const item of items) {
+          if (!counters[item.category]) continue;
+          counters[item.category].total += 1;
+          if (item.answer === '예') counters[item.category].yes += 1;
+          else if (item.answer === '아니오') counters[item.category].no += 1;
+        }
+      } catch (e) {
+        console.warn('[report/me] parse error:', e);
+      }
+    }
+
+    const report = ['Environment', 'Social', 'Governance'].map((cat) => ({
+      category: cat,
+      yes: counters[cat].yes,
+      no: counters[cat].no,
+      total: counters[cat].total,
+    }));
+
+    res.json({ report });
+  } catch (e) {
+    console.error('[report/me] error:', e);
+    res.status(500).json({ error: 'Internal error' });
+  }
+});
+
+/* ============ 제출 이력(연도 목록) ============ */
+router.get('/submissions/me', requireAuth, async (req, res) => {
+  const userId = req.user.id;
+  try {
+    const [rows] = await pool.query(
+      `SELECT submission_id AS id, inputdate, YEAR(inputdate) AS year
+       FROM esg_user_answer
+       WHERE user_id = ?
+       ORDER BY inputdate DESC`,
+      [userId]
+    );
+    res.json({ submissions: rows });
+  } catch (e) {
+    console.error('[submissions/me] query error:', e);
+    res.status(500).json({ error: 'Internal error while loading submissions' });
+  }
+});
+
+/* ============ 특정 제출 상세(카드용 요약) ============ */
+router.get('/submissions/:id', requireAuth, async (req, res) => {
+  const userId = req.user.id;
+  const sid = Number(req.params.id);
+
+  if (!Number.isFinite(sid)) {
+    return res.status(400).json({ error: 'invalid submission id' });
   }
 
-  const counters = {
-    Environment: { yes: 0, no: 0, total: 0 },
-    Social: { yes: 0, no: 0, total: 0 },
-    Governance: { yes: 0, no: 0, total: 0 },
-  };
+  try {
+    // submission_id로 특정 제출 조회(소유권 확인 포함)
+    const [rows] = await pool.query(
+      `SELECT answerjson, inputdate
+       FROM esg_user_answer
+       WHERE user_id = ? AND submission_id = ?
+       LIMIT 1`,
+      [userId, sid]
+    );
 
-  let savedAt = null;
+    if (!rows.length) {
+      return res.status(404).json({ error: 'submission not found' });
+    }
 
-  if (rows.length) {
+    // answerjson 파싱
+    let payload;
     try {
-      const payload = typeof rows[0].answerjson === 'string'
+      payload = typeof rows[0].answerjson === 'string'
         ? JSON.parse(rows[0].answerjson)
         : rows[0].answerjson;
-
-      const items = Array.isArray(payload?.answers) ? payload.answers : [];
-      for (const item of items) {
-        if (!counters[item.category]) continue;
-        counters[item.category].total += 1;
-        if (item.answer === '예') counters[item.category].yes += 1;
-        else if (item.answer === '아니오') counters[item.category].no += 1;
-      }
-      savedAt = rows[0].inputdate;
     } catch (e) {
-      console.warn('[report/me] parse error:', e);
+      console.error('[submissions/:id] JSON parse error:', e);
+      return res.status(500).json({ error: 'Invalid answerjson format' });
     }
+
+    const items = Array.isArray(payload?.answers) ? payload.answers : [];
+
+    // 카테고리별 집계
+    const cats = ['Environment', 'Social', 'Governance'];
+    const totals = { Environment: 0, Social: 0, Governance: 0 };
+    const yesCounts = { Environment: 0, Social: 0, Governance: 0 };
+    const noCounts  = { Environment: 0, Social: 0, Governance: 0 };
+
+    for (const it of items) {
+      const cat = it.category;
+      if (!cats.includes(cat)) continue;
+      totals[cat] += 1;
+      if (it.answer === '예') yesCounts[cat] += 1;
+      else noCounts[cat] += 1; // 미응답 포함
+    }
+
+    // 가중치 & 점수
+    const weights = { Environment: 35, Social: 35, Governance: 30 };
+    const scores = {
+      Environment: totals.Environment ? (yesCounts.Environment / totals.Environment) * weights.Environment : 0,
+      Social:      totals.Social      ? (yesCounts.Social      / totals.Social)      * weights.Social      : 0,
+      Governance:  totals.Governance  ? (yesCounts.Governance  / totals.Governance)  * weights.Governance  : 0,
+    };
+    const totalScore = (scores.Environment + scores.Social + scores.Governance);
+
+    // 응답
+    res.json({
+      submission_id: sid,
+      savedAt: rows[0].inputdate,  // 프론트에서 toLocaleString 처리
+      totals,
+      yesCounts,
+      noCounts,
+      weights,
+      scores: {
+        Environment: Number(scores.Environment.toFixed(2)),
+        Social: Number(scores.Social.toFixed(2)),
+        Governance: Number(scores.Governance.toFixed(2)),
+        total: Number(totalScore.toFixed(2)),
+      },
+    });
+  } catch (err) {
+    console.error('[submissions/:id] query error:', err);
+    res.status(500).json({ error: 'Internal error while loading submission detail' });
   }
-
-  const report = ['Environment', 'Social', 'Governance'].map((cat) => ({
-    category: cat,
-    yes: counters[cat].yes,
-    no: counters[cat].no,
-    total: counters[cat].total,
-  }));
-
-  res.json({ report, savedAt });
 });
 
 export default router;
