@@ -15,7 +15,7 @@ import ESG_Reports from "./pages/ESG_Reports.jsx";
 import ESG_Report_2025 from "./pages/ESG_Report_2025.jsx";
 import ESG_Report_2024 from "./pages/ESG_Report_2024.jsx";
 import ESG_Report_2023 from "./pages/ESG_Report_2023.jsx";
-import logo from "./assets/images/logo.png";
+import logo from "./assets/images/logo3.png";
 import { useEffect, useState } from "react";
 import { FAQWrite, FAQHistory } from "./pages/Query.jsx";
 import Carb1 from "./pages/Carb1.jsx";
