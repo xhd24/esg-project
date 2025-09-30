@@ -7,6 +7,7 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer,
   LineChart, Line
 } from "recharts";
+import { useParams } from "react-router-dom";
 
 const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042"];
 
@@ -15,20 +16,25 @@ export default function C2Result() {
   const [shipData, setShipData] = useState([]);
   const [trendData, setTrendData] = useState([]);
 
-  const userId = sessionStorage.getItem('userKey');
+  const { year } = useParams();
+  const yearNum = Number(year);
+
+  const userId = sessionStorage.getItem("userKey");
 
   useEffect(() => {
     getCarbon(userId).then((res) => {
-      const posts2 = res.posts2 || [];
+      const posts2 = (res.posts2 || []).filter(p => {
+        const postYear = p.start_date ? new Date(p.start_date).getFullYear() : null;
+        return postYear === yearNum;
+      });
 
-      // 문자열 → 숫자 변환
       const toNum = (v) => Number(String(v ?? "0").replace(/,/g, ""));
 
-      // A. grade 등급별 배출량 합계 (PieChart)
+      // A. grade 등급별 배출량 합계
       const gradeTotals = {};
       posts2.forEach((p) => {
         const g = p.grade || "등급없음";
-        const tco2 = toNum(p.tco2);
+        const tco2 = toNum(p.tCO2);
         gradeTotals[g] = (gradeTotals[g] || 0) + tco2;
       });
       setGradeData(
@@ -38,11 +44,11 @@ export default function C2Result() {
         }))
       );
 
-      // B. ship_id별 배출량 합계 (BarChart)
+      // B. ship_id별 배출량 합계
       const ships = {};
       posts2.forEach((p) => {
         const ship = p.ship_id;
-        const tco2 = toNum(p.tco2);
+        const tco2 = toNum(p.tCO2);
         if (!ships[ship]) {
           ships[ship] = { ship_id: ship, 배출량: 0 };
         }
@@ -50,22 +56,21 @@ export default function C2Result() {
       });
       setShipData(Object.values(ships));
 
-      // C. 기간별 배출량 추세 (LineChart, start_date 기준)
+      // C. 기간별 추세
       const byDate = {};
       posts2.forEach((p) => {
         const date = p.start_date?.slice(0, 10) || "날짜없음";
-        const tco2 = toNum(p.tco2);
+        const tco2 = toNum(p.tCO2);
         if (!byDate[date]) {
           byDate[date] = { date, 배출량: 0 };
         }
         byDate[date].배출량 += tco2;
       });
-      const sorted = Object.values(byDate).sort((a, b) =>
-        a.date.localeCompare(b.date)
+      setTrendData(
+        Object.values(byDate).sort((a, b) => a.date.localeCompare(b.date))
       );
-      setTrendData(sorted);
     });
-  }, []);
+  }, [userId]); // ✅ useEffect 끝
 
   return (
     <div className="c1r-wrap">
@@ -73,7 +78,7 @@ export default function C2Result() {
       <div className="c1r-top">
         {/* 결과 A */}
         <section className="c1r-card c1r-square">
-          <h4 className="c1r-title">결과 A (등급별 CO₂ 배출량)</h4>
+          <h4 className="c1r-title">등급별 CO₂ 배출량</h4>
           <div className="c1r-body">
             {gradeData.length > 0 ? (
               <ResponsiveContainer width="100%" height={300}>
@@ -101,7 +106,7 @@ export default function C2Result() {
 
         {/* 결과 B */}
         <section className="c1r-card c1r-square">
-          <h4 className="c1r-title">결과 B (선박별 CO₂ 배출량)</h4>
+          <h4 className="c1r-title">선박별 CO₂ 배출량</h4>
           <div className="c1r-body">
             {shipData.length > 0 ? (
               <ResponsiveContainer width="100%" height={300}>
@@ -124,7 +129,7 @@ export default function C2Result() {
       {/* 결과 C */}
       <div className="c1r-bottom">
         <section className="c1r-card c1r-rect">
-          <h4 className="c1r-title">결과 C (기간별 CO₂ 배출량 추세)</h4>
+          <h4 className="c1r-title">기간별 CO₂ 배출량 추세</h4>
           <div className="c1r-body">
             {trendData.length > 0 ? (
               <ResponsiveContainer width="100%" height={300}>

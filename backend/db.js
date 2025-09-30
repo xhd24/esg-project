@@ -84,10 +84,10 @@ export async function getCarbonQuery2(userId) {
   return rows;
 }
 
-export async function inputC2Query(shipKey, startDate, endDate, fuelType, amount, distanceNm, capacityTon, tco2, c2, userKey) {
-  console.log(shipKey, startDate, endDate, fuelType, amount, distanceNm, capacityTon, tco2, c2, userKey);
+export async function inputC2Query(shipKey, startDate, endDate, fuelType, amount, distanceNm, capacityTon, tco2, c2, userKey, grade) {
+  console.log(grade);
   await pool.query(
-    "INSERT INTO cii (ship_id, start_date, end_date, fuel_type, fuel_tons, distance_nm, capacity_ton, tCO2, CII, user_id) VALUES (?,?,?,?,?,?,?,?,?,?)",
-    [shipKey, startDate, endDate, fuelType, amount, distanceNm, capacityTon, tco2, c2, userKey]
+    "INSERT INTO cii (ship_id, start_date, end_date, fuel_type, fuel_tons, distance_nm, capacity_ton, tCO2, CII, user_id, grade) VALUES (?,?,?,?,?,?,?,?,?,?,?)",
+    [shipKey, startDate, endDate, fuelType, amount, distanceNm, capacityTon, tco2, c2, userKey, grade]
   );
 }

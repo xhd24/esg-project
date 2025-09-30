@@ -58,9 +58,11 @@ router.post('/c4', async (req, res) => {
     const endDate = form.endDate;
     const fuelType = form.energyType;
     const userKey = form.userKey;
-    const amount = form.amount;
-    const distanceNm = form.distanceNm;
-    const capacityTon = form.capacityTon;
+    let grade = 'E';
+   
+    const amount = Number(String(form.amount || "0").replace(/,/g, ""));
+    const distanceNm = Number(String(form.distanceNm || "0").replace(/,/g, ""));
+    const capacityTon = Number(String(form.capacityTon || "0").replace(/,/g, ""));
 
     let tco2 = 0;
     let c2 = 0;
@@ -75,8 +77,18 @@ router.post('/c4', async (req, res) => {
 
     c2 = (tco2 * 1e6) / (Number(distanceNm) * Number(capacityTon));
 
-    console.log(c2, tco2);
-    await inputC2Query(shipKey, startDate, endDate, fuelType, amount, distanceNm, capacityTon, tco2, c2, userKey);
+    if(c2<=3.91){
+        grade='A';
+    } else if(c2>3.91 && c2<=4.28){
+        grade='B';
+    } else if (c2>4.28 && c2<=4.83){
+        grade='C';
+    } else if (c2>4.83 && c2<=5.37){
+        grade='D';
+    } else {
+        grade='E';
+    }
+    await inputC2Query(shipKey, startDate, endDate, fuelType, amount, distanceNm, capacityTon, tco2, c2, userKey, grade);
     res.json({ success: true });
 });
 

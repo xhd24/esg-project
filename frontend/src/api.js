@@ -7,19 +7,19 @@ export async function getQueryHx(userId) {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ userId }),
   });
-  return res.json();
+  return res.json()||'';
 }
 
 // 관리자 FAQ 게시판 히스토리
 export async function getQueryHxAll() {
   const res = await fetch(`${BASE}/faq_res`);
-  return res.json();
+  return res.json()||'';
 }
 
 // 관리자 FAQ 게시판 디테일
 export async function getQueryDetail(id) {
   const res = await fetch(`${BASE}/faq_res/${id}`);
-  return res.json();
+  return res.json()||'';
 }
 
 //FAQ 게시판 글작성
@@ -29,7 +29,7 @@ export async function writeQuery(inquiry_title, requester, company, email, categ
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ inquiry_title, requester, company, email, category, content }),
   });
-  return res.json();
+  return res.json()|'';
 }
 
 //로그인
@@ -39,7 +39,7 @@ export async function login(id, pw) {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ id, pw })
   });
-  return res.json();
+  return res.json()||'';
 }
 
 //조선소 외부 저장
@@ -49,7 +49,7 @@ export async function carb1InputQuery(ext) {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ ext })
   });
-  return res.json();
+  return res.json()||'';
 }
 
 //조선소내부 저장
@@ -59,7 +59,7 @@ export async function carb1_1InputQuery(inn) {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ inn })
   });
-  return res.json();
+  return res.json()||'';
 }
 
 //각 테이블 값
@@ -69,7 +69,7 @@ export async function getCarbon(userKey) {
     headers: { 'Content-Type': 'application/json' },
     body:JSON.stringify({userKey})
   });
-  return res.json();
+  return res.json()||'';
 }
 
 //운항배출량 저장
@@ -79,5 +79,5 @@ export async function carb2InputQuery(form) {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ form })
   });
-  return res.json();
+  return res.json()||'';
 }

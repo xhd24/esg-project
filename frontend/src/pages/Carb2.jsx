@@ -3,6 +3,7 @@ import { useState, useEffect, useRef } from "react";
 import { carb2InputQuery } from "../api.js";
 import "./css/Carb1.css";
 
+
 /* ---------- 공통 포맷/검증 ---------- */
 function sanitizeNumeric(input) {
   if (input == null) return "";
@@ -76,9 +77,6 @@ function Carb2() {
   });
   const [loading, setLoading] = useState(false);
 
-  // 저장 눌렀을 때 표에 보여줄 스냅샷 (선택적)
-  const [lastSaved, setLastSaved] = useState(null);
-
   // 에러 상태
   const [amountErr, setAmountErr] = useState("");
   const [distanceErr, setDistanceErr] = useState("");
@@ -100,7 +98,7 @@ function Carb2() {
 
   // ✅ 마운트 시 과거 로컬스토리지 청소만 수행(자동 복원/저장 안 함)
   useEffect(() => {
-    try { localStorage.removeItem(LS_KEY); } catch {}
+    try { localStorage.removeItem(LS_KEY); } catch { }
     return () => {
       resetTimer(amountTimer);
       resetTimer(distanceTimer);
@@ -200,7 +198,7 @@ function Carb2() {
       capacityTon: "",
       userKey: prev.userKey // 세션 사용자키 유지
     }));
-    try { localStorage.removeItem(LS_KEY); } catch {}
+    try { localStorage.removeItem(LS_KEY); } catch { }
     clearAllErrorUI();
   };
 
@@ -213,30 +211,25 @@ function Carb2() {
     const amount = toNumber(form.amount);
     const distanceNm = toNumber(form.distanceNm);
     const capacityTon = toNumber(form.capacityTon);
+
     if (!(amount > 0 && distanceNm > 0 && capacityTon > 0)) {
       return alert("모든 수치는 0보다 커야 합니다.");
     }
-
-    // (선택) 표에 즉시 반영될 스냅샷
-    setLastSaved({
-      shipKey: form.shipKey.trim(),
-      startDate: form.startDate,
-      endDate: form.endDate,
-      energyType: form.energyType,
-      amount: form.amount,
-      distanceNm: form.distanceNm,
-      capacityTon: form.capacityTon
-    });
 
     try {
       setLoading(true);
       const res = await carb2InputQuery(form);
       if (res?.success) {
-        alert("추가 성공");
-        resetForm(); // ✅ 성공 시 모든 필드 비우기
+        window.dispatchEvent(
+          new CustomEvent("openGlobalModal", { detail: { message: "추가 성공" } })
+        );
+        resetForm();
       } else {
-        alert("저장 실패");
+        window.dispatchEvent(
+          new CustomEvent("openGlobalModal", { detail: { message: "저장 실패" } })
+        );
       }
+
     } catch (err) {
       console.error(err);
       alert("서버 오류가 발생했습니다.");
@@ -407,6 +400,7 @@ function Carb2() {
         </form>
       </section>
     </div>
+
   );
 }
 
