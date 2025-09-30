@@ -336,7 +336,7 @@ function Carb2() {
               onChange={onChangeAmount}
               type="text"
               inputMode="decimal"
-              placeholder="예: 4,500.000"
+              placeholder="예: 80"
               required
             />
             {amountErr && (

@@ -115,23 +115,27 @@
   max-width: 1080px;
 }
 
-/* ===== Bottom ===== */
+/* 하단 래퍼: 가운데 정렬 */
 .bottom {
-  max-width: 1080px;
+  max-width: 1080px;   /* 기존 값 유지/원하는 값 */
   margin: 0 auto;
-  text-align: center;
-  display: grid;
+  display: flex;       /* ← grid 대신 flex */
+  flex-direction: column;
+  align-items: center; /* ← 가로축 가운데 정렬 */
   gap: 8px;
+  text-align: center;
 }
 
-/* 네비게이션 */
+/* 네비게이션 버튼 줄: 가운데 정렬 */
 .nav {
-  display: inline-flex;
   list-style: none;
+  display: flex;
+  justify-content: center; /* ← 핵심 */
   gap: 16px;
   padding: 0;
-  margin: 0;
+  margin: 0;               /* 좌우 여백 제거 */
 }
+
 .nav li a {
   text-decoration: none;
   font-size: 13px;

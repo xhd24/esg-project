@@ -42,3 +42,64 @@
   color: #888;
 }
 
+/* 컨테이너 정렬/간격 */
+.user-info{
+  display:flex;
+  align-items:center;
+  gap:12px;                 /* 인사말과 버튼 사이 */
+}
+
+/* 인사말 pill */
+.user-greet{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  padding:6px 12px;
+  border-radius:9999px;
+  background:#f6fdf9;       /* 아주 옅은 초록 */
+  border:1px solid #d8f0e2;
+  color:#0f5132;            /* 딥그린 텍스트 */
+  font-weight:700;
+  letter-spacing:.1px;
+  box-shadow:0 4px 10px rgba(25,135,84,.08);
+  white-space:nowrap;       /* 줄바꿈 방지 */
+}
+
+/* 작은 상태 점 */
+.user-dot{
+  width:9px;height:9px;border-radius:50%;
+  background:radial-gradient(circle at 35% 35%, #34d399, #10b981);
+  box-shadow:0 0 0 3px rgba(16,185,129,.15);
+  display:inline-block;
+  animation:dotPulse 1.8s ease-in-out infinite;
+}
+
+@keyframes dotPulse{
+  0%,100%{transform:scale(1); box-shadow:0 0 0 3px rgba(16,185,129,.15);}
+  50%    {transform:scale(1.15); box-shadow:0 0 0 5px rgba(16,185,129,.10);}
+}
+
+/* 기존 로그아웃 버튼에 pill 스타일만 보강 */
+.logout-pill{
+  background:#fff;
+  color:#198754;
+  border:1.5px solid #198754;
+  border-radius:9999px;
+  padding:8px 14px;
+  font-weight:700;
+  transition:background .2s ease, transform .14s ease, box-shadow .2s ease;
+}
+.logout-pill:hover{
+  background:#eef9f4;
+  transform:translateY(-1px);
+  box-shadow:0 6px 14px rgba(0,0,0,.06);
+}
+
+/* 모션 최소화 환경 */
+@media (prefers-reduced-motion: reduce){
+  .user-dot{ animation:none; }
+}
+
+
+
+

@@ -140,11 +140,15 @@ function App() {
               </li>
               {isLogin ? (
                 <li className="nav-item user-info">
-                  <span>{userId}님 안녕하세요!</span>
-                  <button className="logout-btn" onClick={onClickLogout}>
-                    로그아웃
-                  </button>
+                  <span className="user-greet">
+                    <span className="user-dot" aria-hidden="true"></span>
+                    {`${userId}님 안녕하세요!`}
+                  </span>
+                  <button className="logout-btn logout-pill" onClick={onClickLogout}>로그아웃</button>
                 </li>
+
+
+
               ) : (
                 <li className="nav-item">
                   <Link to="/login" className="nav-link login">
