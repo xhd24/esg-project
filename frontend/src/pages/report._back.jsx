@@ -5,7 +5,7 @@ import "./css/report.back.css";
 
 // 이미지 파일을 import
 import hero2025 from "../assets/images/aa2_2025.png";
-import card2024 from "../assets/images/2024 탄소배출량 보고서.png";
+import card2024 from "../assets/images/aa2_2024.png";
 import card2023 from "../assets/images/aa2_2023.png";
 
 export default function ReportBack() {

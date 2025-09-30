@@ -2,10 +2,6 @@ import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import styles from "./css/Home.module.css";
 import main_esg from "../assets/images/main_esg.png";   // Hero 섹션 이미지
-import main_esg_1 from "../assets/images/main_esg_1.png";   // Hero 섹션 이미지
-import main_esg_2 from "../assets/images/main_esg_2.png";   // Hero 섹션 이미지
-// import main_jinwoo from "../assets/images/main_jinwoo.png";   // Hero 섹션 이미지
-// import main_jinwoo2 from "../assets/images/main_jinwoo2.png";   // Hero 섹션 이미지
 import main_esg2 from "../assets/images/main_esg2.png"; // 중간 배너 이미지
 
 import icon1 from "../assets/images/icon1.png";
@@ -16,37 +12,13 @@ function Home() {
   const [isVisible, setIsVisible] = useState(false);
   const statsRef = useRef(null);
 
-  // 🔽 FAB용 상태
+  // 🔽 FAB용 상태: 스크롤이 화면 길이의 50% 이하인지 여부
   const [isHalfOrBelow, setIsHalfOrBelow] = useState(true);
   const [fabHidden, setFabHidden] = useState(false);
 
   const navigate = useNavigate();
   const handleClick = () => navigate("/assessment");
   const handleClick2 = () => navigate("/carbon");
-
-  // ✅ Hero 배경 슬라이드 (페이드 + 프로그레스바)
-  const images = [main_esg, main_esg_1, main_esg_2];
-  const [activeIndex, setActiveIndex] = useState(0);
-  const [progress, setProgress] = useState(0);
-
-  useEffect(() => {
-    const duration = 5000; // 5초
-    const step = 100;
-
-    let elapsed = 0;
-    const interval = setInterval(() => {
-      elapsed += step;
-      setProgress((elapsed / duration) * 100);
-
-      if (elapsed >= duration) {
-        setActiveIndex((prev) => (prev + 1) % images.length);
-        elapsed = 0;
-        setProgress(0);
-      }
-    }, step);
-
-    return () => clearInterval(interval);
-  }, [images.length]);
 
   // Stats 배너 등장
   useEffect(() => {
@@ -67,7 +39,7 @@ function Home() {
     };
   }, []);
 
-  // 🔽 FAB: 스크롤 위치 감지
+  // 🔽 FAB: 스크롤 위치 감지(실시간)
   useEffect(() => {
     const onScroll = () => {
       const scrollTop = window.scrollY || window.pageYOffset || 0;
@@ -80,7 +52,7 @@ function Home() {
       const percent = (scrollTop / maxScroll) * 100;
 
       setIsHalfOrBelow(percent <= 50);
-      setFabHidden(docHeight <= winHeight + 40);
+      setFabHidden(docHeight <= winHeight + 40); // 스크롤할 내용이 거의 없으면 숨김
     };
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
@@ -91,7 +63,7 @@ function Home() {
     };
   }, []);
 
-  // 🔽 FAB 클릭
+  // 🔽 FAB 클릭: 50% 이하면 아래, 그 외엔 위로
   const handleFabClick = () => {
     const scrollTop = window.scrollY || 0;
     const docHeight = Math.max(
@@ -111,61 +83,13 @@ function Home() {
 
   return (
     <div className={styles.home}>
-      {/* ✅ Hero Section (배경 페이드) */}
-      <div className={styles.hero}>
-        {images.map((img, idx) => (
-          <div
-            key={idx}
-            className={`${styles.bg} ${idx === activeIndex ? styles.active : ""}`}
-            style={{ backgroundImage: `url(${img})` }}
-          />
-        ))}
+      {/* ✅ Hero Section (이미지 단독) */}
+      <section
+        className={styles.hero}
+        style={{ backgroundImage: `url(${main_esg})` }}
+      ></section>
 
-        {/* ◀ 왼쪽 화살표 */}
-        {/* <button
-          className={`${styles.arrow} ${styles.left}`}
-          onClick={() => {
-            setActiveIndex((prev) => (prev - 1 + images.length) % images.length);
-            setProgress(0);
-          }}
-        >
-          &#10094;
-        </button> */}
-
-        {/* ▶ 오른쪽 화살표 */}
-        {/* <button
-          className={`${styles.arrow} ${styles.right}`}
-          onClick={() => {
-            setActiveIndex((prev) => (prev + 1) % images.length);
-            setProgress(0);
-          }}
-        >
-          &#10095;
-        </button> */}
-
-        {/* 하단 프로그레스 바 */}
-        <div className={styles.tabBar}>
-          {images.map((_, idx) => (
-            <div
-              key={idx}
-              className={styles.tab}
-              onClick={() => {
-                setActiveIndex(idx);
-                setProgress(0);
-              }}
-            >
-              <div
-                className={styles.progress}
-                style={{
-                  width: idx === activeIndex ? `${progress}%` : "0%",
-                }}
-              />
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* ✅ HeroContent (배경 아래 분리) */}
+      {/* ✅ HeroContent (이미지 아래 따로 분리) */}
       <div className={styles.heroContent}>
         <h1 className={`${styles.heroTitle} ${styles.typing}`}>
           ESG 검증과 탄소배출 측정, <br /> 기업 지속가능성의 시작
@@ -216,7 +140,7 @@ function Home() {
         </div>
       </section>
 
-      {/* ✅ 중간 배너 */}
+      {/* ✅ 중간 배너 (main_esg2) */}
       <section className={styles.banner}>
         <img src={main_esg2} alt="탄소배출량 측정" className={styles.bannerImg} />
         <div className={styles.overlay}>
@@ -236,8 +160,9 @@ function Home() {
         aria-label={isHalfOrBelow ? "아래로 이동" : "위로 이동"}
         title={isHalfOrBelow ? "아래로 이동" : "위로 이동"}
       >
+        {/* 아래 화살표. 위로 모드일 때 CSS 회전 */}
         <svg className={styles.scrollFabIcon} viewBox="0 0 24 24" aria-hidden="true">
-          <path d="M12 16a1 1 0 0 1-.7-.29l-5-5a1 1 0 1 1 1.4-1.42L12 13.59l4.3-4.3a1 1 0 0 1 1.4 1.42l-5 5A1 1 0 0 1 12 16z" />
+          <path d="M12 16a1 1 0 0 1-.7-.29l-5-5a1 1 0 1 1 1.4-1.42L12 13.59l4.3-4.3a1 1 0 0 1 1.4 1.42l-5 5A1 1 0 0 1 12 16z"/>
         </svg>
       </button>
     </div>
