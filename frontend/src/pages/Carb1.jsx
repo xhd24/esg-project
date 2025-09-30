@@ -430,10 +430,10 @@ export default function Carb1() {
         aria-label={isBelowHalf ? "맨 위로" : "맨 아래로"}
         title={isBelowHalf ? "맨 위로" : "맨 아래로"}
       >
-        <svg className="scroll-fab__icon" viewBox="0 0 24 24" aria-hidden="true">
-          {/* 기본은 ↓, isBelowHalf 이면 CSS로 180도 회전 */}
-          <path d="M12 4c.55 0 1 .45 1 1v12.17l4.59-4.58c.39-.39 1.03-.39 1.41 0 .39.39.39 1.02 0 1.41l-6.3 6.3c-.39.39-1.02.39-1.41 0l-6.3-6.3a1.003 1.003 0 0 1 1.41-1.41L11 17.17V5c0-.55.45-1 1-1z"/>
+        <svg className="scroll-fab__icon" viewBox="0 0 24 24" aria-hidden="true" fill="currentColor">
+          <path d="M16.59 8.59 12 13.17 7.41 8.59 6 10l6 6 6-6z" />
         </svg>
+
       </button>
     </div>
   );

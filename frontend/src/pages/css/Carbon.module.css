@@ -12,7 +12,7 @@
   justify-content: flex-end;  /* ← 오른쪽 정렬 핵심 */
   gap: 30px;                  /* 버튼 사이 간격 */
   width: 100%;                /* 줄 전체를 차지해야 오른쪽 끝으로 붙음 */
-  padding-right: 1135px;       /* ← 원하는 만큼 더 오른쪽으로 (수치만 조절) */
+  padding-right: 880px;       /* ← 원하는 만큼 더 오른쪽으로 (수치만 조절) */
 }
 
 /* 버튼 스타일 */
@@ -26,6 +26,7 @@
   transition: all 0.2s ease;
   border: 1px solid transparent;
   box-shadow: 0 6px 14px -8px rgba(0, 0, 0, 0.12);
+  
 }
 
 .link:hover {

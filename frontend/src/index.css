@@ -122,7 +122,7 @@
   width:180px;
   height:auto;
   margin-right:32px;
-  margin-left:30px;
+  margin-left:50px;
 
 }
 
@@ -141,17 +141,18 @@
 .main_nav {
   background: #fff;
   border-bottom: 1px solid #ddd;
+  
 }
 
 /* 내부 래퍼를 3열 그리드로: [로고] [메뉴(가운데)] [로그인/로그아웃] */
 .main_nav .nav-inner{
-  display: grid;
-  grid-template-columns: auto 1fr auto; /* 좌:로고  중:메뉴  우:버튼 */
-  align-items: center;
-  gap: 16px;
-  max-width: 1200px;   /* 필요 없으면 지워도 됩니다 */
-  margin: 0 auto;      /* 가운데 고정 */
-  padding: 10px 20px;
+  display:grid;
+  grid-template-columns:auto 1fr auto;  /* [로고] [메뉴] [버튼/유저] */
+  align-items:center;                    /* 수직 가운데 */
+  gap:16px;
+  max-width:1200px;
+  margin:0 auto;
+  padding:1px 1px;  
 }
 
 /* 로고 영역(링크) */
@@ -196,7 +197,7 @@
   position: relative;
   top: -90px;                    /* ← 줄 전체를 "살짝 위로" */
   gap: 32px;  
-  margin-right: 30px;                  /* 버튼 사이 조금 여유 */
+  margin-right: 25px;                  /* 버튼 사이 조금 여유 */
 }
 
 /* === 메뉴 버튼(고스트-pill) 크게 === */
@@ -231,8 +232,8 @@
 
 /* === 로그아웃 버튼도 살짝 키우기 === */
 .logout-btn{
-  padding: 10px 16px;           /* ↑ 높이/폭 업 */
-  font-size: 13px;              /* ↑ 글씨 키움 */
+  padding: 8px 14px;           /* ↑ 높이/폭 업 */
+  font-size: 11px;              /* ↑ 글씨 키움 */
   border-radius: 9999px;
 }
 
@@ -255,7 +256,6 @@
   .main_nav .nav-link{ padding: 9px 12px; font-size: 16px; }
   .login-btn, .login{ padding: 9px 16px; font-size: 15px; top: -3px; }
 }
-
 
 
 
