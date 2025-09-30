@@ -4,9 +4,9 @@ import { useEffect, useState, useCallback } from "react";
 import "./css/report.back.css";
 
 // 이미지 파일을 import
-import hero2025 from "../assets/images/aa2_2025.png";
-import card2024 from "../assets/images/2024 탄소배출량 보고서.png";
-import card2023 from "../assets/images/aa2_2023.png";
+import hero2025 from "../assets/images/2025_탄소배출량_보고서.png";
+import card2024 from "../assets/images/2024_탄소배출량_보고서.png";
+import card2023 from "../assets/images/2023_탄소배출량_보고서.png";
 
 export default function ReportBack() {
   const navigate = useNavigate();
@@ -64,7 +64,7 @@ export default function ReportBack() {
   return (
     <div className="rb-page">
       <div className="rb-container">
-        <h2 className="rb-title">ESG Reports</h2>
+        <h2 className="rb-title">Carbon Emission Reports</h2>
 
         {/* 상단 큰 카드 (1000 x 450) */}
         <div className="rb-hero">
