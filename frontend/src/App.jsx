@@ -125,12 +125,12 @@ function App() {
               </li>
               <li className="nav-item">
                 <Link to="/carbon" className="nav-link">
-                  탄소배출량(거제)
+                  탄소배출량
                 </Link>
               </li>
               <li className="nav-item">
                 <Link to="/assessment" className="nav-link">
-                  ESG 평가 (거제)
+                  ESG 평가
                 </Link>
               </li>
               <li className="nav-item">

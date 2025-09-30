@@ -17,16 +17,16 @@
 /* 상단 타이틀 */
 .rb-title {
   text-align: center;
-  font-size: 28px;
-  font-weight: 700;
-  margin: 6px 0 16px;
+  font-size: 24px;
+  font-weight: bold;
+  margin-bottom: 20px;
 }
 
 /* 큰 카드 (1000 x 450) */
 .rb-hero {
   width: 1000px;
   height: 450px;
-  border-radius: 16px;
+  border-radius: 8px;
   overflow: hidden;
   margin: 0 auto;
   box-shadow: 0 10px 24px rgba(0,0,0,0.08);
@@ -38,16 +38,16 @@
 .rb-row {
   display: flex;
   justify-content: center;
-  gap: 16px;
+  gap: 8px;
   margin-top: 18px;
   flex-wrap: wrap;
 }
 
 /* 작은 카드 (492 x 250) */
 .rb-card {
-  width: 492px;
-  height: 250px;
-  border-radius: 16px;
+  width: 500px;
+  height: 281px;
+  border-radius: 8px;
   overflow: hidden;
   box-shadow: 0 10px 24px rgba(0,0,0,0.08);
   background: #f3f5f7;
