@@ -5,6 +5,7 @@ import faqresRouter from './routes/faq_res.js';
 import signupRouter from "./routes/signup.js";
 import loginRouter from "./routes/login.js";
 import carbonRouter from "./routes/carbon.js";
+import esgRouter from './routes/esg.js';
 
 const app = express();
 
@@ -15,6 +16,7 @@ app.use('/faq',faqRouter);
 app.use('/faq_res',faqresRouter);
 app.use("/signup", signupRouter); 
 app.use("/login", loginRouter); 
+app.use('/esg', esgRouter);
 
 app.use("/carbon", carbonRouter); 
 

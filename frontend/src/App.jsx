@@ -146,9 +146,6 @@ function App() {
                   </span>
                   <button className="logout-btn logout-pill" onClick={onClickLogout}>로그아웃</button>
                 </li>
-
-
-
               ) : (
                 <li className="nav-item">
                   <Link to="/login" className="nav-link login">
@@ -189,13 +186,19 @@ function App() {
               <Route path="/report/:year" element={<CarbonReport />} />
               <Route path="/report/:year" element={<ReportYear />} />
 
-              {/* 기존 리포트 목록/상세 */}
+              {/* ESG Reports 리스트 */}
               <Route path="/ESG_reports" element={<ESG_Reports />} />
-              <Route path="/ESG_report_2025" element={<ESG_Report_2025 />} />
-              <Route path="/ESG_report_2024" element={<ESG_Report_2024 />} />
-              <Route path="/ESG_report_2023" element={<ESG_Report_2023 />} />
 
-              {/* FAQ 답변 */}
+              {/* ESG Report (연도별 제출 이력) */}
+              <Route path="/ESG_report/:year" element={<ESG_Report />} />
+
+              {/* ✅ ESG Report 상세 (제출 선택 시 이동) */}
+              <Route
+                path="/ESG_report/:year/submission/:sid"
+                element={<ESG_ReportDetail />}
+              />
+
+              {/* 기타 */}
               <Route path="/faq_res" element={<FAQRes />} />
               <Route path="/faq_res/:id" element={<FAQDetail />} />
             </Routes>

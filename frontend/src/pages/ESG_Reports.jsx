@@ -121,11 +121,10 @@ function ESG_Reports() {
               {modal.actions?.map((a, idx) => (
                 <button
                   key={idx}
-                  className={`alert-btn ${
-                    a.variant === "primary"
+                  className={`alert-btn ${a.variant === "primary"
                       ? "alert-btn--primary"
                       : "alert-btn--ghost"
-                  }`}
+                    }`}
                   onClick={a.onClick}
                 >
                   {a.label}
@@ -138,5 +137,4 @@ function ESG_Reports() {
     </div>
   );
 }
-
 export default ESG_Reports;

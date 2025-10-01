@@ -1,0 +1,273 @@
+/* --- 헤더/칩/도움말 --- */
+.history-head {
+  display: flex;
+  align-items: end;
+  gap: 12px;
+  justify-content: space-between;
+  margin-bottom: 10px;
+  flex-wrap: wrap;
+}
+
+.history-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 20px;
+  font-weight: 800;
+  margin: 0;
+}
+
+.year-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 28px;
+  padding: 0 10px;
+  border-radius: 999px;
+  background: #0ea5e9;
+  color: #fff;
+  font-weight: 700;
+  font-size: 13px;
+  letter-spacing: .2px;
+  box-shadow: 0 6px 16px -12px rgba(14,165,233,.9);
+}
+
+.history-help {
+  margin: 0;
+  color: #6b7280;
+  font-size: 12.5px;
+}
+
+/* --- 테이블 룩앤필 업그레이드 --- */
+.user-report-table-wrap {
+  border-radius: 14px;
+  border: 1px solid #e9eef6;
+  background: #fbfdff;
+  overflow: hidden;
+}
+
+.user-report-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 14px;
+  color: #111827;
+}
+
+.user-report-table thead th {
+  background: linear-gradient(180deg, #f7f9fc, #f3f6fb);
+  color: #374151;
+  font-weight: 700;
+  text-align: left;
+  padding: 12px 16px;
+  border-bottom: 1px solid #e7edf5;
+}
+
+.user-report-table tbody tr {
+  transition: background .16s ease, transform .1s ease;
+}
+
+.user-report-table tbody tr:nth-child(even) {
+  background: #fcfdff;
+}
+
+.user-report-table tbody tr:hover {
+  background: #eef6ff;
+}
+
+.user-report-table tbody td {
+  padding: 12px 16px;
+  border-bottom: 1px solid #eff3f8;
+  vertical-align: middle;
+}
+
+/* --- ID, 날짜, 화살표 --- */
+.col-id .id-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 10px;
+  border-radius: 10px;
+  border: 1px solid #e2e8f0;
+  background: #ffffff;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: .2px;
+  box-shadow: 0 6px 16px -12px rgba(0,0,0,.18);
+}
+
+.col-date {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.col-date .date-text {
+  opacity: .95;
+}
+
+.row-link .row-arrow {
+  transition: transform .18s ease, opacity .18s ease;
+  opacity: .5;
+}
+
+.row-link:hover .row-arrow {
+  transform: translateX(4px);
+  opacity: .9;
+}
+
+/* --- 모바일 대응 --- */
+@media (max-width: 720px) {
+  .history-head {
+    align-items: flex-start;
+  }
+  .user-report-table thead {
+    display: none;
+  }
+  .user-report-table,
+  .user-report-table tbody,
+  .user-report-table tr,
+  .user-report-table td {
+    display: block;
+    width: 100%;
+  }
+  .user-report-table tbody tr {
+    padding: 10px 12px;
+    border-bottom: 1px solid #e9eef6;
+  }
+  .user-report-table tbody td {
+    border: 0;
+    padding: 6px 2px;
+  }
+  .col-date {
+    margin-top: 4px;
+  }
+}
+/* ===== ESG_Report (연도별 제출 이력 페이지) ===== */
+.report-container {
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+/* 상단 타이틀 */
+.report-container > h2 {
+  margin: 0 0 6px;
+}
+
+/* 서브 타이틀 라인 */
+.report-history h3 {
+  margin: 10px 0 12px;
+}
+
+/* 카드 느낌의 래퍼 */
+.user-report-table-wrap {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+  box-shadow: 0 6px 16px -14px rgba(0,0,0,0.25);
+  overflow: hidden;
+}
+
+/* 테이블 기본 */
+.user-report-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+/* 헤더 */
+.user-report-table thead th {
+  text-align: left;
+  padding: 12px 14px;
+  font-weight: 800;
+  font-size: 13px;
+  color: #334155;
+  background: linear-gradient(to bottom, #f8fafc, #f1f5f9);
+  border-bottom: 1px solid #e5e7eb;
+}
+
+/* 본문 셀 */
+.user-report-table tbody td {
+  padding: 12px 14px;
+  font-size: 14px;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+/* 마지막 행 보더 제거 */
+.user-report-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+/* 행 hover / active */
+.user-report-table tbody tr {
+  transition: background 0.15s ease, transform 0.04s ease;
+}
+.user-report-table tbody tr:hover {
+  background: #f8fafc;
+}
+.user-report-table tbody tr:active {
+  transform: scale(0.999);
+}
+
+/* 비활성(구버전) */
+.row-disabled {
+  background: #fafafa;
+  color: #94a3b8;
+}
+
+/* 에러 카드 */
+.user-report-card.user-report-card--error {
+  background: #fff5f5;
+  border: 1px solid #fde2e1;
+  color: #991b1b;
+  padding: 14px 16px;
+  border-radius: 12px;
+}
+.user-report-actions {
+  margin-top: 8px;
+}
+.btn {
+  height: 34px;
+  border-radius: 8px;
+  padding: 0 12px;
+  font-weight: 700;
+  border: 1px solid transparent;
+  cursor: pointer;
+}
+.btn.btn--ghost {
+  background: #fff;
+  border-color: #e5e7eb;
+}
+.btn.btn--ghost:hover {
+  background: #f8fafc;
+}
+
+/* 반응형 */
+@media (max-width: 640px) {
+  .user-report-table thead {
+    display: none;
+  }
+  .user-report-table,
+  .user-report-table tbody,
+  .user-report-table tr,
+  .user-report-table td {
+    display: block;
+    width: 100%;
+  }
+  .user-report-table tbody tr {
+    border-bottom: 1px dashed #e5e7eb;
+  }
+  .user-report-table tbody tr:last-child {
+    border-bottom: none;
+  }
+  .user-report-table td {
+    padding: 10px 14px;
+  }
+  .user-report-table td::before {
+    content: attr(data-label);
+    display: block;
+    font-size: 12px;
+    color: #64748b;
+    margin-bottom: 4px;
+  }
+}

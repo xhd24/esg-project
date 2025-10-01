@@ -28,16 +28,13 @@ router.post('/', async (req, res) => {
 
     return res.json({
       success: true,
+      userKey: user.user_id,       
       userId: user.login_id,
-      userKey:user.user_id,
       message: "로그인 성공!"
     });
   } catch (err) {
-    console.error("로그인 실패:", err);
-    return res.status(500).json({
-      error: "서버 오류, 잠시 후 다시 시도해주세요.",
-      success: false
-    });
+    console.error('로그인 실패:', err);
+    return res.status(500).json({ success: false, error: '서버 오류, 잠시 후 다시 시도해주세요.' });
   }
 });
 

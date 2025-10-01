@@ -25,6 +25,7 @@ export async function getUser(id) {
 export async function getQueryHx(userId) {
   const [rows] = await pool.query(
     "SELECT category, inquiry_title, inquiry_date FROM faq WHERE requester=? ORDER BY faq_id DESC", [userId]
+  [userId]
   );
   return rows;
 }

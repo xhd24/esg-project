@@ -1,0 +1,123 @@
+/* frontend/src/pages/css/ESG_ReportDetail.css */
+
+/* 이 페이지는 왼쪽 정렬 */
+.esg-report-detail-page .report-container {
+  max-width: 1000px;
+  margin: 0 auto;
+  text-align: left;          /* 왼쪽 정렬 */
+  padding: 20px;
+}
+
+/* 상단 바 */
+.detail-topbar {
+  display: grid;
+  grid-template-columns: 40px 1fr 40px;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.btn-back {
+  height: 36px;
+  width: 36px;
+  border-radius: 10px;
+  border: 1px solid #e5e7eb;
+  background: #fff;
+  cursor: pointer;
+  font-size: 18px;
+}
+.btn-back:hover { background: #f8fafc; }
+.detail-title { margin: 0; text-align: center; }
+
+/* 제출 ID/연도 pill */
+.detail-subhead {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+}
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 28px;
+  padding: 0 10px;
+  border-radius: 999px;
+  background: #eef6ff;
+  color: #0f172a;
+  border: 1px solid #dbeafe;
+}
+.pill-label { font-size: 12px; color: #64748b; }
+.pill-value { font-weight: 700; font-size: 12.5px; }
+
+/* 저장 시각 */
+.saved-at { margin-bottom: 6px; color: #6b7280; font-size: 13px; }
+
+/* 카드 레이아웃 */
+.report-cards {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+  margin: 10px 0 18px;
+}
+.report-detail-card {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+  padding: 14px;
+  box-shadow: 0 6px 16px -14px rgba(0,0,0,0.25);
+  text-align: left;          /* 카드도 왼쪽 정렬 */
+}
+.report-detail-card h3 { margin: 0 0 8px; font-size: 16px; }
+.total-score { font-size: 28px; font-weight: 800; }
+.score { font-weight: 700; margin-bottom: 6px; }
+
+/* 하단 카드 영역 */
+.report-bottom {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  margin-top: 6px;
+}
+.report-bottom-card {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+  padding: 14px;
+  text-align: left;
+}
+.report-bottom-title { margin: 0 0 8px; font-size: 15px; font-weight: 700; }
+.report-bottom-body { color: #334155; font-size: 14px; }
+
+/* 알림/에러 */
+.alert {
+  border-radius: 12px;
+  padding: 14px 16px;
+  border: 1px solid #f0f3f8;
+  background: #fff;
+}
+.alert.error { border-color: #fde2e1; background: #fff5f5; color: #991b1b; }
+.alert-title { font-weight: 800; margin-bottom: 6px; }
+.alert-actions { display: flex; gap: 8px; margin-top: 8px; }
+
+/* 버튼 */
+.btn {
+  height: 34px;
+  border-radius: 8px;
+  padding: 0 12px;
+  font-weight: 700;
+  border: 1px solid transparent;
+  cursor: pointer;
+}
+.btn--ghost { background: #fff; border-color: #e5e7eb; }
+.btn--ghost:hover { background: #f8fafc; }
+.btn--primary { background: #0ea5e9; color: #fff; }
+.btn--primary:hover { background: #0284c7; }
+
+/* 보조 텍스트 */
+.loading, .muted { color: #6b7280; font-size: 14px; }
+
+/* 반응형 */
+@media (max-width: 960px) {
+  .report-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .report-bottom { grid-template-columns: 1fr; }
+}

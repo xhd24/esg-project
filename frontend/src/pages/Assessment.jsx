@@ -1,37 +1,42 @@
 // src/pages/Assessment.jsx
 import React, { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import questions from "../../../backend/questions";
 import { calculateScore } from "../../../backend/scoreQuestions.js";
 import "./css/questions.css";
+import { getEsgQuestions, getMyEsgAnswers, saveEsgAnswersBulk } from "../api";
 
 const REPORT_KEY = "ESG_REPORT_V1";
-const SCROLLER_SELECTOR = ".assessment-content";
 
 function Assessment() {
   const navigate = useNavigate();
   const categories = ["Environment", "Social", "Governance"];
+
+  const userKey =
+    sessionStorage.getItem("userKey") || localStorage.getItem("userKey");
+
   const [selectedCategory, setSelectedCategory] = useState("Environment");
 
+  const [questions, setQuestions] = useState({
+    Environment: [],
+    Social: [],
+    Governance: [],
+  });
+
+  // { [cat]: { [question_id]: '예'|'아니오' } }
   const [answers, setAnswers] = useState({
-    Environment: Array(50).fill(null),
-    Social: Array(55).fill(null),
-    Governance: Array(55).fill(null),
+    Environment: {},
+    Social: {},
+    Governance: {},
   });
 
   const [saved, setSaved] = useState(false);
   const toastRef = useRef(null);
   const [modal, setModal] = useState(null);
-
   const questionRefs = useRef({});
   const [highlightKey, setHighlightKey] = useState(null);
 
-  const totals = {
-    Environment: questions.Environment.length,
-    Social: questions.Social.length,
-    Governance: questions.Governance.length,
-  };
-  const weights = { Environment: 35, Social: 35, Governance: 30 };
+  const [loading, setLoading] = useState(!!userKey);
+  const [error, setError] = useState("");
 
   // ---------- 로그인 확인 공통 가드 ----------
   const ensureLogin = () => {
@@ -64,31 +69,44 @@ function Assessment() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const handleAnswer = (category, qIndex, value) => {
-    if (!ensureLogin()) return; // 로그인 전 응답 방지
-    setAnswers((prev) => {
-      const updated = { ...prev };
-      const next = [...(updated[category] || [])];
-      next[qIndex] = value === "예" ? 1 : 0;
-      updated[category] = next;
-      return updated;
-    });
-    setSaved(false);
-  };
-
   // ---- 스크롤 유틸 ----
+  // 초기 로드
+  useEffect(() => {
+    if (!userKey) {
+      setLoading(false);
+      return;
+    }
+    (async () => {
+      try {
+        setLoading(true);
+        const qObj = {};
+        const aObj = {};
+        for (const cat of categories) {
+          qObj[cat] = await getEsgQuestions(cat);
+          aObj[cat] = await getMyEsgAnswers(cat);
+        }
+        setQuestions(qObj);
+        setAnswers(aObj);
+        setError("");
+      } catch (e) {
+        if (e?.message === "UNAUTHORIZED") {
+          setError("세션이 만료되었거나 권한이 없습니다. 다시 로그인해 주세요.");
+        } else {
+          setError("데이터를 불러오지 못했어요. 잠시 후 다시 시도해 주세요.");
+        }
+      } finally {
+        setLoading(false);
+      }
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userKey]);
+
+  // 스크롤/하이라이트
+  const SCROLLER_SELECTOR = ".assessment-content";
   const scrollToTopBoth = (behavior = "auto") => {
     const scroller = document.querySelector(SCROLLER_SELECTOR);
     if (scroller) scroller.scrollTo({ top: 0, left: 0, behavior });
     window.scrollTo({ top: 0, left: 0, behavior });
-  };
-
-  const scrollToQuestion = (cat, idx, behavior = "smooth") => {
-    const key = `${cat}-${idx}`;
-    const el = questionRefs.current[key];
-    if (el?.scrollIntoView) el.scrollIntoView({ behavior, block: "start" });
-    setHighlightKey(key);
-    setTimeout(() => setHighlightKey(null), 1400);
   };
 
   useEffect(() => {
@@ -101,22 +119,54 @@ function Assessment() {
     }
   }, [saved]);
 
-  const findUnansweredIndices = (cat) => {
-    const count = totals[cat];
-    const arr = answers[cat] || [];
-    const missing = [];
-    for (let i = 0; i < count; i++) {
-      if (arr[i] !== 1 && arr[i] !== 0) missing.push(i);
-    }
-    return missing;
+  const scrollToQuestion = (cat, qid, behavior = "smooth") => {
+    const key = `${cat}-${qid}`;
+    const el = questionRefs.current[key];
+    if (el?.scrollIntoView) el.scrollIntoView({ behavior, block: "start" });
+    setHighlightKey(key);
+    setTimeout(() => setHighlightKey(null), 1400);
   };
 
+  // 라디오 응답
+  const handleAnswer = (category, questionId, option) => {
+    setAnswers((prev) => ({
+      ...prev,
+      [category]: { ...(prev[category] || {}), [questionId]: option },
+    }));
+    setSaved(false);
+  };
+
+  // ✅ 전체 예/전체 아니오 헬퍼
+  const pickOption = (q, target /* '예' | '아니오' */) => {
+    const opts = q.options || ["예", "아니오"];
+    // 옵션에 정확히 '예'/'아니오'가 있으면 그대로, 없으면 가장 첫 옵션으로 폴백
+    if (opts.includes(target)) return target;
+    return opts[0];
+  };
+
+  const setAllForCategory = (cat, target /* '예' | '아니오' */) => {
+    const qs = questions[cat] || [];
+    const nextMap = {};
+    for (const q of qs) {
+      nextMap[q.id] = pickOption(q, target);
+    }
+    setAnswers((prev) => ({ ...prev, [cat]: nextMap }));
+    setSaved(false);
+  };
+
+  // 미응답 찾기
+  const findUnansweredIds = (cat) => {
+    const qs = questions[cat] || [];
+    const map = answers[cat] || {};
+    return qs.filter((q) => !map[q.id]).map((q) => q.id);
+  };
+
+  // 네비게이션
   const goPrev = () => {
     if (!ensureLogin()) return;
     const idx = categories.indexOf(selectedCategory);
     if (idx > 0) setSelectedCategory(categories[idx - 1]);
   };
-
   const goNext = () => {
     if (!ensureLogin()) return;
 
@@ -125,13 +175,13 @@ function Assessment() {
     if (idx === categories.length - 1) return;
 
     const nextCat = categories[idx + 1];
-    const missing = findUnansweredIndices(current);
+    const missingIds = findUnansweredIds(current);
 
-    if (missing.length > 0) {
-      const firstIdx = missing[0];
+    if (missingIds.length > 0) {
+      const firstId = missingIds[0];
       setModal({
         title: "미응답 문항 안내",
-        message: `${current} 카테고리에 미응답 문항이 ${missing.length}개 있어요.\n첫 미응답 문항(#${firstIdx + 1}) 위치로 이동합니다.`,
+        message: `${current} 카테고리에 미응답 문항이 ${missingIds.length}개 있어요.\n첫 미응답 문항(#${firstId}) 위치로 이동합니다.`,
         actions: [
           { label: "취소", variant: "ghost", onClick: () => setModal(null) },
           {
@@ -139,7 +189,7 @@ function Assessment() {
             variant: "primary",
             onClick: () => {
               setModal(null);
-              scrollToQuestion(current, firstIdx, "smooth");
+              scrollToQuestion(current, firstId, "smooth");
             },
           },
         ],
@@ -164,18 +214,17 @@ function Assessment() {
     });
   };
 
-  const submitAll = () => {
-    if (!ensureLogin()) return;
-
+  // 최종 제출 (JSON 저장 규격으로 구성)
+  const submitAll = async () => {
     for (const cat of categories) {
-      const missing = findUnansweredIndices(cat);
+      const missing = findUnansweredIds(cat);
       if (missing.length > 0) {
-        const firstIdx = missing[0];
+        const firstId = missing[0];
         setSelectedCategory(cat);
         setTimeout(() => {
           setModal({
             title: "미응답 문항 안내",
-            message: `${cat} 카테고리에 미응답 문항이 ${missing.length}개 있어요.\n첫 미응답 문항(#${firstIdx + 1}) 위치로 이동합니다.`,
+            message: `${cat} 카테고리에 미응답 문항이 ${missing.length}개 있어요.\n첫 미응답 문항(#${firstId}) 위치로 이동합니다.`,
             actions: [
               { label: "취소", variant: "ghost", onClick: () => setModal(null) },
               {
@@ -183,7 +232,7 @@ function Assessment() {
                 variant: "primary",
                 onClick: () => {
                   setModal(null);
-                  scrollToQuestion(cat, firstIdx, "smooth");
+                  scrollToQuestion(cat, firstId, "smooth");
                 },
               },
             ],
@@ -193,34 +242,57 @@ function Assessment() {
       }
     }
 
-    const scores = calculateScore(answers);
-    const yesCounts = {};
-    const noCounts = {};
+    const toSave = [];
     categories.forEach((cat) => {
-      const count = totals[cat];
-      const yes = (answers[cat] || []).slice(0, count).filter((v) => v === 1).length;
-      yesCounts[cat] = yes;
-      noCounts[cat] = count - yes;
+      const map = answers[cat] || {};
+      const qs = questions[cat] || [];
+      for (const q of qs) {
+        const opt = map[q.id];
+        if (!opt) continue;
+        toSave.push({
+          category: q.category,
+          subCategory: q.subCategory || null,
+          questionid: Number(q.id),
+          question: q.text,
+          answer: opt,
+        });
+      }
     });
 
-    const payload = {
-      savedAt: new Date().toISOString(),
-      totals,
-      weights,
-      scores,
-      yesCounts,
-      noCounts,
-      answers,
-    };
-
-    localStorage.setItem(REPORT_KEY, JSON.stringify(payload));
-    setSaved(true);
-
-    setModal({
-      title: "제출 완료",
-      message: "수고하셨습니다. 결과가 저장되었습니다.",
-      actions: [{ label: "확인", variant: "primary", onClick: () => setModal(null) }],
-    });
+    try {
+      const resp = await saveEsgAnswersBulk(toSave);
+      if (resp?.success) {
+        setSaved(true);
+        localStorage.setItem(
+          REPORT_KEY,
+          JSON.stringify({
+            savedAt: new Date().toISOString(),
+            answers,
+          })
+        );
+        setModal({
+          title: "제출 완료",
+          message: "수고하셨습니다. 결과가 저장되었습니다.",
+          actions: [{ label: "확인", variant: "primary", onClick: () => setModal(null) }],
+        });
+      } else {
+        throw new Error("SAVE_FAILED");
+      }
+    } catch (e) {
+      if (e?.message === "UNAUTHORIZED") {
+        setModal({
+          title: "로그인이 필요합니다",
+          message: "세션이 만료되었어요. 다시 로그인해 주세요.",
+          actions: [{ label: "로그인", variant: "primary", onClick: () => navigate("/login") }],
+        });
+      } else {
+        setModal({
+          title: "오류",
+          message: "저장 중 오류가 발생했습니다.",
+          actions: [{ label: "확인", variant: "primary", onClick: () => setModal(null) }],
+        });
+      }
+    }
   };
 
   // ============================
@@ -323,7 +395,37 @@ function Assessment() {
 
       {/* 본문 */}
       <main className="assessment-content">
-        <h2>{selectedCategory} 설문조사</h2>
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <h2 style={{ marginRight: "auto" }}>{selectedCategory} 설문조사</h2>
+
+          {/* ✅ 전체 선택 버튼 */}
+          <button
+            className="btn btn--ghost"
+            onClick={() => setAllForCategory(selectedCategory, "예")}
+            disabled={loading || (questions[selectedCategory] || []).length === 0}
+            title="현재 카테고리의 모든 문항을 '예'로 선택"
+          >
+            전체 예
+          </button>
+          <button
+            className="btn btn--ghost"
+            onClick={() => setAllForCategory(selectedCategory, "아니오")}
+            disabled={loading || (questions[selectedCategory] || []).length === 0}
+            title="현재 카테고리의 모든 문항을 '아니오'로 선택"
+          >
+            전체 아니오
+          </button>
+        </div>
+
+        {loading && <div style={{ marginBottom: 12 }}>불러오는 중…</div>}
+        {error && (
+          <div style={{ marginBottom: 12, color: "crimson" }}>
+            {error}{" "}
+            <button className="btn btn--ghost" onClick={() => navigate("/login")}>
+              로그인
+            </button>
+          </div>
+        )}
 
         {saved && (
           <div
@@ -339,13 +441,13 @@ function Assessment() {
               fontWeight: "bold",
             }}
           >
-            ℹ️ 결과가 저장되었습니다. 사이드바의 <b>ESG Report</b>에서 확인하세요.
+            ℹ️ 서버에 저장되었습니다. 사이드바의 <b>ESG Report</b>에서 확인하세요.
           </div>
         )}
 
-        {(questions[selectedCategory] || []).map((q, idx) => {
-          const selected = answers[selectedCategory][idx];
-          const key = `${selectedCategory}-${idx}`;
+        {(questions[selectedCategory] || []).map((q) => {
+          const selected = (answers[selectedCategory] || {})[q.id] || null;
+          const key = `${selectedCategory}-${q.id}`;
           const isMissing = highlightKey === key;
 
           return (
@@ -362,44 +464,26 @@ function Assessment() {
                 <p className="question-description">{q.description}</p>
               )}
 
-              <div className="option-pills" role="radiogroup">
-                <input
-                  className="pill-input"
-                  type="radio"
-                  id={`q-${selectedCategory}-${idx}-yes`}
-                  name={`q-${selectedCategory}-${idx}`}
-                  value="예"
-                  checked={selected === 1}
-                  onChange={(e) =>
-                    handleAnswer(selectedCategory, idx, e.target.value)
-                  }
-                />
-                <label
-                  className="pill-label"
-                  htmlFor={`q-${selectedCategory}-${idx}-yes`}
-                >
-                  <span className="pill-dot" aria-hidden="true"></span>
-                  예
-                </label>
-
-                <input
-                  className="pill-input"
-                  type="radio"
-                  id={`q-${selectedCategory}-${idx}-no`}
-                  name={`q-${selectedCategory}-${idx}`}
-                  value="아니오"
-                  checked={selected === 0}
-                  onChange={(e) =>
-                    handleAnswer(selectedCategory, idx, e.target.value)
-                  }
-                />
-                <label
-                  className="pill-label"
-                  htmlFor={`q-${selectedCategory}-${idx}-no`}
-                >
-                  <span className="pill-dot" aria-hidden="true"></span>
-                  아니오
-                </label>
+              <div className="option-pills" role="radiogroup" aria-label={`q-${q.id}`}>
+                {(q.options || ["예", "아니오"]).map((opt, i) => (
+                  <React.Fragment key={i}>
+                    <input
+                      className="pill-input"
+                      type="radio"
+                      id={`q-${key}-${i}`}
+                      name={`q-${key}`}
+                      value={opt}
+                      checked={selected === opt}
+                      onChange={(e) =>
+                        handleAnswer(selectedCategory, q.id, e.target.value)
+                      }
+                    />
+                    <label className="pill-label" htmlFor={`q-${key}-${i}`}>
+                      <span className="pill-dot" aria-hidden="true"></span>
+                      {opt}
+                    </label>
+                  </React.Fragment>
+                ))}
               </div>
             </div>
           );
@@ -445,11 +529,8 @@ function Assessment() {
               {modal.actions?.map((a, idx) => (
                 <button
                   key={idx}
-                  className={`alert-btn ${
-                    a.variant === "primary"
-                      ? "alert-btn--primary"
-                      : "alert-btn--ghost"
-                  }`}
+                  className={`alert-btn ${a.variant === "primary" ? "alert-btn--primary" : "alert-btn--ghost"
+                    }`}
                   onClick={a.onClick}
                 >
                   {a.label}
