@@ -1,8 +1,10 @@
 // src/pages/Carb1.jsx
 import { useState, useEffect, useRef } from "react";
-import { carb1InputQuery, carb1_1InputQuery } from '../api.js';
+import { useNavigate } from "react-router-dom";
+import { carb1InputQuery, carb1_1InputQuery } from "../api.js";
 
 import "./css/Carb1.css";
+import "./css/report.back.css"; // ← 뒤로가기 버튼 스타일 재사용
 
 // 외부 5항목(숫자만 입력)
 const EXT_LABELS = [
@@ -10,13 +12,19 @@ const EXT_LABELS = [
   "2. 기자재 제조",
   "3. 원자재 및 기자재 운송 ",
   "4. 선박 폐기 ",
-  "5. 재활용 "
+  "5. 재활용 ",
 ];
 
 // 내부 8단계(숫자만 입력)
 const INT_LABELS = [
-  "1. 설계", "2. 강재적치", "3. 강재절단", "4. 조립",
-  "5. 의장", "6. 탑재", "7. 안벽작업", "8. 시운전"
+  "1. 설계",
+  "2. 강재적치",
+  "3. 강재절단",
+  "4. 조립",
+  "5. 의장",
+  "6. 탑재",
+  "7. 안벽작업",
+  "8. 시운전",
 ];
 
 // 숫자만 허용(소수점 1개 허용)으로 정제 - 쉼표 허용
@@ -54,21 +62,22 @@ const LS_KEY = "carb1_form_v1";
 const ERROR_FADE_MS = 300;
 const ERROR_AUTO_HIDE_MS = 3000;
 
-
 export default function Carb1() {
+  const navigate = useNavigate();
+  const BACK_PATH = "/carbon"; // ← 무조건 이동할 대상 경로
+
   // ===== 외부 =====
   const [ext, setExt] = useState({
     shipKey: "",
     startDate: "",
     endDate: "",
     items: ["", "", "", "", ""],
-    userId: ''
+    userId: "",
   });
   const [extLoading, setExtLoading] = useState(false);
   const [extErrs, setExtErrs] = useState(["", "", "", "", ""]);
   const [extErrLeaving, setExtErrLeaving] = useState([false, false, false, false, false]);
   const extErrTimers = useRef({});
-
 
   // ===== 내부 =====
   const [inn, setInn] = useState({
@@ -76,7 +85,7 @@ export default function Carb1() {
     startDate: "",
     endDate: "",
     steps: ["", "", "", "", "", "", "", ""],
-    userId: ''
+    userId: "",
   });
   const [inLoading, setInLoading] = useState(false);
   const [innErrs, setInnErrs] = useState(["", "", "", "", "", "", "", ""]);
@@ -88,7 +97,7 @@ export default function Carb1() {
   const [lastSavedInn, setLastSavedInn] = useState(null);
 
   useEffect(() => {
-    const storedUserId = sessionStorage.getItem("userKey"); // 로그인 시 저장된 값
+    const storedUserId = sessionStorage.getItem("userKey");
     if (storedUserId) {
       setExt((prev) => ({ ...prev, userId: storedUserId }));
       setInn((prev) => ({ ...prev, userId: storedUserId }));
@@ -156,13 +165,12 @@ export default function Carb1() {
 
   // 버튼 활성화 조건
   const isExtReady =
-    ext.shipKey.trim() &&
-    ext.startDate && ext.endDate &&
-    extErrs.every((m) => !m);
+    ext.shipKey.trim() && ext.startDate && ext.endDate && extErrs.every((m) => !m);
 
   const isInnReady =
     inn.shipKey.trim() &&
-    inn.startDate && inn.endDate &&
+    inn.startDate &&
+    inn.endDate &&
     inn.steps.every((v) => v.trim()) &&
     innErrs.every((m) => !m);
 
@@ -170,38 +178,30 @@ export default function Carb1() {
   const submitExternal = async (e) => {
     e.preventDefault();
     if (ext.endDate < ext.startDate) return alert("외부: 종료일이 시작일보다 빠릅니다.");
-    const cleanItems = ext.items.map(v => v ? v.replace(/,/g, "") : "");
+    const cleanItems = ext.items.map((v) => (v ? v.replace(/,/g, "") : ""));
 
     setLastSavedExt({
       shipKey: ext.shipKey.trim(),
       startDate: ext.startDate,
       endDate: ext.endDate,
-      items: cleanItems.slice()
+      items: cleanItems.slice(),
     });
-    const payload = {
-      ...ext,
-      items: cleanItems
-    };
+    const payload = { ...ext, items: cleanItems };
 
     const res = await carb1InputQuery(payload);
     if (res?.success) {
-
-      window.dispatchEvent(
-        new CustomEvent("openGlobalModal", { detail: { message: "추가 성공" } })
-      );
+      window.dispatchEvent(new CustomEvent("openGlobalModal", { detail: { message: "추가 성공" } }));
       setExt((prev) => ({
         shipKey: "",
         startDate: "",
         endDate: "",
         items: ["", "", "", "", ""],
-        userId: prev.userId   // userId는 유지해야 하니까 prev.userId 넣어줌
+        userId: prev.userId,
       }));
       setExtErrs(["", "", "", "", ""]);
       setExtErrLeaving([false, false, false, false, false]);
     } else {
-      window.dispatchEvent(
-        new CustomEvent("openGlobalModal", { detail: { message: "저장 실패" } })
-      );
+      window.dispatchEvent(new CustomEvent("openGlobalModal", { detail: { message: "저장 실패" } }));
     }
   };
 
@@ -210,39 +210,29 @@ export default function Carb1() {
     e.preventDefault();
     if (inn.endDate < inn.startDate) return alert("내부: 종료일이 시작일보다 빠릅니다.");
 
-    const cleanItems = inn.steps.map(v => v ? v.replace(/,/g, "") : "");
-
+    const cleanItems = inn.steps.map((v) => (v ? v.replace(/,/g, "") : ""));
     setLastSavedInn({
       shipKey: inn.shipKey.trim(),
       startDate: inn.startDate,
       endDate: inn.endDate,
-      steps: cleanItems.slice()
+      steps: cleanItems.slice(),
     });
-    const payload = {
-      ...inn,
-      items: cleanItems
-    };
+    const payload = { ...inn, items: cleanItems };
+
     const res = await carb1_1InputQuery(payload);
     if (res.success) {
-      window.dispatchEvent(
-        new CustomEvent("openGlobalModal", { detail: { message: "추가 성공" } })
-      );
+      window.dispatchEvent(new CustomEvent("openGlobalModal", { detail: { message: "추가 성공" } }));
       setInn((prev) => ({
         shipKey: "",
         startDate: "",
         endDate: "",
         steps: ["", "", "", "", "", "", "", ""],
-        userId: prev.userId
+        userId: prev.userId,
       }));
-
-      // 에러 메시지/상태도 초기화
       setExtErrs(["", "", "", "", "", "", "", ""]);
       setExtErrLeaving([false, false, false, false, false, false, false, false]);
-    }
-    else {
-      window.dispatchEvent(
-        new CustomEvent("openGlobalModal", { detail: { message: "저장 실패" } })
-      );
+    } else {
+      window.dispatchEvent(new CustomEvent("openGlobalModal", { detail: { message: "저장 실패" } }));
     }
   };
 
@@ -263,7 +253,7 @@ export default function Carb1() {
         start: lastSavedExt.startDate || "—",
         end: lastSavedExt.endDate || "—",
         name: label,
-        value: v
+        value: v,
       });
     });
   }
@@ -278,15 +268,15 @@ export default function Carb1() {
         start: lastSavedInn.startDate || "—",
         end: lastSavedInn.endDate || "—",
         name: label,
-        value: v
+        value: v,
       });
     });
   }
 
   // ============================
-  // 플로팅 스크롤 버튼 상태/로직 (윈도우 스크롤)
+  // 플로팅 스크롤 버튼 상태/로직
   // ============================
-  const [isBelowHalf, setIsBelowHalf] = useState(false); // true면 ↑ 표시/맨위로, false면 ↓ 표시/맨아래로
+  const [isBelowHalf, setIsBelowHalf] = useState(false);
   const [showFab, setShowFab] = useState(false);
 
   useEffect(() => {
@@ -299,7 +289,6 @@ export default function Carb1() {
         const scrollTop = window.pageYOffset || doc.scrollTop || 0;
         const max = (doc.scrollHeight - doc.clientHeight) || 0;
 
-        // 컨텐츠가 넘치지 않으면 버튼 숨김
         setShowFab(max > 0);
 
         const ratio = max > 0 ? scrollTop / max : 0;
@@ -307,7 +296,7 @@ export default function Carb1() {
         ticking = false;
       });
     };
-    handler(); // 초기 계산
+    handler();
     window.addEventListener("scroll", handler, { passive: true });
     window.addEventListener("resize", handler);
     return () => {
@@ -323,7 +312,20 @@ export default function Carb1() {
   };
 
   return (
-    <div className="carb1-container">
+    <div className="carb1-container back-root">
+      {/* 좌측 상단 뒤로가기 버튼 — 무조건 /esg_back 으로 */}
+      <button
+        className="back-btn"
+        aria-label="뒤로가기"
+        onClick={() => navigate(BACK_PATH, { replace: true })}
+      >
+        {/* 직선형 화살표 아이콘 */}
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+          <path d="M20 12H8" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" />
+          <path d="M12 7L7 12L12 17" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      </button>
+
       {/* ========== 외부 ========== */}
       <section className="card">
         <h3 className="section-title">① 외부 업체 탄소 배출량 </h3>
@@ -333,8 +335,12 @@ export default function Carb1() {
               <label className="label">선박 식별자 </label>
               <input
                 className="input"
-                type="text" name="shipKey" value={ext.shipKey} onChange={onChangeExt}
-                placeholder="예: 1, KOR-AB12, ANY-CODE-123" required
+                type="text"
+                name="shipKey"
+                value={ext.shipKey}
+                onChange={onChangeExt}
+                placeholder="예: 1, KOR-AB12, ANY-CODE-123"
+                required
               />
             </div>
             <div className="field" />
@@ -343,21 +349,39 @@ export default function Carb1() {
           <div className="grid-2">
             <div className="field">
               <label className="label">시작일</label>
-              <input className="date" type="date" name="startDate" value={ext.startDate} onChange={onChangeExt} required />
+              <input
+                className="date"
+                type="date"
+                name="startDate"
+                value={ext.startDate}
+                onChange={onChangeExt}
+                required
+              />
             </div>
             <div className="field">
               <label className="label">종료일</label>
-              <input className="date" type="date" name="endDate" value={ext.endDate} onChange={onChangeExt} min={ext.startDate || undefined} required />
+              <input
+                className="date"
+                type="date"
+                name="endDate"
+                value={ext.endDate}
+                onChange={onChangeExt}
+                min={ext.startDate || undefined}
+                required
+              />
             </div>
           </div>
 
           <div className="grid-2">
             {EXT_LABELS.map((label, i) => (
               <div className="field" key={i}>
-                <label className="label">{label} <small>(단위 t)</small></label>
+                <label className="label">
+                  {label} <small>(단위 t)</small>
+                </label>
                 <input
                   className={`input numeric ${extErrs[i] ? "input-error" : ""}`}
-                  type="text" inputMode="decimal"
+                  type="text"
+                  inputMode="decimal"
                   value={ext.items[i]}
                   onChange={(e) => onChangeExtItem(i, e.target.value)}
                   placeholder="예: 1,250.5"
@@ -387,8 +411,12 @@ export default function Carb1() {
               <label className="label">선박 식별자</label>
               <input
                 className="input"
-                type="text" name="shipKey" value={inn.shipKey} onChange={onChangeInn}
-                placeholder="예: 1, KOR-AB12, ANY-CODE-123" required
+                type="text"
+                name="shipKey"
+                value={inn.shipKey}
+                onChange={onChangeInn}
+                placeholder="예: 1, KOR-AB12, ANY-CODE-123"
+                required
               />
             </div>
             <div className="field" />
@@ -397,21 +425,39 @@ export default function Carb1() {
           <div className="grid-2">
             <div className="field">
               <label className="label">시작일</label>
-              <input className="date" type="date" name="startDate" value={inn.startDate} onChange={onChangeInn} required />
+              <input
+                className="date"
+                type="date"
+                name="startDate"
+                value={inn.startDate}
+                onChange={onChangeInn}
+                required
+              />
             </div>
             <div className="field">
               <label className="label">종료일</label>
-              <input className="date" type="date" name="endDate" value={inn.endDate} onChange={onChangeInn} min={inn.startDate || undefined} required />
+              <input
+                className="date"
+                type="date"
+                name="endDate"
+                value={inn.endDate}
+                onChange={onChangeInn}
+                min={inn.startDate || undefined}
+                required
+              />
             </div>
           </div>
 
           <div className="grid-2">
             {INT_LABELS.map((label, i) => (
               <div className="field" key={i}>
-                <label className="label">{label} <small>(단위 t)</small></label>
+                <label className="label">
+                  {label} <small>(단위 t)</small>
+                </label>
                 <input
                   className={`input numeric ${innErrs[i] ? "input-error" : ""}`}
-                  type="text" inputMode="decimal"
+                  type="text"
+                  inputMode="decimal"
                   value={inn.steps[i]}
                   onChange={(e) => onChangeInnStep(i, e.target.value)}
                   placeholder="예: 2,000 또는 2,000.75"
@@ -441,11 +487,22 @@ export default function Carb1() {
         aria-label={isBelowHalf ? "맨 위로" : "맨 아래로"}
         title={isBelowHalf ? "맨 위로" : "맨 아래로"}
       >
-        <svg className="scroll-fab__icon" viewBox="0 0 24 24" aria-hidden="true">
-          {/* 기본은 ↓, isBelowHalf 이면 CSS로 180도 회전 */}
-          <path d="M12 4c.55 0 1 .45 1 1v12.17l4.59-4.58c.39-.39 1.03-.39 1.41 0 .39.39.39 1.02 0 1.41l-6.3 6.3c-.39.39-1.02.39-1.41 0l-6.3-6.3a1.003 1.003 0 0 1 1.41-1.41L11 17.17V5c0-.55.45-1 1-1z" />
+        {/* 얇은 V 쉐브론 */}
+        <svg className="scroll-fab__icon" viewBox="0 0 24 24" width="22" height="22" fill="none" aria-hidden="true">
+          <path d="M6.8 9.4 L12 14.1 L17.2 9.4" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
       </button>
     </div>
   );
+}
+
+// 타이머 정리 유틸(원래 있던 것으로 가정)
+function resetErrTimers(ref, idx) {
+  try {
+    const t = ref.current?.[idx];
+    if (!t) return;
+    if (t.hideId) clearTimeout(t.hideId);
+    if (t.clearId) clearTimeout(t.clearId);
+    ref.current[idx] = {};
+  } catch {}
 }

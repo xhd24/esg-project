@@ -1,25 +1,41 @@
+// src/pages/Carb3.jsx
 import { useEffect, useState } from "react";
-import { getCarbon } from '../api.js';
-import styles from './css/carb3.module.css';
+import { useNavigate } from "react-router-dom";
+import { getCarbon } from "../api.js";
+import styles from "./css/carb3.module.css";
+import "./css/report.back.css"; // ← 공통 뒤로가기 버튼 스타일
 
 function Carb3() {
+  const navigate = useNavigate();
+
   const [table1, setTable1] = useState([]);
   const [table2, setTable2] = useState([]);
-  const user = sessionStorage.getItem('userKey');
+  const user = sessionStorage.getItem("userKey");
 
   useEffect(() => {
-    getCarbon(user).then((res)=>{
+    getCarbon(user).then((res) => {
       setTable1(res.posts || []);
       setTable2(res.posts2 || []);
     });
-  }, []);
+  }, [user]);
 
   return (
-    <div className={styles["table-wrapper"]}>
-      
+    <div className={`${styles["table-wrapper"]} back-root`}>
+      {/* 좌측 상단 뒤로가기 버튼: 항상 /carbon 으로 */}
+      <button
+        className="back-btn"
+        aria-label="뒤로가기"
+        onClick={() => navigate("/carbon", { replace: true })}
+      >
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M20 12H8" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" />
+          <path d="M12 7L7 12L12 17" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      </button>
+
       {/* 외부 업체 탄소 배출량 */}
       <div className={styles.card}>
-        <h2 className={styles["section-title"]}> 외부 업체 탄소 배출량</h2>
+        <h2 className={styles["section-title"]}>외부 업체 탄소 배출량</h2>
         <table className={styles.table}>
           <thead>
             <tr>
@@ -35,13 +51,13 @@ function Carb3() {
           </thead>
           <tbody>
             {table1
-              .filter((v) => v.io_type === 'OUT')
-              .slice(0, 5)  
+              .filter((v) => v.io_type === "OUT")
+              .slice(0, 5)
               .map((v) => (
                 <tr key={v.ci_id}>
                   <td data-label="선박 식별자">{v.ship_id}</td>
-                  <td data-label="시작일">{v.start_date.split('T')[0]}</td>
-                  <td data-label="종료일">{v.end_date.split('T')[0]}</td>
+                  <td data-label="시작일">{v.start_date.split("T")[0]}</td>
+                  <td data-label="종료일">{v.end_date.split("T")[0]}</td>
                   <td data-label="원자재 채취">{v.out_step1}</td>
                   <td data-label="기자재 제조">{v.out_step2}</td>
                   <td data-label="운송">{v.out_step3}</td>
@@ -74,13 +90,13 @@ function Carb3() {
           </thead>
           <tbody>
             {table1
-              .filter((v) => v.io_type === 'IN')
-              .slice(0, 5)  
+              .filter((v) => v.io_type === "IN")
+              .slice(0, 5)
               .map((v) => (
                 <tr key={v.ci_id}>
                   <td data-label="선박 식별자">{v.ship_id}</td>
-                  <td data-label="시작일">{v.start_date.split('T')[0]}</td>
-                  <td data-label="종료일">{v.end_date.split('T')[0]}</td>
+                  <td data-label="시작일">{v.start_date.split("T")[0]}</td>
+                  <td data-label="종료일">{v.end_date.split("T")[0]}</td>
                   <td data-label="설계">{v.in_step1}</td>
                   <td data-label="강재적치">{v.in_step2}</td>
                   <td data-label="강재절단">{v.in_step3}</td>
@@ -94,6 +110,8 @@ function Carb3() {
           </tbody>
         </table>
       </div>
+
+      {/* 운항 탄소 배출량 */}
       <div className={styles.card}>
         <h2 className={styles["section-title"]}>운항 탄소 배출량</h2>
         <table className={styles.table}>
@@ -109,19 +127,17 @@ function Carb3() {
             </tr>
           </thead>
           <tbody>
-            {table2
-              .slice(0, 5)  
-              .map((v) => (
-                <tr key={v.cii_id}>
-                  <td data-label="선박 식별자">{v.ship_id}</td>
-                  <td data-label="운항 시작일">{v.start_date.split('T')[0]}</td>
-                  <td data-label="운항 종료일">{v.end_date.split('T')[0]}</td>
-                  <td data-label="연료">{v.fuel_type}</td>
-                  <td data-label="연료 사용량">{v.fuel_tons}</td>
-                  <td data-label="운항거리">{v.distance_nm}</td>
-                  <td data-label="적재능력">{v.capacity_ton}</td>
-                </tr>
-              ))}
+            {table2.slice(0, 5).map((v) => (
+              <tr key={v.cii_id}>
+                <td data-label="선박 식별자">{v.ship_id}</td>
+                <td data-label="운항 시작일">{v.start_date.split("T")[0]}</td>
+                <td data-label="운항 종료일">{v.end_date.split("T")[0]}</td>
+                <td data-label="연료">{v.fuel_type}</td>
+                <td data-label="연료 사용량">{v.fuel_tons}</td>
+                <td data-label="운항거리">{v.distance_nm}</td>
+                <td data-label="적재능력">{v.capacity_ton}</td>
+              </tr>
+            ))}
           </tbody>
         </table>
       </div>

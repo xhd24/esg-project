@@ -36,12 +36,10 @@ export default function ESGBack() {
     [navigate]
   );
 
-  // 페이지 진입 시 1회 체크 (원치 않으면 주석 처리)
   useEffect(() => {
     ensureLogin("/carbon");
   }, [ensureLogin]);
 
-  // 버튼 클릭 시에도 가드 적용
   const goForms = () => {
     if (ensureLogin("/carbon/forms")) {
       navigate("/carbon/forms");
@@ -49,7 +47,21 @@ export default function ESGBack() {
   };
 
   return (
-    <div className="carb1-container">
+    <div className="carb1-container back-root">
+      {/* 뒤로가기 버튼: 무조건 홈으로 */}
+      <button
+        type="button"
+        className="back-btn"
+        aria-label="뒤로가기"
+        onClick={() => navigate("/", { replace: true })}
+      >
+        {/* 직선 화살표 아이콘 */}
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M20 12H8" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" />
+          <path d="M12 7L7 12L12 17" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      </button>
+
       <section className="card">
         <h2 className="section-title">탄소배출량 안내</h2>
         <p>
@@ -72,11 +84,7 @@ export default function ESGBack() {
               {modal.actions?.map((a, idx) => (
                 <button
                   key={idx}
-                  className={`alert-btn ${
-                    a.variant === "primary"
-                      ? "alert-btn--primary"
-                      : "alert-btn--ghost"
-                  }`}
+                  className={`alert-btn ${a.variant === "primary" ? "alert-btn--primary" : "alert-btn--ghost"}`}
                   onClick={a.onClick}
                 >
                   {a.label}
