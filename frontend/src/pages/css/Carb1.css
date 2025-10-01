@@ -48,6 +48,8 @@
   gap: 10px;
   padding-left: 10px;
   border-left: 6px solid var(--green-400);
+   margin-left:45px;
+
 }
 
 /* 2열 그리드 */

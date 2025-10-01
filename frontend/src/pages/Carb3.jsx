@@ -1,18 +1,23 @@
+// src/pages/Carb3.jsx
 import { useEffect, useState } from "react";
-import { deleteC1row, getCarbon, editC1row, editC2row, editC3row, deleteC3row } from '../api.js';
-import styles from './css/carb3.module.css';
+import { useNavigate } from "react-router-dom";
+import { getCarbon } from "../api.js";
+import styles from "./css/carb3.module.css";
+import "./css/report.back.css"; // ← 공통 뒤로가기 버튼 스타일
 
 function Carb3() {
+  const navigate = useNavigate();
+
   const [table1, setTable1] = useState([]);
   const [table2, setTable2] = useState([]);
-  const user = sessionStorage.getItem('userKey');
+  const user = sessionStorage.getItem("userKey");
 
   useEffect(() => {
     getCarbon(user).then((res) => {
       setTable1(res.posts || []);
       setTable2(res.posts2 || []);
     });
-  }, []);
+  }, [user]);
 
   //1번 테이블 수정
   const [editRow, setEditRow] = useState(null);
@@ -129,11 +134,22 @@ function Carb3() {
   };
 
   return (
-    <div className={styles["table-wrapper"]}>
+    <div className={`${styles["table-wrapper"]} back-root`}>
+      {/* 좌측 상단 뒤로가기 버튼: 항상 /carbon 으로 */}
+      <button
+        className="back-btn"
+        aria-label="뒤로가기"
+        onClick={() => navigate("/carbon", { replace: true })}
+      >
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M20 12H8" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" />
+          <path d="M12 7L7 12L12 17" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      </button>
 
       {/* 외부 업체 탄소 배출량 */}
       <div className={styles.card}>
-        <h2 className={styles["section-title"]}> 외부 업체 탄소 배출량</h2>
+        <h2 className={styles["section-title"]}>외부 업체 탄소 배출량</h2>
         <table className={styles.table}>
           <thead>
             <tr>
