@@ -1,4 +1,4 @@
-const BASE = "http://localhost:3000";
+const BASE = "http://project-esg.ch84qkaky60x.ap-southeast-2.rds.amazonaws.com";
 
 // 인증 헤더 생성 함수
 export function getAuthHeaders() {
