@@ -12,10 +12,7 @@ import "./index.css";
 import "bootstrap/dist/css/bootstrap.min.css";
 import Sidebar from "./pages/Sidebar.jsx";
 import ESG_Reports from "./pages/ESG_Reports.jsx";
-import ESG_Report_2025 from "./pages/ESG_Report_2025.jsx";
-import ESG_Report_2024 from "./pages/ESG_Report_2024.jsx";
-import ESG_Report_2023 from "./pages/ESG_Report_2023.jsx";
-import logo from "./assets/images/logo3.png";
+import logo from "./assets/images/logo.png";
 import { useEffect, useState } from "react";
 import { FAQWrite, FAQHistory } from "./pages/Query.jsx";
 import Carb1 from "./pages/Carb1.jsx";
@@ -114,46 +111,54 @@ function App() {
           }}
         >
           <nav className="main_nav">
-            <a href="/">
-              <img src={logo} className="logo" alt="logo" />
-            </a>
-            <ul className="nav">
-              <li className="nav-item">
-                <Link to="/" className="nav-link">
-                  Home
-                </Link>
-              </li>
-              <li className="nav-item">
-                <Link to="/carbon" className="nav-link">
-                  탄소배출량
-                </Link>
-              </li>
-              <li className="nav-item">
-                <Link to="/assessment" className="nav-link">
-                  ESG 평가
-                </Link>
-              </li>
-              <li className="nav-item">
-                <Link to="/faq" className="nav-link">
-                  FAQ
-                </Link>
-              </li>
-              {isLogin ? (
-                <li className="nav-item user-info">
-                  <span className="user-greet">
-                    <span className="user-dot" aria-hidden="true"></span>
-                    {`${userId}님 안녕하세요!`}
-                  </span>
-                  <button className="logout-btn logout-pill" onClick={onClickLogout}>로그아웃</button>
-                </li>
-              ) : (
-                <li className="nav-item">
-                  <Link to="/login" className="nav-link login">
-                    <span className="green">로그인</span>
-                  </Link>
-                </li>
-              )}
-            </ul>
+            <div className="nav-inner">
+
+              <a href="/">
+                <img src={logo} className="logo" alt="logo" />
+              </a>
+              <div className="nav-right">
+                <ul className="nav">
+                  <li className="nav-item">
+                    <Link to="/" className="nav-link">
+                      Home
+                    </Link>
+                  </li>
+                  <li className="nav-item">
+                    <Link to="/carbon" className="nav-link">
+                      탄소배출량
+                    </Link>
+                  </li>
+                  <li className="nav-item">
+                    <Link to="/assessment" className="nav-link">
+                      ESG 평가
+                    </Link>
+                  </li>
+                  <li className="nav-item">
+                    <Link to="/faq" className="nav-link">
+                      FAQ
+                    </Link>
+                  </li>
+                  {isLogin ? (
+                    <li className="nav-item user-info">
+                      <span className="user-greet">
+                        <span className="user-dot" aria-hidden="true"></span>
+                        {`${userId}님 안녕하세요!`}
+                      </span>
+                      <button className="logout-btn logout-pill" onClick={onClickLogout}>로그아웃</button>
+                    </li>
+
+
+
+                  ) : (
+                    <li className="nav-item">
+                      <Link to="/login" className="nav-link login">
+                        <span className="green">로그인</span>
+                      </Link>
+                    </li>
+                  )}
+                </ul>
+              </div>
+            </div>
           </nav>
 
           <main style={{ padding: "20px" }}>
