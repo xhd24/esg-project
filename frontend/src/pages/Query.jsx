@@ -11,7 +11,8 @@ export function FAQWrite() {
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [submitting, setSubmitting] = useState(false);
-  const userId = sessionStorage.userId;
+  const userKey = sessionStorage.getItem('userKey');
+  const userId = sessionStorage.getItem('userId');
 
   const navigate = useNavigate();
 
@@ -30,9 +31,8 @@ export function FAQWrite() {
 
     try {
       setSubmitting(true);
-      const res = await writeQuery(title, userId, company, email, category, content);
-
-      if (res?.success) {
+      const res = await writeQuery(title, userId, userKey, company, email, category, content);
+      if (res.success) {
         window.alert("문의가 정상적으로 등록되었습니다.\n확인을 누르면 문의 내역으로 이동합니다.");
         navigate('/faq');
       } else {
@@ -125,11 +125,12 @@ export function FAQWrite() {
 
 export function FAQHistory() {
   const [posts, setPosts] = useState([]);
+  const userKey = sessionStorage.getItem('userKey');
   const userId = sessionStorage.getItem('userId');
 
   useEffect(() => {
-    getQueryHx(userId).then(setPosts);
-  }, [userId]);
+    getQueryHx(userKey).then(setPosts);
+  }, [userKey]);
 
   return (
     <div className={styles["table-wrapper"]}>

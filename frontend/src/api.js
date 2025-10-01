@@ -33,12 +33,13 @@ export async function getQueryDetail(id) {
 }
 
 //FAQ 게시판 글작성
-export async function writeQuery(inquiry_title, requester, company, email, category, content) {
+export async function writeQuery(inquiry_title,user_id, requester, company, email, category, content) {
   const res = await fetch(`${BASE}/faq/write`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       inquiry_title,
+      user_id,
       requester,
       company,
       email,
@@ -46,7 +47,7 @@ export async function writeQuery(inquiry_title, requester, company, email, categ
       content,
     }),
   });
-  return res.json()|'';
+  return res.json();
 }
 
 export async function apiFetch(path, options = {}) {

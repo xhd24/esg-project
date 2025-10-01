@@ -12,8 +12,8 @@ router.post('/', async (req, res) => {
 
 //글작석
 router.post("/write", async (req, res) => {
-  const { inquiry_title, requester, company, email, category, content } = req.body;
-  await addQuery(inquiry_title, requester, company, email, category, content);
+  const { inquiry_title, requester, user_id, company, email, category, content } = req.body;
+  await addQuery(inquiry_title, requester, user_id, company, email, category, content);
   res.json({ success: true });
 });
 
