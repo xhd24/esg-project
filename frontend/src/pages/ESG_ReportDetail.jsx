@@ -1,4 +1,3 @@
-// frontend/src/pages/ESG_ReportDetail.jsx
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import {
@@ -8,7 +7,23 @@ import "./css/ESG_ReportDetail.css";
 
 const API_BASE = "http://localhost:3000/esg";
 const to2 = (n) => Number(n || 0).toFixed(2);
-const pct = (yes, total) => (total > 0 ? ((yes / total) * 100).toFixed(1) : "0.0");
+const pct = (yes, total) => {
+  const y = Number(yes || 0);
+  const t = Number(total || 0);
+  return t > 0 ? ((y / t) * 100).toFixed(1) : "0.0";
+};
+
+// 점수 퍼센트에 따라 색상 클래스 반환
+function toneClass(score, max) {
+  const s = Number(score || 0);
+  const m = Number(max || 0);
+  const p = m > 0 ? (s / m) * 100 : 0;
+  if (p >= 80) return "tone--good"; // 초록
+  if (p >= 50) return "tone--warn"; // 주황
+  return "tone--bad";               // 빨강
+}
+
+const CATS = ["Environment", "Social", "Governance"];
 
 function getAuthHeaders() {
   const userKey =
@@ -28,57 +43,77 @@ export default function ESG_ReportDetail() {
   const [loadingDetail, setLoadingDetail] = useState(true);
   const [errorDetail, setErrorDetail] = useState("");
 
-  const [companyData, setCompanyData] = useState([]); // 결과 A
+  const [companyData, setCompanyData] = useState([]);   // 결과 A
   const [weaknessData, setWeaknessData] = useState([]); // 결과 B
 
   const savedAtText = useMemo(() => {
     if (!detail?.savedAt) return "";
     const d = new Date(detail.savedAt);
-    return isNaN(d.getTime()) ? String(detail.savedAt) : d.toLocaleString();
+    return isNaN(d.getTime())
+      ? String(detail.savedAt)
+      : d.toLocaleString("ko-KR");
   }, [detail?.savedAt]);
+
+  // 총점 분모(가중치 합계)
+  const maxTotal = useMemo(() => {
+    const w = detail?.weights || {};
+    const sum =
+      Number(w.Environment || 0) +
+      Number(w.Social || 0) +
+      Number(w.Governance || 0);
+    return sum || 100; // 안전한 기본값
+  }, [detail?.weights]);
 
   // 상세 불러오기
   useEffect(() => {
+    let ignore = false;
     (async () => {
       try {
         setLoadingDetail(true);
         setErrorDetail("");
-        const res = await fetch(`${API_BASE}/submissions/${sid}`, { headers: getAuthHeaders() });
+        const res = await fetch(`${API_BASE}/submissions/${sid}`, {
+          headers: getAuthHeaders(),
+        });
         const data = await res.json();
         if (!res.ok) throw new Error(data?.error || "제출 상세를 불러오지 못했습니다.");
-        setDetail(data);
+        if (!ignore) setDetail(data);
       } catch (e) {
-        setErrorDetail(e.message || "제출 상세를 불러오지 못했습니다.");
+        if (!ignore) setErrorDetail(e.message || "제출 상세를 불러오지 못했습니다.");
       } finally {
-        setLoadingDetail(false);
+        if (!ignore) setLoadingDetail(false);
       }
     })();
+    return () => { ignore = true; };
   }, [sid]);
 
   // 결과 A (기업별 ESG 점수)
   useEffect(() => {
+    let ignore = false;
     (async () => {
       try {
         const res = await fetch(`${API_BASE}/report/company`, { headers: getAuthHeaders() });
         const data = await res.json();
-        if (res.ok) setCompanyData(data.companies || []);
+        if (res.ok && !ignore) setCompanyData(data?.companies || []);
       } catch (e) {
         console.warn("결과 A 불러오기 실패:", e);
       }
     })();
+    return () => { ignore = true; };
   }, []);
 
   // 결과 B (취약점 분석)
   useEffect(() => {
+    let ignore = false;
     (async () => {
       try {
         const res = await fetch(`${API_BASE}/report/weakness`, { headers: getAuthHeaders() });
         const data = await res.json();
-        if (res.ok) setWeaknessData(data.weaknesses || []);
+        if (res.ok && !ignore) setWeaknessData(data?.weaknesses || []);
       } catch (e) {
         console.warn("결과 B 불러오기 실패:", e);
       }
     })();
+    return () => { ignore = true; };
   }, []);
 
   return (
@@ -113,24 +148,37 @@ export default function ESG_ReportDetail() {
 
             {/* 기본 점수 카드 */}
             <div className="report-cards">
+              {/* 총점 */}
               <div className="report-detail-card">
                 <h3>총점</h3>
-                <div className="total-score">{to2(detail.scores.total)} / 100</div>
+                <div className={`total-score ${toneClass(detail?.scores?.total, maxTotal)}`}>
+                  {to2(detail?.scores?.total)} / {maxTotal}
+                </div>
                 <small>
-                  E {to2(detail.scores.Environment)} / S {to2(detail.scores.Social)} / G {to2(detail.scores.Governance)}
+                  E {to2(detail?.scores?.Environment)} / S {to2(detail?.scores?.Social)} / G {to2(detail?.scores?.Governance)}
                 </small>
               </div>
 
-              {["Environment", "Social", "Governance"].map(cat => (
-                <div key={cat} className="report-detail-card">
-                  <h3>{cat}</h3>
-                  <div className="score">{to2(detail.scores[cat])} / {detail.weights[cat]}</div>
-                  <div>
-                    예: <b>{detail.yesCounts[cat]}</b> / {detail.totals[cat]} ({pct(detail.yesCounts[cat], detail.totals[cat])}%)
+              {/* E / S / G 공통 렌더링 */}
+              {CATS.map((cat) => {
+                const score = detail?.scores?.[cat] ?? 0;
+                const weight = detail?.weights?.[cat] ?? 0;
+                const yes = detail?.yesCounts?.[cat] ?? 0;
+                const total = detail?.totals?.[cat] ?? 0;
+                const no = detail?.noCounts?.[cat] ?? Math.max(0, Number(total) - Number(yes));
+                return (
+                  <div key={cat} className="report-detail-card">
+                    <h3>{cat}</h3>
+                    <div className={`score ${toneClass(score, weight)}`}>
+                      {to2(score)} / {weight}
+                    </div>
+                    <div>
+                      예: <b>{yes}</b> / {total} ({pct(yes, total)}%)
+                    </div>
+                    <div>아니오(또는 미응답): {no}</div>
                   </div>
-                  <div>아니오(또는 미응답): {detail.noCounts[cat]}</div>
-                </div>
-              ))}
+                );
+              })}
             </div>
 
             {/* 결과 A & B */}
@@ -145,7 +193,7 @@ export default function ESG_ReportDetail() {
                       <YAxis />
                       <Tooltip />
                       <Legend />
-                      <Bar dataKey="score" fill="#0ea5e9" name="총점" />
+                      <Bar dataKey="score" name="총점" />
                     </BarChart>
                   </ResponsiveContainer>
                 </div>
@@ -161,9 +209,9 @@ export default function ESG_ReportDetail() {
                       <YAxis />
                       <Tooltip />
                       <Legend />
-                      <Bar dataKey="E" fill="#34d399" name="Environment" />
-                      <Bar dataKey="S" fill="#60a5fa" name="Social" />
-                      <Bar dataKey="G" fill="#f87171" name="Governance" />
+                      <Bar dataKey="E" name="Environment" />
+                      <Bar dataKey="S" name="Social" />
+                      <Bar dataKey="G" name="Governance" />
                     </BarChart>
                   </ResponsiveContainer>
                 </div>
