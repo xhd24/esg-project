@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import "./css/ESG_Report_2025.css";  // CSS 불러오기
+//import "./css/ESG_Report_2025.css";  // CSS 불러오기
 
 const REPORT_KEY = "ESG_REPORT_V1";
 

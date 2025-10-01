@@ -70,8 +70,8 @@ function ESG_Reports() {
           className="reports-card"
           role="button"
           tabIndex={0}
-          onClick={() => goYear("/ESG_report_2025")}
-          onKeyDown={(e) => e.key === "Enter" && goYear("/ESG_report_2025")}
+          onClick={() => navigate("/ESG_report/2025")}
+          onKeyDown={(e) => e.key === "Enter" && navigate("/ESG_report/2025")}
         >
           <img
             src={report2025}
@@ -85,8 +85,8 @@ function ESG_Reports() {
           className="reports-card"
           role="button"
           tabIndex={0}
-          onClick={() => goYear("/ESG_report_2024")}
-          onKeyDown={(e) => e.key === "Enter" && goYear("/ESG_report_2024")}
+          onClick={() => navigate("/ESG_report/2024")}
+          onKeyDown={(e) => e.key === "Enter" && navigate("/ESG_report/2024")}
         >
           <img
             src={report2024}
@@ -100,8 +100,8 @@ function ESG_Reports() {
           className="reports-card"
           role="button"
           tabIndex={0}
-          onClick={() => goYear("/ESG_report_2023")}
-          onKeyDown={(e) => e.key === "Enter" && goYear("/ESG_report_2023")}
+          onClick={() => navigate("/ESG_report/2023")}
+          onKeyDown={(e) => e.key === "Enter" && navigate("/ESG_report/2023")}
         >
           <img
             src={report2023}

@@ -12,6 +12,8 @@ import "./index.css";
 import "bootstrap/dist/css/bootstrap.min.css";
 import Sidebar from "./pages/Sidebar.jsx";
 import ESG_Reports from "./pages/ESG_Reports.jsx";
+import ESG_Report from "./pages/ESG_Report.jsx";
+import ESG_ReportDetail from "./pages/ESG_ReportDetail.jsx";
 import logo from "./assets/images/logo.png";
 import { useEffect, useState } from "react";
 import { FAQWrite, FAQHistory } from "./pages/Query.jsx";
