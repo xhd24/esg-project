@@ -1,6 +1,9 @@
 // frontend/src/pages/ESG_ReportDetail.jsx
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import {
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer
+} from "recharts";
 import "./css/ESG_ReportDetail.css";
 
 const API_BASE = "http://localhost:3000/esg";
@@ -25,12 +28,16 @@ export default function ESG_ReportDetail() {
   const [loadingDetail, setLoadingDetail] = useState(true);
   const [errorDetail, setErrorDetail] = useState("");
 
+  const [companyData, setCompanyData] = useState([]); // 결과 A
+  const [weaknessData, setWeaknessData] = useState([]); // 결과 B
+
   const savedAtText = useMemo(() => {
     if (!detail?.savedAt) return "";
     const d = new Date(detail.savedAt);
     return isNaN(d.getTime()) ? String(detail.savedAt) : d.toLocaleString();
   }, [detail?.savedAt]);
 
+  // 상세 불러오기
   useEffect(() => {
     (async () => {
       try {
@@ -47,6 +54,32 @@ export default function ESG_ReportDetail() {
       }
     })();
   }, [sid]);
+
+  // 결과 A (기업별 ESG 점수)
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await fetch(`${API_BASE}/report/company`, { headers: getAuthHeaders() });
+        const data = await res.json();
+        if (res.ok) setCompanyData(data.companies || []);
+      } catch (e) {
+        console.warn("결과 A 불러오기 실패:", e);
+      }
+    })();
+  }, []);
+
+  // 결과 B (취약점 분석)
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await fetch(`${API_BASE}/report/weakness`, { headers: getAuthHeaders() });
+        const data = await res.json();
+        if (res.ok) setWeaknessData(data.weaknesses || []);
+      } catch (e) {
+        console.warn("결과 B 불러오기 실패:", e);
+      }
+    })();
+  }, []);
 
   return (
     <div className="esg-report-detail-page">
@@ -78,6 +111,7 @@ export default function ESG_ReportDetail() {
           <>
             <div className="saved-at">저장 시각: {savedAtText}</div>
 
+            {/* 기본 점수 카드 */}
             <div className="report-cards">
               <div className="report-detail-card">
                 <h3>총점</h3>
@@ -87,48 +121,52 @@ export default function ESG_ReportDetail() {
                 </small>
               </div>
 
-              <div className="report-detail-card">
-                <h3>Environment</h3>
-                <div className="score">
-                  {to2(detail.scores.Environment)} / {detail.weights.Environment}
+              {["Environment", "Social", "Governance"].map(cat => (
+                <div key={cat} className="report-detail-card">
+                  <h3>{cat}</h3>
+                  <div className="score">{to2(detail.scores[cat])} / {detail.weights[cat]}</div>
+                  <div>
+                    예: <b>{detail.yesCounts[cat]}</b> / {detail.totals[cat]} ({pct(detail.yesCounts[cat], detail.totals[cat])}%)
+                  </div>
+                  <div>아니오(또는 미응답): {detail.noCounts[cat]}</div>
                 </div>
-                <div>
-                  예: <b>{detail.yesCounts.Environment}</b> / {detail.totals.Environment} ({pct(detail.yesCounts.Environment, detail.totals.Environment)}%)
-                </div>
-                <div>아니오(또는 미응답): {detail.noCounts.Environment}</div>
-              </div>
-
-              <div className="report-detail-card">
-                <h3>Social</h3>
-                <div className="score">
-                  {to2(detail.scores.Social)} / {detail.weights.Social}
-                </div>
-                <div>
-                  예: <b>{detail.yesCounts.Social}</b> / {detail.totals.Social} ({pct(detail.yesCounts.Social, detail.totals.Social)}%)
-                </div>
-                <div>아니오(또는 미응답): {detail.noCounts.Social}</div>
-              </div>
-
-              <div className="report-detail-card">
-                <h3>Governance</h3>
-                <div className="score">
-                  {to2(detail.scores.Governance)} / {detail.weights.Governance}
-                </div>
-                <div>
-                  예: <b>{detail.yesCounts.Governance}</b> / {detail.totals.Governance} ({pct(detail.yesCounts.Governance, detail.totals.Governance)}%)
-                </div>
-                <div>아니오(또는 미응답): {detail.noCounts.Governance}</div>
-              </div>
+              ))}
             </div>
 
+            {/* 결과 A & B */}
             <div className="report-bottom">
               <div className="report-bottom-card">
-                <h4 className="report-bottom-title">결과 A</h4>
-                <div className="report-bottom-body">해당 제출({sid})의 A 결과/지표/차트 등을 표시</div>
+                <h4 className="report-bottom-title">결과 A: 기업별 ESG 점수 비교</h4>
+                <div className="report-bottom-body">
+                  <ResponsiveContainer width="100%" height={300}>
+                    <BarChart data={companyData}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="company" />
+                      <YAxis />
+                      <Tooltip />
+                      <Legend />
+                      <Bar dataKey="score" fill="#0ea5e9" name="총점" />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
               </div>
+
               <div className="report-bottom-card">
-                <h4 className="report-bottom-title">결과 B</h4>
-                <div className="report-bottom-body">해당 제출({sid})의 B 결과/지표/차트 등을 표시</div>
+                <h4 className="report-bottom-title">결과 B: 취약점 분석</h4>
+                <div className="report-bottom-body">
+                  <ResponsiveContainer width="100%" height={300}>
+                    <BarChart data={weaknessData}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="subCategory" />
+                      <YAxis />
+                      <Tooltip />
+                      <Legend />
+                      <Bar dataKey="E" fill="#34d399" name="Environment" />
+                      <Bar dataKey="S" fill="#60a5fa" name="Social" />
+                      <Bar dataKey="G" fill="#f87171" name="Governance" />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
               </div>
             </div>
           </>

@@ -37,7 +37,7 @@ async function requireAuth(req, res, next) {
   }
 }
 
-/* ============ 질문 목록 (정적 questionsSource 사용) ============ */
+/* ============ 질문 목록 ============ */
 router.get('/questions', requireAuth, async (req, res) => {
   const { category } = req.query;
 
@@ -45,7 +45,7 @@ router.get('/questions', requireAuth, async (req, res) => {
     (questionsSource[cat] || []).map((q) => ({
       id: q.id,
       category: q.category,
-      subCategory: q.subCategory || null,   // subCategory 포함
+      subCategory: q.subCategory || null,
       text: q.text,
       description: q.description || '',
       options: q.options || ['예', '아니오'],
@@ -58,7 +58,7 @@ router.get('/questions', requireAuth, async (req, res) => {
   return res.json({ questions: pick(category) });
 });
 
-/* ============ 내 응답 조회 (최신 1건 map) ============ */
+/* ============ 내 응답 조회 (최신 1건) ============ */
 router.get('/answers/me', requireAuth, async (req, res) => {
   try {
     const userId = req.user.id;
@@ -96,7 +96,7 @@ router.get('/answers/me', requireAuth, async (req, res) => {
   }
 });
 
-/* ============ 일괄 저장 (한 JSON으로 1레코드) ============ */
+/* ============ 답변 저장 ============ */
 router.post('/answers/bulk', requireAuth, async (req, res) => {
   try {
     const userId = req.user.id;
@@ -125,16 +125,13 @@ router.post('/answers/bulk', requireAuth, async (req, res) => {
       answers: cleaned,
     };
 
-    // INSERT (submission_id는 AUTO_INCREMENT 가정)
     const [result] = await pool.query(
       `INSERT INTO esg_user_answer (user_id, answerjson, inputdate)
        VALUES (?, ?, NOW())`,
       [userId, JSON.stringify(answerjson)]
     );
 
-    // mysql2: insertId 제공 (AUTO_INCREMENT PK일 때)
     const submissionId = result?.insertId ?? null;
-
     return res.json({ success: true, saved_count: cleaned.length, submission_id: submissionId });
   } catch (err) {
     console.error('[answers/bulk] error:', err);
@@ -142,59 +139,7 @@ router.post('/answers/bulk', requireAuth, async (req, res) => {
   }
 });
 
-/* ============ 카테고리별 집계 (최신 1건) ============ */
-router.get('/report/me', requireAuth, async (req, res) => {
-  try {
-    const userId = req.user.id;
-
-    const [rows] = await pool.query(
-      `SELECT answerjson
-       FROM esg_user_answer
-       WHERE user_id = ?
-       ORDER BY inputdate DESC
-       LIMIT 1`,
-      [userId]
-    );
-
-    const counters = {
-      Environment: { yes: 0, no: 0, total: 0 },
-      Social: { yes: 0, no: 0, total: 0 },
-      Governance: { yes: 0, no: 0, total: 0 },
-    };
-
-    if (rows.length) {
-      try {
-        const payload = typeof rows[0].answerjson === 'string'
-          ? JSON.parse(rows[0].answerjson)
-          : rows[0].answerjson;
-
-        const items = Array.isArray(payload?.answers) ? payload.answers : [];
-        for (const item of items) {
-          if (!counters[item.category]) continue;
-          counters[item.category].total += 1;
-          if (item.answer === '예') counters[item.category].yes += 1;
-          else if (item.answer === '아니오') counters[item.category].no += 1;
-        }
-      } catch (e) {
-        console.warn('[report/me] parse error:', e);
-      }
-    }
-
-    const report = ['Environment', 'Social', 'Governance'].map((cat) => ({
-      category: cat,
-      yes: counters[cat].yes,
-      no: counters[cat].no,
-      total: counters[cat].total,
-    }));
-
-    res.json({ report });
-  } catch (e) {
-    console.error('[report/me] error:', e);
-    res.status(500).json({ error: 'Internal error' });
-  }
-});
-
-/* ============ 제출 이력(연도 목록) ============ */
+/* ============ 제출 이력 ============ */
 router.get('/submissions/me', requireAuth, async (req, res) => {
   const userId = req.user.id;
   try {
@@ -212,7 +157,7 @@ router.get('/submissions/me', requireAuth, async (req, res) => {
   }
 });
 
-/* ============ 특정 제출 상세(카드용 요약) ============ */
+/* ============ 특정 제출 상세 ============ */
 router.get('/submissions/:id', requireAuth, async (req, res) => {
   const userId = req.user.id;
   const sid = Number(req.params.id);
@@ -222,7 +167,6 @@ router.get('/submissions/:id', requireAuth, async (req, res) => {
   }
 
   try {
-    // submission_id로 특정 제출 조회(소유권 확인 포함)
     const [rows] = await pool.query(
       `SELECT answerjson, inputdate
        FROM esg_user_answer
@@ -231,24 +175,18 @@ router.get('/submissions/:id', requireAuth, async (req, res) => {
       [userId, sid]
     );
 
-    if (!rows.length) {
-      return res.status(404).json({ error: 'submission not found' });
-    }
+    if (!rows.length) return res.status(404).json({ error: 'submission not found' });
 
-    // answerjson 파싱
     let payload;
     try {
       payload = typeof rows[0].answerjson === 'string'
         ? JSON.parse(rows[0].answerjson)
         : rows[0].answerjson;
     } catch (e) {
-      console.error('[submissions/:id] JSON parse error:', e);
       return res.status(500).json({ error: 'Invalid answerjson format' });
     }
 
     const items = Array.isArray(payload?.answers) ? payload.answers : [];
-
-    // 카테고리별 집계
     const cats = ['Environment', 'Social', 'Governance'];
     const totals = { Environment: 0, Social: 0, Governance: 0 };
     const yesCounts = { Environment: 0, Social: 0, Governance: 0 };
@@ -259,26 +197,21 @@ router.get('/submissions/:id', requireAuth, async (req, res) => {
       if (!cats.includes(cat)) continue;
       totals[cat] += 1;
       if (it.answer === '예') yesCounts[cat] += 1;
-      else noCounts[cat] += 1; // 미응답 포함
+      else noCounts[cat] += 1;
     }
 
-    // 가중치 & 점수
     const weights = { Environment: 35, Social: 35, Governance: 30 };
     const scores = {
       Environment: totals.Environment ? (yesCounts.Environment / totals.Environment) * weights.Environment : 0,
       Social:      totals.Social      ? (yesCounts.Social      / totals.Social)      * weights.Social      : 0,
       Governance:  totals.Governance  ? (yesCounts.Governance  / totals.Governance)  * weights.Governance  : 0,
     };
-    const totalScore = (scores.Environment + scores.Social + scores.Governance);
+    const totalScore = scores.Environment + scores.Social + scores.Governance;
 
-    // 응답
     res.json({
       submission_id: sid,
-      savedAt: rows[0].inputdate,  // 프론트에서 toLocaleString 처리
-      totals,
-      yesCounts,
-      noCounts,
-      weights,
+      savedAt: rows[0].inputdate,
+      totals, yesCounts, noCounts, weights,
       scores: {
         Environment: Number(scores.Environment.toFixed(2)),
         Social: Number(scores.Social.toFixed(2)),
@@ -289,6 +222,89 @@ router.get('/submissions/:id', requireAuth, async (req, res) => {
   } catch (err) {
     console.error('[submissions/:id] query error:', err);
     res.status(500).json({ error: 'Internal error while loading submission detail' });
+  }
+});
+
+/* ============ 결과 A: 기업별 ESG 평가 (총점 비교) ============ */
+router.get('/report/company', async (req, res) => {
+  try {
+    const [rows] = await pool.query(
+      `SELECT u.company, a.submission_id, a.inputdate, a.answerjson
+       FROM esg_user_answer a
+       JOIN signup_login u ON a.user_id = u.user_id
+       WHERE a.inputdate = (
+         SELECT MAX(inputdate) 
+         FROM esg_user_answer 
+         WHERE user_id = a.user_id
+       )
+       ORDER BY u.company`
+    );
+
+    const result = rows.map(r => {
+      let score = 0;
+      try {
+        const payload = typeof r.answerjson === 'string' ? JSON.parse(r.answerjson) : r.answerjson;
+        const items = Array.isArray(payload?.answers) ? payload.answers : [];
+
+        const cats = ['Environment', 'Social', 'Governance'];
+        const weights = { Environment: 35, Social: 35, Governance: 30 };
+        let scores = { Environment: 0, Social: 0, Governance: 0 };
+
+        cats.forEach(cat => {
+          const filtered = items.filter(it => it.category === cat);
+          if (filtered.length) {
+            const yesCount = filtered.filter(it => it.answer === '예').length;
+            scores[cat] = (yesCount / filtered.length) * weights[cat];
+          }
+        });
+        score = scores.Environment + scores.Social + scores.Governance;
+      } catch {}
+      return { company: r.company, score: Number(score.toFixed(2)) };
+    });
+
+    res.json({ companies: result });
+  } catch (err) {
+    console.error('[report/company] error:', err);
+    res.status(500).json({ error: 'Internal error while loading company report' });
+  }
+});
+
+/* ============ 결과 B: 분야별 '아니오' 취약점 분석 ============ */
+router.get('/report/weakness', async (req, res) => {
+  try {
+    const [rows] = await pool.query(
+      `SELECT answerjson FROM esg_user_answer ORDER BY inputdate DESC`
+    );
+
+    const counters = {};
+    for (const row of rows) {
+      let payload;
+      try {
+        payload = typeof row.answerjson === 'string' ? JSON.parse(row.answerjson) : row.answerjson;
+      } catch { continue; }
+
+      const items = Array.isArray(payload?.answers) ? payload.answers : [];
+      for (const item of items) {
+        if (item.answer !== '아니오') continue;
+        const sub = item.subCategory || '기타';
+        const cat = item.category?.[0]; // E / S / G
+        if (!['E','S','G'].includes(cat)) continue;
+        if (!counters[sub]) counters[sub] = { E:0, S:0, G:0 };
+        counters[sub][cat] += 1;
+      }
+    }
+
+    const chartData = Object.entries(counters).map(([subCategory, vals]) => ({
+      subCategory,
+      E: vals.E,
+      S: vals.S,
+      G: vals.G
+    }));
+
+    res.json({ weaknesses: chartData });
+  } catch (err) {
+    console.error('[report/weakness] error:', err);
+    res.status(500).json({ error: 'Internal error while loading weakness report' });
   }
 });
 
