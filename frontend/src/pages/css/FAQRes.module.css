@@ -114,3 +114,547 @@
   border-top: 1px solid #eee;
   padding-top: 16px;
 }
+/* 제목 */
+.caption{
+  text-align:left;
+  font-weight:800;
+  color:#0f172a;
+  padding: 6px 2px 10px;
+}
+
+/* 행 클릭 가능 & 포커스 */
+.row{
+  cursor: pointer;
+  transition: background .18s ease, transform .04s ease;
+}
+.row:hover{ background:#f6fffb; }
+.row:active{ transform: scale(.999); }
+.row:focus-within{
+  outline: none;
+  background:#f0fff7;
+  box-shadow: inset 0 0 0 2px rgba(25,135,84,.22);
+}
+
+/* 긴 제목 말줄임 */
+.titleCell{
+  max-width: 720px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: left;
+}
+
+/* 카테고리 칩 */
+.chip{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  padding:6px 10px;
+  border-radius:9999px;
+  font-weight:700;
+  font-size:.9rem;
+  border:1px solid #dce8e0;
+  color:#0f5132;
+  background:#eafaf2;                 /* default */
+}
+
+/* 카테고리별 색 (원하면 키워드 맞춰 추가) */
+.chip[data-cat*="도입"],
+.chip[data-cat*="induction"]{
+  background:#eafaf2;
+  border-color:#cdeede;
+  color:#0f5132;
+}
+.chip[data-cat*="esg"]{
+  background:#e8f4ff;
+  border-color:#cfe3fb;
+  color:#0b5ed7;
+}
+.chip[data-cat*="탄소"],
+.chip[data-cat*="carb"],
+.chip[data-cat*="carbon"]{
+  background:#fff7e6;
+  border-color:#ffe1a3;
+  color:#b26b00;
+}
+
+/* 테이블 카드(이전 답변 베이스와 호환) */
+.table-wrapper{ overflow-x:auto; }
+.table{
+  width:100%;
+  border-collapse:separate;
+  border-spacing:0;
+  margin-top:16px;
+  background:#fff;
+  color:#1f2937;
+  border:1px solid #e6e8eb;
+  border-radius:12px;
+  box-shadow:0 10px 26px rgba(16,24,40,.08);
+  font-size:15.5px;
+}
+.table thead{
+  position:sticky; top:0; z-index:1;
+  background: linear-gradient(180deg, #f9fbfd 0%, #f4f7fb 100%);
+}
+.table thead td{
+  padding:14px 16px;
+  text-align:center;
+  font-weight:800;
+  color:#0f172a;
+  border-bottom:1px solid #e6e8eb;
+}
+.table tbody td{
+  padding:14px 16px;
+  border-bottom:1px solid #eef2f4;
+  text-align:center;
+}
+.table tbody tr:last-child td{ border-bottom:none; }
+.table tbody tr:nth-child(odd){ background:#fcfdff; }
+
+/* 모바일 최적화 */
+@media (max-width: 640px){
+  .table{ font-size:14.5px; }
+  .table thead td, .table tbody td{ padding:12px; }
+  .titleCell{ max-width: 420px; }
+}
+
+
+
+/* 캡션 */
+.caption{
+  text-align:left;
+  font-weight:800;
+  color:#0f172a;
+  padding: 6px 2px 10px;
+}
+
+/* 헤더 버튼(정렬) */
+.thBtn{
+  cursor: pointer;
+  user-select: none;
+  padding: 0;
+}
+.thStatic{
+  font-weight: 800;
+  color:#0f172a;
+}
+
+.sortBtn{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  padding:10px 12px;
+  border-radius:10px;
+  border:1px solid transparent;
+  background:transparent;
+  font-weight:800;
+  color:#0f172a;
+  transition: background .18s ease, box-shadow .18s ease, color .18s ease;
+}
+.sortBtn:hover{
+  background:#f6faff;
+  box-shadow: inset 0 0 0 1px #e6e8eb;
+}
+.sortBtn[data-active="true"]{
+  background:#eef9f4;
+  box-shadow: inset 0 0 0 1px #cfeede;
+  color:#0f5132;
+}
+
+.sortIcon{
+  width:18px;
+  height:18px;
+}
+
+/* 행 hover/포커스(유지) */
+.row{
+  cursor: pointer;
+  transition: background .18s ease, transform .04s ease;
+}
+.row:hover{ background:#f6fffb; }
+.row:active{ transform: scale(.999); }
+.row:focus-within{
+  outline: none;
+  background:#f0fff7;
+  box-shadow: inset 0 0 0 2px rgba(25,135,84,.22);
+}
+
+/* 긴 제목 말줄임 */
+.titleCell{
+  max-width: 720px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: left;
+}
+
+/* 카테고리 칩 */
+.chip{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  padding:6px 10px;
+  border-radius:9999px;
+  font-weight:700;
+  font-size:.9rem;
+  border:1px solid #dce8e0;
+  color:#0f5132;
+  background:#eafaf2;   /* default */
+}
+
+/* 카테고리별 색 */
+.chip[data-cat*="도입"],
+.chip[data-cat*="induction"]{
+  background:#eafaf2; border-color:#cdeede; color:#0f5132;
+}
+.chip[data-cat*="esg"]{
+  background:#e8f4ff; border-color:#cfe3fb; color:#0b5ed7;
+}
+.chip[data-cat*="탄소"],
+.chip[data-cat*="carb"],
+.chip[data-cat*="carbon"]{
+  background:#fff7e6; border-color:#ffe1a3; color:#b26b00;
+}
+
+/* 테이블 카드 */
+.table-wrapper{ overflow-x:auto; }
+.table{
+  width:100%;
+  border-collapse:separate;
+  border-spacing:0;
+  margin-top:16px;
+  background:#fff;
+  color:#1f2937;
+  border:1px solid #e6e8eb;
+  border-radius:12px;
+  box-shadow:0 10px 26px rgba(16,24,40,.08);
+  font-size:15.5px;
+}
+.table thead{
+  position:sticky; top:0; z-index:1;
+  background: linear-gradient(180deg, #f9fbfd 0%, #f4f7fb 100%);
+}
+.table thead td{
+  padding:14px 16px;
+  text-align:center;
+  font-weight:800;
+  color:#0f172a;
+  border-bottom:1px solid #e6e8eb;
+}
+.table tbody td{
+  padding:14px 16px;
+  border-bottom:1px solid #eef2f4;
+  text-align:center;
+}
+.table tbody tr:last-child td{ border-bottom:none; }
+.table tbody tr:nth-child(odd){ background:#fcfdff; }
+
+/* 모바일 */
+@media (max-width: 640px){
+  .table{ font-size:14.5px; }
+  .table thead td, .table tbody td{ padding:12px; }
+  .titleCell{ max-width: 420px; }
+}
+
+
+/* === 겹치는 기본 정렬 화살표 제거(유령 아이콘 숨김) === */
+.table thead td::before,
+.table thead td::after {
+  content: none !important;
+  display: none !important;
+  background: none !important;
+  border: 0 !important;
+}
+/* 정렬 버튼 정렬/간격 보정 */
+.sortBtn{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;              /* 아이콘 간격 살짝 줄임 */
+  padding:8px 12px;     /* pill 높이 살짝 낮춤 */
+  line-height:1;
+  white-space:nowrap;   /* 줄바꿈 방지 */
+}
+
+.sortIcon{
+  width:16px;
+  height:16px;
+  flex:0 0 16px;
+}
+/* 1) 브라우저/플러그인/부트스트랩이 붙이는 기본 화살표 전부 제거 */
+.table thead td::before,
+.table thead td::after,
+.table thead th::before,
+.table thead th::after {
+  content: none !important;
+  display: none !important;
+  background: none !important;
+  border: 0 !important;
+}
+
+/* 부트스트랩/타 플러그인에서 th에 배경 화살표를 넣는 경우 차단 */
+.table thead td,
+.table thead th {
+  background-image: none !important;
+}
+
+/* DataTables 류를 쓰는 경우까지 싹 정리 */
+table.dataTable > thead .sorting:before,
+table.dataTable > thead .sorting:after,
+table.dataTable > thead .sorting_asc:before,
+table.dataTable > thead .sorting_asc:after,
+table.dataTable > thead .sorting_desc:before,
+table.dataTable > thead .sorting_desc:after {
+  content: "" !important;
+  display: none !important;
+}
+
+/* 혹시 caret 요소를 쓰는 테마라면 이것도 제거 */
+.table thead .caret { display: none !important; }
+/* 단일 아이콘만 회전으로 방향 표시 */
+.sortBtn[data-dir="none"]  .sortIcon { opacity:.35; transform: rotate(180deg); } /* 기본은 흐린 양방향 느낌 */
+.sortBtn[data-dir="asc"]   .sortIcon { opacity:1;    transform: rotate(180deg); } /* 오름차순 ↑ */
+.sortBtn[data-dir="desc"]  .sortIcon { opacity:1;    transform: rotate(0deg);   } /* 내림차순 ↓ */
+
+/* 아이콘 간격/높이 보정 – 겹침 방지 */
+.sortBtn{
+  display:inline-flex;
+  align-items:center;
+  gap:1px;
+  padding:10px 20px;
+  line-height:1;
+  white-space:nowrap;
+}
+.sortIcon{
+  width:16px;
+  height:16px;
+  flex:0 0 16px;
+}
+
+
+
+
+.table thead td::before,
+.table thead td::after,
+.table thead th::before,
+.table thead th::after,
+.table thead td,
+.table thead th {
+  background-image: none !important;
+}
+table.dataTable > thead .sorting:before,
+table.dataTable > thead .sorting:after,
+table.dataTable > thead .sorting_asc:before,
+table.dataTable > thead .sorting_asc:after,
+table.dataTable > thead .sorting_desc:before,
+table.dataTable > thead .sorting_desc:after {
+  display: none !important;
+  content: "" !important;
+}
+
+
+
+
+
+/* DataTables / Bootstrap / 아이콘팩에서 넣는 정렬/캐럿 아이콘 숨김 */
+.table thead th [class*="sort"],
+.table thead th [class*="caret"],
+.table thead th .fa-sort, 
+.table thead th .fa-sort-up, 
+.table thead th .fa-sort-down,
+.table thead th .fa-caret-up, 
+.table thead th .fa-caret-down,
+.table thead th .bi-caret-up, 
+.table thead th .bi-caret-down,
+.table thead td [class*="sort"],
+.table thead td [class*="caret"] {
+  display: none !important;
+}
+
+/* 혹시 테마가 background 로 아이콘을 그리는 경우도 제거 */
+.table thead th,
+.table thead td {
+  background-repeat: no-repeat !important;
+  background-position: right center !important;
+  background-size: 0 !important;
+}
+
+/* 우리 버튼은 깔끔하게 */
+.sortBtn {
+  -webkit-appearance: none;
+  appearance: none;
+  border: 0;
+  background: transparent;
+}
+
+/* 헤더에 기본/플러그인 화살표(의사요소)만 제거 */
+.table thead th::before,
+.table thead th::after,
+.table thead td::before,
+.table thead td::after {
+  content: none !important;
+  display: none !important;
+}
+
+/* 배경 화살표 이미지도 제거 */
+.table thead th,
+.table thead td {
+  background-image: none !important;
+  background-repeat: no-repeat !important;
+  background-position: right center !important;
+  background-size: 0 !important;
+}
+
+/* DataTables/부트스트랩류 정렬 아이콘 제거(필요 시) */
+table.dataTable > thead .sorting:before,
+table.dataTable > thead .sorting:after,
+table.dataTable > thead .sorting_asc:before,
+table.dataTable > thead .sorting_asc:after,
+table.dataTable > thead .sorting_desc:before,
+table.dataTable > thead .sorting_desc:after {
+  display: none !important;
+  content: "" !important;
+}
+
+/* 우리 정렬 버튼 스타일 (글자 보이게 유지) */
+.sortBtn {
+  -webkit-appearance: none;
+  appearance: none;
+  border: 0;
+  background: transparent;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  font-weight: 800;
+  color: #0f172a;
+  white-space: nowrap;
+}
+.sortBtn[data-active="true"] { background:#eef9f4; box-shadow: inset 0 0 0 1px #cfeede; color:#0f5132; }
+
+.sortIcon { width:16px; height:16px; flex:0 0 16px; }
+
+/* ===== 안전한 정렬 아이콘 리셋만 유지 ===== */
+/* (pseudo만 끄고, 자식 텍스트/버튼은 건드리지 않음) */
+.table thead th::before,
+.table thead th::after,
+.table thead td::before,
+.table thead td::after {
+  content: none !important;
+  display: none !important;
+}
+
+.table thead th,
+.table thead td {
+  background-image: none !important;
+  background-repeat: no-repeat !important;
+  background-position: right center !important;
+  background-size: 0 !important;
+}
+
+/* DataTables/Bootstrap 등 아이콘 클래스만 숨김 */
+.table thead .caret,
+.table thead .fa-sort, .table thead .fa-sort-up, .table thead .fa-sort-down,
+.table thead .fa-caret-up, .table thead .fa-caret-down,
+.table thead .bi-caret-up, .table thead .bi-caret-down {
+  display: none !important;
+}
+
+/* ===== 우리 정렬 버튼은 확실히 보이게 ===== */
+.thBtn { cursor: pointer; user-select: none; padding: 0; text-align: center; }
+
+.sortBtn {
+  -webkit-appearance: none;
+  appearance: none;
+  display: inline-flex !important;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid transparent;
+  background: transparent;
+  font-weight: 800;
+  color: #0f172a;
+  line-height: 1;
+  white-space: nowrap;
+  transition: background .18s ease, box-shadow .18s ease, color .18s ease;
+}
+.sortBtn:hover {
+  background: #f6faff;
+  box-shadow: inset 0 0 0 1px #e6e8eb;
+}
+.sortBtn[data-active="true"] {
+  background: #eef9f4;
+  box-shadow: inset 0 0 0 1px #cfeede;
+  color: #0f5132;
+}
+
+.sortIcon {
+  width: 18px;
+  height: 18px;
+  display: block;
+  flex: 0 0 18px;
+}
+
+
+
+/* =========================
+   FAQ Detail – Gradient touch
+   (JSX 변경 없이 스타일만)
+========================= */
+
+/* 카드 외곽선에 그라데이션 테두리 */
+.detailWrapper{
+  /* 기존 값 유지 + 그라데이션 보더만 추가 */
+  background:
+    linear-gradient(#fff, #fff) padding-box,
+    linear-gradient(135deg, #b2f5ea 0%, #c7f9cc 30%, #a7f3d0 60%, #93c5fd 100%) border-box;
+  border: 1px solid transparent;     /* 그라데이션 보더용 */
+  border-radius: 16px;                /* 조금 더 둥글게 */
+  box-shadow: 0 10px 26px rgba(147, 228, 180, 0.08);
+}
+
+/* 타이틀에 은은한 그라데이션 텍스트 */
+.title{
+  background: linear-gradient(90deg, #0ea5e9, #10b981);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;                 /* 그라데이션이 글자에 채워지도록 */
+}
+
+/* 카테고리 칩에 그라데이션 */
+.category{
+  background: linear-gradient(180deg, #e6fffb 0%, #eafff3 100%);
+  color: #0f5132;
+  border: 1px solid rgba(16,185,129,.25);
+  box-shadow: 0 4px 10px rgba(16,185,129,.08) inset;
+}
+
+/* 메타 라인에 아주 얕은 하이라이트 */
+.meta{
+  background: linear-gradient(90deg, rgba(129, 211, 159, 0.06), rgba(137, 200, 227, 0.06));
+  padding: 10px 12px;
+  border-radius: 10px;
+}
+
+/* 구분자도 그라데이션 느낌으로 */
+.separator{
+  display:inline-block;
+  width: 1px; height: 14px;
+  margin: 0 10px;
+  background: linear-gradient(180deg, #bbf7d0, #93c5fd);
+  color: transparent;                 /* 기존 '|' 글자색 숨김 */
+  vertical-align: -2px;
+}
+
+/* 본문 상단 경계에 그라데이션 룰 */
+.content{
+  border-top: 2px solid transparent;
+  background:
+    linear-gradient(#fff,#fff) padding-box,
+    linear-gradient(90deg, #22d3ee, #34d399, #60a5fa) border-box;
+  border-image-slice: 1;
+  padding-top: 20px;
+}
+
+/* 다크모드 사용자 배려(옵션) */
+
