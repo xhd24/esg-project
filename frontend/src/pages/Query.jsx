@@ -1,4 +1,4 @@
-// src/pages/FAQ.jsx (혹은 현재 파일명 유지)
+// src/pages/FAQ.jsx
 import styles from './css/FAQ.module.css';
 import { useEffect, useState } from "react";
 import { getQueryHx, writeQuery } from "../api.js";
@@ -11,36 +11,57 @@ export function FAQWrite() {
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [submitting, setSubmitting] = useState(false);
-  const userId = sessionStorage.userId;
 
+  // ✅ 커스텀 알림 모달 상태
+  const [alertDialog, setAlertDialog] = useState(null);
+  const userId = sessionStorage.userId;
   const navigate = useNavigate();
+
+  // ✅ 공용 알림 함수 (디자인은 아래 모달 렌더링이 담당)
+  const showAlert = (message, onOk) => {
+    setAlertDialog({
+      title: '알림',
+      message,
+      actions: [
+        {
+          label: '확인',
+          variant: 'primary',
+          onClick: () => {
+            setAlertDialog(null);
+            onOk?.();
+          }
+        }
+      ],
+    });
+  };
 
   const handleQuery = async (e) => {
     e.preventDefault();
     if (submitting) return;
 
     // --- 간단한 유효성 검사 ---
-    if (!category) return window.alert("카테고리를 선택해 주세요.");
-    if (!title.trim()) return window.alert("제목을 입력해 주세요.");
-    if (!content.trim()) return window.alert("문의 내용을 입력해 주세요.");
-    if (!email.trim()) return window.alert("이메일을 입력해 주세요.");
-    // 아주 간단한 이메일 패턴 체크 (필요하면 강화 가능)
+    if (!category) return showAlert("카테고리를 선택해 주세요.");
+    if (!title.trim()) return showAlert("제목을 입력해 주세요.");
+    if (!content.trim()) return showAlert("문의 내용을 입력해 주세요.");
+    if (!email.trim()) return showAlert("이메일을 입력해 주세요.");
     const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-    if (!emailOk) return window.alert("이메일 형식이 올바르지 않습니다.");
+    if (!emailOk) return showAlert("이메일 형식이 올바르지 않습니다.");
 
     try {
       setSubmitting(true);
       const res = await writeQuery(title, userId, company, email, category, content);
 
       if (res?.success) {
-        window.alert("문의가 정상적으로 등록되었습니다.\n확인을 누르면 문의 내역으로 이동합니다.");
-        navigate('/faq');
+        // 성공: 확인 누르면 문의 내역으로 이동
+        showAlert("문의가 정상적으로 등록되었습니다.\n확인을 누르면 문의 내역으로 이동합니다.", () => {
+          navigate('/faq');
+        });
       } else {
-        window.alert("등록에 실패했습니다. 잠시 후 다시 시도해 주세요.");
+        showAlert("등록에 실패했습니다. 잠시 후 다시 시도해 주세요.");
       }
     } catch (err) {
       console.error(err);
-      window.alert("오류가 발생했습니다. 잠시 후 다시 시도해 주세요.");
+      showAlert("오류가 발생했습니다. 잠시 후 다시 시도해 주세요.");
     } finally {
       setSubmitting(false);
     }
@@ -119,6 +140,27 @@ export function FAQWrite() {
           {submitting ? "작성 중..." : "작성하기"}
         </button>
       </form>
+
+      {/* ✅ 알림 모달 (2번째 이미지 스타일) */}
+      {alertDialog && (
+        <div className="modal-overlay" role="dialog" aria-modal="true">
+          <div className="modal-card">
+            <h3 className="modal-title">{alertDialog.title || "알림"}</h3>
+            <p className="modal-message">{alertDialog.message}</p>
+            <div className="modal-actions">
+              {alertDialog.actions?.map((a, i) => (
+                <button
+                  key={i}
+                  className={`alert-btn ${a.variant === "primary" ? "alert-btn--primary" : "alert-btn--ghost"}`}
+                  onClick={a.onClick}
+                >
+                  {a.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
