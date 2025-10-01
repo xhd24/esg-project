@@ -17,23 +17,23 @@ export async function getQueryHx(userId) {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ userId }),
   });
-  return res.json()||'';
+  return res.json() || '';
 }
 
 // 관리자 FAQ 게시판 히스토리
 export async function getQueryHxAll() {
   const res = await fetch(`${BASE}/faq_res`);
-  return res.json()||'';
+  return res.json() || '';
 }
 
 // 관리자 FAQ 게시판 디테일
 export async function getQueryDetail(id) {
   const res = await fetch(`${BASE}/faq_res/${id}`);
-  return res.json()||'';
+  return res.json() || '';
 }
 
 //FAQ 게시판 글작성
-export async function writeQuery(inquiry_title,user_id, requester, company, email, category, content) {
+export async function writeQuery(inquiry_title, user_id, requester, company, email, category, content) {
   const res = await fetch(`${BASE}/faq/write`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -64,7 +64,7 @@ export async function login(id, pw) {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ id, pw }),
   });
-  return res.json()||'';
+  return res.json() || '';
 }
 
 //조선소 외부 저장
@@ -74,7 +74,7 @@ export async function carb1InputQuery(ext) {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ ext })
   });
-  return res.json()||'';
+  return res.json() || '';
 }
 
 //조선소내부 저장
@@ -84,17 +84,17 @@ export async function carb1_1InputQuery(inn) {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ inn })
   });
-  return res.json()||'';
+  return res.json() || '';
 }
 
 //각 테이블 값
 export async function getCarbon(userKey) {
-  const res = await fetch(`${BASE}/carbon/c3`,{
-    method:'POST',
+  const res = await fetch(`${BASE}/carbon/c3`, {
+    method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body:JSON.stringify({userKey})
+    body: JSON.stringify({ userKey })
   });
-  return res.json()||'';
+  return res.json() || '';
 }
 
 //운항배출량 저장
@@ -104,7 +104,57 @@ export async function carb2InputQuery(form) {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ form })
   });
-  return res.json()||'';
+  return res.json() || '';
+}
+
+//최신 테이블에서 행 삭제 - 테이블 1
+export async function deleteC1row(id) {
+  const res = await fetch(`${BASE}/carbon/delete`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ id })
+  });
+  return res.json() || '';
+}
+
+//최신 테이블에서 행 수정 - 테이블 1
+export async function editC1row(input) {
+  const res = await fetch(`${BASE}/carbon/edit1`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ input })
+  });
+  return res.json() || '';
+}
+
+//최신 테이블에서 행 수정 - 테이블 2
+export async function editC2row(input) {
+  const res = await fetch(`${BASE}/carbon/edit2`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ input })
+  });
+  return res.json() || '';
+}
+
+//최신 테이블에서 행 삭제 - 테이블 3
+export async function deleteC3row(id) {
+  const res = await fetch(`${BASE}/carbon/delete3`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ id })
+  });
+  return res.json() || '';
+}
+
+//최신 테이블에서 행 수정 - 테이블 3
+export async function editC3row(input) {
+  const res = await fetch(`${BASE}/carbon/edit3`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ input })
+  });
+  return res.json() || '';
 }
 
 // ESG

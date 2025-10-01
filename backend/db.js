@@ -72,22 +72,52 @@ export async function inputC1_1Query(userId, ioType, shipKey, startDate, endDate
 export async function getCarbonQuery(userId) {
 
   const [rows] = await pool.query(
-    "SELECT * FROM ci WHERE user_id=? ORDER BY ci_id DESC",[userId]
+    "SELECT * FROM ci WHERE user_id=? ORDER BY ci_id DESC", [userId]
   );
   return rows;
 }
 
 export async function getCarbonQuery2(userId) {
   const [rows] = await pool.query(
-    "SELECT * FROM cii WHERE user_id=? ORDER BY cii_id DESC",[userId]
+    "SELECT * FROM cii WHERE user_id=? ORDER BY cii_id DESC", [userId]
   );
   return rows;
 }
 
 export async function inputC2Query(shipKey, startDate, endDate, fuelType, amount, distanceNm, capacityTon, tco2, c2, userKey, grade) {
-  console.log(grade);
   await pool.query(
     "INSERT INTO cii (ship_id, start_date, end_date, fuel_type, fuel_tons, distance_nm, capacity_ton, tCO2, CII, user_id, grade) VALUES (?,?,?,?,?,?,?,?,?,?,?)",
     [shipKey, startDate, endDate, fuelType, amount, distanceNm, capacityTon, tco2, c2, userKey, grade]
+  );
+}
+
+export async function deleteC1Row(id) {
+  await pool.query(
+    'DELETE FROM ci WHERE ci_id=?', [id]
+  );
+}
+
+export async function editC1row(id, val1, val2, val3, val4, val5, val6, val7, val8) {
+  await pool.query(
+    'UPDATE ci SET ship_id=?,start_date=?,end_date=?,out_step1=?,out_step2=?,out_step3=?,out_step4=?,out_step5=? WHERE ci_id=?', [val1, val2, val3, val4, val5, val6, val7, val8, id]
+  );
+}
+
+export async function editC2row(id, val1, val2, val3, val4, val5, val6, val7, val8, val9, val10, val11) {
+  await pool.query(
+    'UPDATE ci SET ship_id=?,start_date=?,end_date=?,in_step1=?,in_step2=?,in_step3=?,in_step4=?,in_step5=?,in_step6=?,in_step7=?,in_step8=? WHERE ci_id=?', [val1, val2, val3, val4, val5, val6, val7, val8, val9, val10, val11, id]
+  );
+}
+
+export async function deleteC3Row(id) {
+  await pool.query(
+    'DELETE FROM cii WHERE cii_id=?', [id]
+  );
+}
+
+
+export async function editC3row(id, val1, val2, val3, val4, val5, val6, val7) {
+  await pool.query(
+    'UPDATE cii SET ship_id=?,start_date=?, end_date=?,fuel_type=?, fuel_tons=?,distance_nm=?,capacity_ton=?  WHERE cii_id=?', [val1, val2, val3, val4, val5, val6, val7, id]
   );
 }
