@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import {
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Cell
 } from "recharts";
 import "./css/ESG_ReportDetail.css";
 
@@ -18,9 +18,9 @@ function toneClass(score, max) {
   const s = Number(score || 0);
   const m = Number(max || 0);
   const p = m > 0 ? (s / m) * 100 : 0;
-  if (p >= 80) return "tone--good"; // 초록
-  if (p >= 50) return "tone--warn"; // 주황
-  return "tone--bad";               // 빨강
+  if (p >= 80) return "tone--good";
+  if (p >= 50) return "tone--warn";
+  return "tone--bad";
 }
 
 const CATS = ["Environment", "Social", "Governance"];
@@ -33,6 +33,14 @@ function getAuthHeaders() {
     "Content-Type": "application/json",
     ...(userKey ? { Authorization: `Bearer ${userKey}` } : {}),
   };
+}
+
+// 회사 이름 -> 색
+function colorForCompany(name = "") {
+  if (name.includes("삼성중공업")) return "#3b82f6"; // 파란색
+  if (name.includes("한화오션")) return "#f59e0b"; // 주황색
+  if (name.includes("현대중공업")) return "#10b981"; // 초록색
+  return "#94a3b8"; // 기타(회색)
 }
 
 export default function ESG_ReportDetail() {
@@ -49,9 +57,7 @@ export default function ESG_ReportDetail() {
   const savedAtText = useMemo(() => {
     if (!detail?.savedAt) return "";
     const d = new Date(detail.savedAt);
-    return isNaN(d.getTime())
-      ? String(detail.savedAt)
-      : d.toLocaleString("ko-KR");
+    return isNaN(d.getTime()) ? String(detail.savedAt) : d.toLocaleString("ko-KR");
   }, [detail?.savedAt]);
 
   // 총점 분모(가중치 합계)
@@ -61,7 +67,7 @@ export default function ESG_ReportDetail() {
       Number(w.Environment || 0) +
       Number(w.Social || 0) +
       Number(w.Governance || 0);
-    return sum || 100; // 안전한 기본값
+    return sum || 100;
   }, [detail?.weights]);
 
   // 상세 불러오기
@@ -183,6 +189,7 @@ export default function ESG_ReportDetail() {
 
             {/* 결과 A & B */}
             <div className="report-bottom">
+              {/* 결과 A: 회사별 색 + 범례 파랑 */}
               <div className="report-bottom-card">
                 <h4 className="report-bottom-title">결과 A: 기업별 ESG 점수 비교</h4>
                 <div className="report-bottom-body">
@@ -193,12 +200,17 @@ export default function ESG_ReportDetail() {
                       <YAxis />
                       <Tooltip />
                       <Legend />
-                      <Bar dataKey="score" name="총점" />
+                      <Bar dataKey="score" name="총점" fill="#22c55e">
+                        {companyData.map((d, idx) => (
+                          <Cell key={`cell-${idx}`} fill={colorForCompany(d.company)} />
+                        ))}
+                      </Bar>
                     </BarChart>
                   </ResponsiveContainer>
                 </div>
               </div>
 
+              {/* 결과 B: 범주 색 */}
               <div className="report-bottom-card">
                 <h4 className="report-bottom-title">결과 B: 취약점 분석</h4>
                 <div className="report-bottom-body">
@@ -209,9 +221,9 @@ export default function ESG_ReportDetail() {
                       <YAxis />
                       <Tooltip />
                       <Legend />
-                      <Bar dataKey="E" name="Environment" />
-                      <Bar dataKey="S" name="Social" />
-                      <Bar dataKey="G" name="Governance" />
+                      <Bar dataKey="E" name="Environment" fill="#22c55e" />
+                      <Bar dataKey="S" name="Social" fill="#3b82f6" />
+                      <Bar dataKey="G" name="Governance" fill="#a855f7" />
                     </BarChart>
                   </ResponsiveContainer>
                 </div>

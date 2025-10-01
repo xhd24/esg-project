@@ -233,3 +233,29 @@
 .tone--good { color:#15803d; }  /* 초록 */
 .tone--warn { color:#b45309; }  /* 주황 */
 .tone--bad  { color:#dc2626; }  /* 빨강 */
+
+
+
+/* "결과 A: 기업별 ESG 점수 비교" 같은 섹션 타이틀을 2번 이미지 스타일로 */
+.report-bottom-title{
+  position: relative;
+  padding-left: 14px;              /* 막대와 텍스트 여백 */
+  font-size: 18px;
+  font-weight: 700;                /* 굵게 */
+  color: #0f172a;                  /* 거의 검정 */
+  line-height: 1.2;
+}
+
+/* 왼쪽 세로 막대 */
+.report-bottom-title::before{
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 6px;                      /* 막대 두께 */
+  height: 1.2em;                   /* 글자 높이에 맞춤 */
+  border-radius: 3px;              /* 살짝 라운드 */
+  background: linear-gradient(180deg, #86efac, #22c55e); /* 연-진 초록 그라데이션 */
+  box-shadow: 0 0 0 2px #eafff3 inset;  /* 가장자리 밝은 테두리 느낌(옵션) */
+}
