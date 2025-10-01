@@ -50,13 +50,37 @@ export default function ESG_Report() {
   return (
     <div className="esg-report-page">
       <div className="report-container">
-        <h2>ESG 평가 결과</h2>
+        {/* ← 뒤로가기 버튼 */}
+        <button
+          className="page-back-btn"
+          onClick={() => navigate(-1)}
+          aria-label="뒤로가기"
+          title="뒤로가기"
+        >
+          <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+            <path d="M15 12H6" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+            <path d="M10 7l-5 5 5 5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </button>
 
-        <div className="report-history" style={{ marginTop: 8 }}>
-          <h3>{year}년 제출 이력</h3>
+        {/* 상단 헤더 */}
+        <div className="history-head">
+          <h2 className="history-title">
+            <span className="title-text">ESG 평가 결과</span>
+            <span className="year-chip">
+              <span className="year-dot" aria-hidden="true" />
+              {year}
+            </span>
+          </h2>
+          <p className="history-help">행을 클릭하면 상세 결과 페이지로 이동합니다.</p>
+        </div>
+
+        {/* 본문: 연도별 제출 테이블 */}
+        <div className="report-history">
+          <h3 className="subhead">{year}년 제출 이력</h3>
 
           {loadingList ? (
-            <p>불러오는 중…</p>
+            <p className="loading">불러오는 중…</p>
           ) : errorList ? (
             <div className="user-report-card user-report-card--error">
               <p>⚠️ {errorList}</p>
@@ -67,7 +91,7 @@ export default function ESG_Report() {
               </div>
             </div>
           ) : subsOfYear.length === 0 ? (
-            <p>{year}년에 해당하는 제출 이력이 없습니다.</p>
+            <p className="muted">{year}년에 해당하는 제출 이력이 없습니다.</p>
           ) : (
             <div className="user-report-table-wrap">
               <table className="user-report-table">
@@ -81,15 +105,14 @@ export default function ESG_Report() {
                   {subsOfYear.map((s, idx) => {
                     const sid = s.id ?? s.submission_id ?? null;
                     const dt = s.inputdate ? new Date(s.inputdate) : null;
-                    const dtText =
-                      dt && !isNaN(dt.getTime()) ? dt.toLocaleString() : s.inputdate || "";
+                    const dtText = dt && !isNaN(dt.getTime()) ? dt.toLocaleString() : s.inputdate || "";
                     const rowKey = sid ? String(sid) : `no-id-${s.year}-${s.inputdate}-${idx}`;
                     const isDisabled = !sid;
 
                     return (
                       <tr
                         key={rowKey}
-                        className={isDisabled ? "row-disabled" : ""}
+                        className={`row-link ${isDisabled ? "row-disabled" : ""}`}
                         style={{ cursor: isDisabled ? "not-allowed" : "pointer", opacity: isDisabled ? 0.6 : 1 }}
                         title={isDisabled ? "구버전 데이터(상세 이동 불가)" : "클릭해서 상세 결과 보기"}
                         onClick={() => {
@@ -97,8 +120,13 @@ export default function ESG_Report() {
                           navigate(`/ESG_report/${year}/submission/${sid}`);
                         }}
                       >
-                        <td>{sid ?? "(구버전)"}</td>
-                        <td>{dtText}</td>
+                        <td className="col-id" data-label="제출ID">
+                          <span className="id-badge">{sid ?? "(구버전)"}</span>
+                        </td>
+                        <td className="col-date" data-label="제출일시">
+                          <span className="date-text">{dtText}</span>
+                          <span className="row-arrow" aria-hidden="true">→</span>
+                        </td>
                       </tr>
                     );
                   })}

@@ -1,4 +1,3 @@
-// frontend/src/pages/ESG_ReportDetail.jsx
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import "./css/ESG_ReportDetail.css";
@@ -17,6 +16,14 @@ function getAuthHeaders() {
   };
 }
 
+// 점수 퍼센트에 따라 색상 클래스 반환
+function toneClass(score, max) {
+  const p = max > 0 ? (score / max) * 100 : 0;
+  if (p >= 80) return "tone--good"; // 초록
+  if (p >= 50) return "tone--warn"; // 주황
+  return "tone--bad";               // 빨강
+}
+
 export default function ESG_ReportDetail() {
   const navigate = useNavigate();
   const { year, sid } = useParams();
@@ -30,6 +37,14 @@ export default function ESG_ReportDetail() {
     const d = new Date(detail.savedAt);
     return isNaN(d.getTime()) ? String(detail.savedAt) : d.toLocaleString();
   }, [detail?.savedAt]);
+
+  // 총점 분모(가중치 합계)
+  const maxTotal = useMemo(() => {
+    if (!detail?.weights) return 100; // 안전한 기본값
+    const { Environment = 0, Social = 0, Governance = 0 } = detail.weights;
+    const sum = Number(Environment) + Number(Social) + Number(Governance);
+    return sum || 100;
+  }, [detail?.weights]);
 
   useEffect(() => {
     (async () => {
@@ -79,17 +94,26 @@ export default function ESG_ReportDetail() {
             <div className="saved-at">저장 시각: {savedAtText}</div>
 
             <div className="report-cards">
+              {/* 총점 */}
               <div className="report-detail-card">
                 <h3>총점</h3>
-                <div className="total-score">{to2(detail.scores.total)} / 100</div>
+                <div className={`total-score ${toneClass(detail.scores.total, maxTotal)}`}>
+                  {to2(detail.scores.total)} / {maxTotal}
+                </div>
                 <small>
                   E {to2(detail.scores.Environment)} / S {to2(detail.scores.Social)} / G {to2(detail.scores.Governance)}
                 </small>
               </div>
 
+              {/* Environment */}
               <div className="report-detail-card">
                 <h3>Environment</h3>
-                <div className="score">
+                <div
+                  className={`score ${toneClass(
+                    detail.scores.Environment,
+                    detail.weights.Environment
+                  )}`}
+                >
                   {to2(detail.scores.Environment)} / {detail.weights.Environment}
                 </div>
                 <div>
@@ -98,9 +122,15 @@ export default function ESG_ReportDetail() {
                 <div>아니오(또는 미응답): {detail.noCounts.Environment}</div>
               </div>
 
+              {/* Social */}
               <div className="report-detail-card">
                 <h3>Social</h3>
-                <div className="score">
+                <div
+                  className={`score ${toneClass(
+                    detail.scores.Social,
+                    detail.weights.Social
+                  )}`}
+                >
                   {to2(detail.scores.Social)} / {detail.weights.Social}
                 </div>
                 <div>
@@ -109,9 +139,15 @@ export default function ESG_ReportDetail() {
                 <div>아니오(또는 미응답): {detail.noCounts.Social}</div>
               </div>
 
+              {/* Governance */}
               <div className="report-detail-card">
                 <h3>Governance</h3>
-                <div className="score">
+                <div
+                  className={`score ${toneClass(
+                    detail.scores.Governance,
+                    detail.weights.Governance
+                  )}`}
+                >
                   {to2(detail.scores.Governance)} / {detail.weights.Governance}
                 </div>
                 <div>
