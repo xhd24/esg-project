@@ -1,4 +1,4 @@
-const BASE = "http://project-esg.ch84qkaky60x.ap-southeast-2.rds.amazonaws.com";
+const BASE = "https://trueesg.duckdns.org";
 
 // 인증 헤더 생성 함수
 export function getAuthHeaders() {

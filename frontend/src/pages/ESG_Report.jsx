@@ -3,7 +3,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import "./css/ESG_Report.css";
 
-const API_BASE = "http://localhost:3000/esg";
+const API_BASE = "https://trueesg.duckdns.org/esg";
 
 function getAuthHeaders() {
   const userKey =

@@ -112,7 +112,7 @@ function Signup() {
     };
 
     try {
-      await axios.post("http://localhost:3000/signup", payload, {
+      await axios.post("https://trueesg.duckdns.org/signup", payload, {
         headers: { "Content-Type": "application/json" },
       });
 

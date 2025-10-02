@@ -5,7 +5,7 @@ import {
 } from "recharts";
 import "./css/ESG_ReportDetail.css";
 
-const API_BASE = "http://localhost:3000/esg";
+const API_BASE = "https://trueesg.duckdns.org/esg";
 const to2 = (n) => Number(n || 0).toFixed(2);
 const pct = (yes, total) => {
   const y = Number(yes || 0);

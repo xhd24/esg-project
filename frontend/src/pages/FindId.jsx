@@ -10,7 +10,7 @@ function FindId() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const res = await axios.post("http://localhost:5000/api/find-id", { email, fullName });
+      const res = await axios.post("https://trueesg.duckdns.org/api/find-id", { email, fullName });
       if (res.data.success) {
         setFoundId(res.data.login_id);
       } else {

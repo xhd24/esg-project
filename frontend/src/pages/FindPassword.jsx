@@ -10,7 +10,7 @@ function FindPassword() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const res = await axios.post("http://localhost:5000/api/find-password", { username, email });
+      const res = await axios.post("https://trueesg.duckdns.org/api/find-password", { username, email });
       if (res.data.success) {
         setMessage("임시 비밀번호가 이메일로 발송되었습니다.");
       } else {
